@@ -189,9 +189,11 @@ export function shouldUseOpenAICodexTransport({
   hasExplicitApiKey: boolean
   hasFallbackApiKey: boolean
 }): boolean {
+  if (forceOpenAICodex) return true
+
   return (
     hasOpenAIAuth &&
-    (!isClaudeSubscriber || forceOpenAICodex) &&
+    !isClaudeSubscriber &&
     (isOpenAIModel ||
       (!hasAnthropicAuthToken && !hasExplicitApiKey && !hasFallbackApiKey))
   )
@@ -247,7 +249,9 @@ export async function getAnthropicClient({
   const isOpenAIModel = model ? isOpenAIResponsesModel(model) : false
   const forceOpenAICodex = isEnvTruthy(process.env.SCIX_OPENAI_OAUTH_PROVIDER)
   const forceGrok = isEnvTruthy(process.env.SCIX_GROK_OAUTH_PROVIDER)
-  const isClaudeSubscriber = forceGrok ? false : isClaudeAISubscriber()
+  const isClaudeSubscriber = forceGrok || forceOpenAICodex
+    ? false
+    : isClaudeAISubscriber()
   const hasOpenAIAuth = shouldUseOpenAICodexAuth()
   const usingGrok = forceGrok && shouldUseGrokAuth()
   const hasFallbackApiKey = hasOpenAIAuth &&
@@ -448,9 +452,11 @@ export async function getAnthropicClient({
       : isClaudeSubscriber
         ? null
         : resolveAnthropicClientApiKey({ explicitApiKey: apiKey }),
-    authToken: isClaudeSubscriber && !usingOpenAICodex && !usingGrok
-      ? getClaudeAIOAuthTokens()?.accessToken
-      : undefined,
+    authToken: usingOpenAICodex || usingGrok
+      ? null
+      : isClaudeSubscriber
+        ? getClaudeAIOAuthTokens()?.accessToken
+        : undefined,
     // Set baseURL from OAuth config when using staging OAuth
     ...(stagingOAuthBaseUrl ? { baseURL: stagingOAuthBaseUrl } : {}),
     ...ARGS,

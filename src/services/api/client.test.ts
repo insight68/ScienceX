@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import { GROK_OAUTH_DUMMY_KEY } from '../grokAuth/fetch.js'
+import { OPENAI_OAUTH_DUMMY_KEY } from '../openaiAuth/fetch.js'
 
 mock.module('src/utils/http.js', () => ({
   getAuthHeaders: mock(() => ({})),
@@ -117,6 +118,20 @@ describe('shouldUseOpenAICodexTransport', () => {
     })).toBe(true)
   })
 
+  test('keeps ChatGPT Official transport selected while OAuth credentials are unavailable', async () => {
+    const { shouldUseOpenAICodexTransport } = await import('./client.js')
+
+    expect(shouldUseOpenAICodexTransport({
+      hasOpenAIAuth: false,
+      isClaudeSubscriber: false,
+      forceOpenAICodex: true,
+      isOpenAIModel: true,
+      hasAnthropicAuthToken: true,
+      hasExplicitApiKey: false,
+      hasFallbackApiKey: false,
+    })).toBe(true)
+  })
+
   test('keeps Claude subscriber transport when ChatGPT Official is not selected', async () => {
     const { shouldUseOpenAICodexTransport } = await import('./client.js')
 
@@ -133,6 +148,43 @@ describe('shouldUseOpenAICodexTransport', () => {
 })
 
 describe('getAnthropicClient', () => {
+  test('does not let an ambient Anthropic auth token override ChatGPT Official', async () => {
+    const { getAnthropicClient } = await import('./client.js')
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openai-client-test-'))
+    const tokenFile = path.join(tempDir, 'openai-oauth.json')
+    await fs.writeFile(tokenFile, JSON.stringify({
+      accessToken: 'openai-access',
+      refreshToken: 'openai-refresh',
+      expiresAt: Date.now() + 3600_000,
+    }))
+    const previous = {
+      marker: process.env.SCIX_OPENAI_OAUTH_PROVIDER,
+      tokenFile: process.env.OPENAI_CODEX_OAUTH_FILE,
+      configDir: process.env.CLAUDE_CONFIG_DIR,
+      authToken: process.env.ANTHROPIC_AUTH_TOKEN,
+    }
+    process.env.SCIX_OPENAI_OAUTH_PROVIDER = '1'
+    process.env.OPENAI_CODEX_OAUTH_FILE = tokenFile
+    process.env.CLAUDE_CONFIG_DIR = tempDir
+    process.env.ANTHROPIC_AUTH_TOKEN = 'ambient-token-that-must-not-leak'
+    try {
+      const client = await getAnthropicClient({ maxRetries: 0, model: 'gpt-5.6-sol' })
+      expect(client.apiKey).toBe(OPENAI_OAUTH_DUMMY_KEY)
+      expect(client.authToken).toBeNull()
+      expect(client._options.fetch).toBeFunction()
+    } finally {
+      if (previous.marker === undefined) delete process.env.SCIX_OPENAI_OAUTH_PROVIDER
+      else process.env.SCIX_OPENAI_OAUTH_PROVIDER = previous.marker
+      if (previous.tokenFile === undefined) delete process.env.OPENAI_CODEX_OAUTH_FILE
+      else process.env.OPENAI_CODEX_OAUTH_FILE = previous.tokenFile
+      if (previous.configDir === undefined) delete process.env.CLAUDE_CONFIG_DIR
+      else process.env.CLAUDE_CONFIG_DIR = previous.configDir
+      if (previous.authToken === undefined) delete process.env.ANTHROPIC_AUTH_TOKEN
+      else process.env.ANTHROPIC_AUTH_TOKEN = previous.authToken
+      await fs.rm(tempDir, { recursive: true, force: true })
+    }
+  })
+
   test('selects the isolated Grok transport with a dummy SDK key', async () => {
     const { getAnthropicClient } = await import('./client.js')
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'grok-client-test-'))
