@@ -22,7 +22,6 @@ __pycache__/
 *.py[cod]
 
 # Test, quality, and debug output
-/artifacts/
 coverage/
 /.playwright-mcp/
 /e2e-*.png
