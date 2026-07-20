@@ -8,7 +8,11 @@ import {
 import { ensureStandaloneProviderProxy } from '../server/proxy/standaloneProviderProxy.js'
 import { clearCACertsCache } from './caCerts.js'
 import { getGlobalConfig } from './config.js'
-import { getClaudeConfigHomeDir, isEnvTruthy } from './envUtils.js'
+import {
+  getClaudeConfigHomeDir,
+  getScienceXConfigDir,
+  isEnvTruthy,
+} from './envUtils.js'
 import {
   isProviderManagedEnvVar,
   SAFE_ENV_VARS,
@@ -125,19 +129,26 @@ function filterSettingsEnv(
  */
 function getCcscixSettingsEnv(): Record<string, string> {
   const configDir = getClaudeConfigHomeDir()
+  const providerConfigDir = getScienceXConfigDir()
   const serverPort =
     !isEnvTruthy(process.env.CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST) &&
-    activeProviderNeedsProxy(configDir)
+    activeProviderNeedsProxy(configDir, providerConfigDir)
       ? ensureStandaloneProviderProxy()
       : undefined
   try {
-    const scixSettings = join(configDir, 'sciencex', 'settings.json')
+    const scixSettings = join(providerConfigDir, 'settings.json')
     const raw = readFileSync(scixSettings, 'utf-8')
     const parsed = JSON.parse(raw) as { env?: Record<string, string> }
     const settingsEnv = normalizeLegacyDeepSeekManagedEnv(parsed.env ?? {}).env
-    return mergeActiveProviderManagedEnv(settingsEnv, configDir, { serverPort })
+    return mergeActiveProviderManagedEnv(settingsEnv, configDir, {
+      providerConfigDir,
+      serverPort,
+    })
   } catch {
-    return mergeActiveProviderManagedEnv({}, configDir, { serverPort })
+    return mergeActiveProviderManagedEnv({}, configDir, {
+      providerConfigDir,
+      serverPort,
+    })
   }
 }
 

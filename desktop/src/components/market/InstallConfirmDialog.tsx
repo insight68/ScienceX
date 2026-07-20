@@ -53,7 +53,7 @@ export function InstallConfirmDialog({
           <div className="flex items-center justify-between gap-2">
             <span className="text-[var(--color-text-tertiary)]">{t('market.installConfirm.location')}</span>
             <span className="truncate font-mono text-[11px] text-[var(--color-text-secondary)]">
-              ~/.claude/skills/{skill.slug}/
+              ~/.sciencex/claude/skills/{skill.slug}/
             </span>
           </div>
         </div>

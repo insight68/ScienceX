@@ -40,6 +40,7 @@ import {
   paginateScheduledRunRecords,
   type ScheduledRunSummary,
 } from './localIndex/scheduledRunIndex.js'
+import { getScienceXConfigDir, getScienceXStateDir } from '../../utils/envUtils.js'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -215,9 +216,7 @@ type RunsFileMutationTarget = {
 }
 
 function getLogFilePath(): string {
-  const configDir =
-    process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-  return path.join(configDir, 'scheduled_tasks_log.json')
+  return path.join(getScienceXStateDir(), 'scheduled_tasks_log.json')
 }
 
 function captureRunsFileMutationTarget(): RunsFileMutationTarget {
@@ -901,7 +900,7 @@ export class CronScheduler {
   }
 
   private getConfigDir(): string {
-    return process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
+    return getScienceXConfigDir()
   }
 
   private shouldStripInheritedProviderEnv(providerId?: string | null): boolean {
@@ -909,7 +908,7 @@ export class CronScheduler {
       return true
     }
 
-    const scixDir = path.join(this.getConfigDir(), 'sciencex')
+    const scixDir = this.getConfigDir()
     if (existsSync(path.join(scixDir, 'providers.json'))) {
       return true
     }
@@ -939,7 +938,7 @@ export class CronScheduler {
 
     try {
       const raw = readFileSync(
-        path.join(this.getConfigDir(), 'sciencex', 'settings.json'),
+        path.join(this.getConfigDir(), 'settings.json'),
         'utf-8',
       )
       const parsed = JSON.parse(raw) as { env?: Record<string, string> }

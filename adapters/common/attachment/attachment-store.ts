@@ -14,8 +14,8 @@ import * as fs from 'node:fs/promises'
 import * as fsSync from 'node:fs'
 import type { Dirent } from 'node:fs'
 import * as path from 'node:path'
-import * as os from 'node:os'
 import type { ImPlatform } from './attachment-types.js'
+import { adapterDownloadsDir } from '../storage-paths.js'
 
 export interface AttachmentStoreConfig {
   root: string
@@ -29,7 +29,7 @@ const DEFAULT_RETENTION_MS = 24 * 60 * 60 * 1000
 const DEFAULT_ORPHAN_GRACE_MS = 10 * 60 * 1000
 
 function defaultRoot(): string {
-  return path.join(os.homedir(), '.claude', 'im-downloads')
+  return adapterDownloadsDir()
 }
 
 /** Strip path separators / .. / control chars from a filename. */

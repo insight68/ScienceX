@@ -35,7 +35,10 @@ import {
   buildClaudeCliArgs,
   resolveClaudeCliLauncher,
 } from '../../utils/desktopBundledCli.js'
-import { getClaudeConfigHomeDir } from '../../utils/envUtils.js'
+import {
+  getClaudeConfigHomeDir,
+  getScienceXConfigDir,
+} from '../../utils/envUtils.js'
 import { findCanonicalGitRoot } from '../../utils/git.js'
 import { sanitizePath } from '../../utils/path.js'
 import { getProcessEnvWithTerminalShellEnvironment } from '../../utils/terminalShellEnvironment.js'
@@ -1475,9 +1478,7 @@ export class ConversationService {
       return true
     }
 
-    const configDir =
-      process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-    const scixDir = path.join(configDir, 'sciencex')
+    const scixDir = getScienceXConfigDir()
     const providersIndexPath = path.join(scixDir, 'providers.json')
     const settingsPath = path.join(scixDir, 'settings.json')
 
@@ -1532,9 +1533,7 @@ export class ConversationService {
       return false
     }
 
-    const configDir =
-      process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-    const settingsPath = path.join(configDir, 'sciencex', 'settings.json')
+    const settingsPath = path.join(getScienceXConfigDir(), 'settings.json')
     try {
       const raw = fs.readFileSync(settingsPath, 'utf-8')
       const parsed = JSON.parse(raw) as { env?: Record<string, string> }

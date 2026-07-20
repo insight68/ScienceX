@@ -390,10 +390,11 @@ export function buildProviderManagedEnv(
 
 export function readActiveProviderManagedEnv(
   configDir: string,
-  options?: { serverPort?: number },
+  options?: { serverPort?: number, providerConfigDir?: string },
 ): Record<string, string> | null {
   try {
-    const raw = fs.readFileSync(path.join(configDir, 'sciencex', 'providers.json'), 'utf-8')
+    const providerConfigDir = options?.providerConfigDir ?? path.join(configDir, 'sciencex')
+    const raw = fs.readFileSync(path.join(providerConfigDir, 'providers.json'), 'utf-8')
     const index = normalizeProvidersIndex(JSON.parse(raw))
     if (!index?.activeId) return null
 
@@ -415,9 +416,12 @@ export function readActiveProviderManagedEnv(
   }
 }
 
-export function activeProviderNeedsProxy(configDir: string): boolean {
+export function activeProviderNeedsProxy(
+  configDir: string,
+  providerConfigDir = path.join(configDir, 'sciencex'),
+): boolean {
   try {
-    const raw = fs.readFileSync(path.join(configDir, 'sciencex', 'providers.json'), 'utf-8')
+    const raw = fs.readFileSync(path.join(providerConfigDir, 'providers.json'), 'utf-8')
     const index = normalizeProvidersIndex(JSON.parse(raw))
     if (
       !index?.activeId ||
@@ -439,7 +443,7 @@ export function activeProviderNeedsProxy(configDir: string): boolean {
 export function mergeActiveProviderManagedEnv(
   settingsEnv: Record<string, string>,
   configDir: string,
-  options?: { serverPort?: number },
+  options?: { serverPort?: number, providerConfigDir?: string },
 ): Record<string, string> {
   const activeProviderEnv = readActiveProviderManagedEnv(configDir, options)
   if (!activeProviderEnv) {

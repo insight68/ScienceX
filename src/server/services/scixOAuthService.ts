@@ -10,8 +10,8 @@
  */
 
 import * as fs from 'fs/promises'
-import * as os from 'os'
 import * as path from 'path'
+import { getScienceXCredentialsDir } from '../../utils/envUtils.js'
 import { logTokenRefreshFailure } from './oauthRefreshLog.js'
 import {
   generateCodeVerifier,
@@ -79,9 +79,7 @@ export class ScixOAuthService {
   }
 
   private getOAuthFilePath(): string {
-    const configDir =
-      process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-    return path.join(configDir, 'sciencex', 'oauth.json')
+    return path.join(getScienceXCredentialsDir(), 'oauth.json')
   }
 
   async loadTokens(): Promise<StoredOAuthTokens | null> {

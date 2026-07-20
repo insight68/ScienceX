@@ -1,10 +1,10 @@
 import * as fs from 'node:fs/promises'
-import * as os from 'node:os'
 import * as path from 'node:path'
 import { randomBytes } from 'node:crypto'
 import { ApiError } from '../middleware/errorHandler.js'
 import { readRecoverableJsonFile } from './recoverableJsonFile.js'
 import { ensurePersistentStorageUpgraded } from './persistentStorageMigrations.js'
+import { getScienceXConfigDir } from '../../utils/envUtils.js'
 
 const CURRENT_DESKTOP_UI_PREFERENCES_SCHEMA_VERSION = 2
 const MAX_PROJECT_PREFERENCE_ENTRIES = 2_000
@@ -165,15 +165,15 @@ export class DesktopUiPreferencesService {
   private static writeLocks = new Map<string, Promise<void>>()
 
   private getConfigDir(): string {
-    return process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
+    return getScienceXConfigDir()
   }
 
   private getPreferencesPath(): string {
-    return path.join(this.getConfigDir(), 'sciencex', 'desktop-ui.json')
+    return path.join(this.getConfigDir(), 'desktop-ui.json')
   }
 
   private getProfileDir(): string {
-    return path.join(this.getConfigDir(), 'sciencex', 'profile')
+    return path.join(this.getConfigDir(), 'profile')
   }
 
   private getProfileAvatarPath(avatarFile: string): string {
@@ -181,7 +181,7 @@ export class DesktopUiPreferencesService {
     if (!normalized) {
       throw ApiError.badRequest('Invalid avatar file path')
     }
-    return path.join(this.getConfigDir(), 'sciencex', normalized)
+    return path.join(this.getConfigDir(), normalized)
   }
 
   private async fileExists(filePath: string): Promise<boolean> {

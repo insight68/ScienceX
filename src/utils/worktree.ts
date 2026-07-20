@@ -203,7 +203,7 @@ const GIT_NO_PROMPT_ENV = {
 }
 
 function worktreesDir(repoRoot: string): string {
-  return join(repoRoot, '.claude', 'worktrees')
+  return join(repoRoot, '.sciencex', 'worktrees')
 }
 
 export async function ensureWorktreesDirExcluded(repoRoot: string): Promise<void> {
@@ -212,7 +212,7 @@ export async function ensureWorktreesDirExcluded(repoRoot: string): Promise<void
   if (!commonDir) return
 
   const excludePath = join(commonDir, 'info', 'exclude')
-  const pattern = '.claude/worktrees/'
+  const pattern = '.sciencex/worktrees/'
   let existing = ''
   try {
     existing = await readFile(excludePath, 'utf-8')
@@ -230,7 +230,7 @@ export async function ensureWorktreesDirExcluded(repoRoot: string): Promise<void
   const prefix = existing.length === 0 || existing.endsWith('\n') ? existing : `${existing}\n`
   await writeFile(
     excludePath,
-    `${prefix}# Claude worktree sessions\n${pattern}\n`,
+    `${prefix}# ScienceX worktree sessions\n${pattern}\n`,
     'utf-8',
   )
 }

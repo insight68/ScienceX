@@ -24,6 +24,7 @@ import { computeNextCronRun, parseCronExpression } from './cron.js'
 import { logForDebugging } from './debug.js'
 import { isFsInaccessible } from './errors.js'
 import { getFsImplementation } from './fsOperations.js'
+import { addFileGlobRuleToGitignore } from './git/gitignore.js'
 import { safeParseJSON } from './json.js'
 import { logError } from './log.js'
 import { jsonStringify } from './slowOperations.js'
@@ -103,7 +104,8 @@ export type CronTaskMeta = {
 
 type CronFile = { tasks: CronTask[] }
 
-const CRON_FILE_REL = join('.claude', 'scheduled_tasks.json')
+const CRON_FILE_REL = join('.sciencex', 'scheduled_tasks.json')
+const LEGACY_CRON_FILE_REL = join('.claude', 'scheduled_tasks.json')
 
 /**
  * Path to the cron file. `dir` defaults to getProjectRoot() — pass it
@@ -112,6 +114,10 @@ const CRON_FILE_REL = join('.claude', 'scheduled_tasks.json')
  */
 export function getCronFilePath(dir?: string): string {
   return join(dir ?? getProjectRoot(), CRON_FILE_REL)
+}
+
+function getLegacyCronFilePath(dir?: string): string {
+  return join(dir ?? getProjectRoot(), LEGACY_CRON_FILE_REL)
 }
 
 /**
@@ -126,9 +132,18 @@ export async function readCronTasks(dir?: string): Promise<CronTask[]> {
   try {
     raw = await fs.readFile(getCronFilePath(dir), { encoding: 'utf-8' })
   } catch (e: unknown) {
-    if (isFsInaccessible(e)) return []
-    logError(e)
-    return []
+    if (isFsInaccessible(e)) {
+      try {
+        raw = await fs.readFile(getLegacyCronFilePath(dir), { encoding: 'utf-8' })
+      } catch (legacyError: unknown) {
+        if (isFsInaccessible(legacyError)) return []
+        logError(legacyError)
+        return []
+      }
+    } else {
+      logError(e)
+      return []
+    }
   }
 
   const parsed = safeParseJSON(raw, false)
@@ -198,7 +213,11 @@ export function hasCronTasksSync(dir?: string): boolean {
     // eslint-disable-next-line custom-rules/no-sync-fs -- called once from cronScheduler.start()
     raw = readFileSync(getCronFilePath(dir), 'utf-8')
   } catch {
-    return false
+    try {
+      raw = readFileSync(getLegacyCronFilePath(dir), 'utf-8')
+    } catch {
+      return false
+    }
   }
   const parsed = safeParseJSON(raw, false)
   if (!parsed || typeof parsed !== 'object') return false
@@ -216,7 +235,8 @@ export async function writeCronTasks(
   dir?: string,
 ): Promise<void> {
   const root = dir ?? getProjectRoot()
-  await mkdir(join(root, '.claude'), { recursive: true })
+  await mkdir(join(root, '.sciencex'), { recursive: true })
+  await addFileGlobRuleToGitignore('.sciencex/scheduled_tasks.json', root)
   // Strip runtime-only flags — everything on disk is durable by definition,
   // and agentId is session-scoped (teammates don't persist across sessions).
   const body: CronFile = {

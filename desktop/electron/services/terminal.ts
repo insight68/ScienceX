@@ -99,6 +99,10 @@ type TerminalSession = {
 const preparedNodePtyDirs = new Set<string>()
 
 export function terminalConfigPath(app: TerminalAppLike | undefined, env: NodeJS.ProcessEnv = process.env): string | null {
+  const scienceXHome = env.SCIENCEX_HOME?.trim()
+  if (scienceXHome) {
+    return path.join(scienceXHome, 'state', TERMINAL_CONFIG_FILE)
+  }
   const portableDir = env.CLAUDE_CONFIG_DIR?.trim()
   if (portableDir) {
     return path.join(portableDir, TERMINAL_CONFIG_FILE)
@@ -254,7 +258,8 @@ function loadTerminalConfig(app: TerminalAppLike | undefined, env: NodeJS.Proces
   const configPath = terminalConfigPath(app, env)
   if (!configPath) return {}
   const candidates = [configPath]
-  if (app && !env.CLAUDE_CONFIG_DIR) {
+  if (app) {
+    candidates.push(path.join(app.getPath('home'), '.claude', TERMINAL_CONFIG_FILE))
     candidates.push(path.join(app.getPath('userData'), TERMINAL_CONFIG_FILE))
   }
   for (const candidate of candidates) {
@@ -281,6 +286,7 @@ export function resolveTerminalCwd(
 ): string {
   const trimmed = cwd?.trim()
   const resolved = trimmed
+    || env.SCIENCEX_HOME
     || env.CLAUDE_CONFIG_DIR
     || env.HOME
     || env.USERPROFILE

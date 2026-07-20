@@ -250,18 +250,15 @@ export function getProjectDirsUpToHome(
       break
     }
 
-    const claudeSubdir = join(current, '.claude', subdir)
-    // Filter to existing dirs. This is a perf filter (avoids spawning
-    // ripgrep on non-existent dirs downstream) and the worktree fallback
-    // in loadMarkdownFilesForSubdir relies on it. statSync + explicit error
-    // handling instead of existsSync — re-throws unexpected errors rather
-    // than silently swallowing them. Downstream loadMarkdownFiles handles
-    // the TOCTOU window (dir disappearing before read) gracefully.
-    try {
-      statSync(claudeSubdir)
-      dirs.push(claudeSubdir)
-    } catch (e: unknown) {
-      if (!isFsInaccessible(e)) throw e
+    // ScienceX is primary; .claude remains a read-only compatibility layer.
+    for (const configDirectory of ['.sciencex', '.claude']) {
+      const configSubdir = join(current, configDirectory, subdir)
+      try {
+        statSync(configSubdir)
+        dirs.push(configSubdir)
+      } catch (e: unknown) {
+        if (!isFsInaccessible(e)) throw e
+      }
     }
 
     // Stop after processing the git root directory - this prevents commands from parent
@@ -320,16 +317,18 @@ export const loadMarkdownFilesForSubdir = memoize(
     const gitRoot = findGitRoot(cwd)
     const canonicalRoot = findCanonicalGitRoot(cwd)
     if (gitRoot && canonicalRoot && canonicalRoot !== gitRoot) {
-      const worktreeSubdir = normalizePathForComparison(
-        join(gitRoot, '.claude', subdir),
+      const worktreeSubdirs = ['.sciencex', '.claude'].map(directory =>
+        normalizePathForComparison(join(gitRoot, directory, subdir)),
       )
-      const worktreeHasSubdir = projectDirs.some(
-        dir => normalizePathForComparison(dir) === worktreeSubdir,
+      const worktreeHasSubdir = projectDirs.some(dir =>
+        worktreeSubdirs.includes(normalizePathForComparison(dir)),
       )
       if (!worktreeHasSubdir) {
-        const mainClaudeSubdir = join(canonicalRoot, '.claude', subdir)
-        if (!projectDirs.includes(mainClaudeSubdir)) {
-          projectDirs.push(mainClaudeSubdir)
+        for (const directory of ['.sciencex', '.claude']) {
+          const mainConfigSubdir = join(canonicalRoot, directory, subdir)
+          if (!projectDirs.includes(mainConfigSubdir)) {
+            projectDirs.push(mainConfigSubdir)
+          }
         }
       }
     }

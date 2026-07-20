@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises'
-import * as os from 'os'
 import * as path from 'path'
+import { getScienceXCredentialsDir } from '../../utils/envUtils.js'
 import { AuthCodeListener } from '../../services/oauth/auth-code-listener.js'
 import {
   buildGrokAuthorizeUrl,
@@ -68,8 +68,7 @@ function escapeHtml(value: string): string {
 }
 
 export function getscixGrokOAuthFilePath(): string {
-  const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-  return path.join(configDir, 'sciencex', 'grok-oauth.json')
+  return path.join(getScienceXCredentialsDir(), 'grok-oauth.json')
 }
 
 export class ScixGrokOAuthService {

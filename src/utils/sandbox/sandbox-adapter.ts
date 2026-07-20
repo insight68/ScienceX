@@ -240,6 +240,8 @@ export function convertToSandboxRuntimeConfig(
   const cwd = getCwdState()
   const originalCwd = getOriginalCwd()
   if (cwd !== originalCwd) {
+    denyWrite.push(resolve(cwd, '.sciencex', 'settings.json'))
+    denyWrite.push(resolve(cwd, '.sciencex', 'settings.local.json'))
     denyWrite.push(resolve(cwd, '.claude', 'settings.json'))
     denyWrite.push(resolve(cwd, '.claude', 'settings.local.json'))
   }
@@ -249,8 +251,10 @@ export function convertToSandboxRuntimeConfig(
   // .claude/agents but not .claude/skills. Skills have the same privilege level
   // (auto-discovered, auto-loaded, full Claude capabilities) so they need the
   // same OS-level sandbox protection.
+  denyWrite.push(resolve(originalCwd, '.sciencex', 'skills'))
   denyWrite.push(resolve(originalCwd, '.claude', 'skills'))
   if (cwd !== originalCwd) {
+    denyWrite.push(resolve(cwd, '.sciencex', 'skills'))
     denyWrite.push(resolve(cwd, '.claude', 'skills'))
   }
 

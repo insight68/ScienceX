@@ -49,19 +49,19 @@ afterEach(() => {
 })
 
 describe('Electron app mode service', () => {
-  it('always uses ~/.claude in system mode and ignores app-adjacent legacy data at runtime', () => {
+  it('uses ~/.sciencex in system mode and keeps app-adjacent legacy data isolated', () => {
     const fakeApp = app()
     const legacyDir = path.join(path.dirname(fakeApp.getPath('exe')), 'CLAUDE_CONFIG_DIR')
     fs.mkdirSync(legacyDir, { recursive: true })
     fs.writeFileSync(path.join(legacyDir, 'settings.json'), '{"legacy":true}')
 
-    expect(systemClaudeConfigDir(fakeApp)).toBe(path.join(fakeApp.root, 'home', '.claude'))
+    expect(systemClaudeConfigDir(fakeApp)).toBe(path.join(fakeApp.root, 'home', '.sciencex'))
     expect(determineStartupPortableDir(fakeApp, {})).toBeNull()
     expect(applyStartupPortableMode(fakeApp, {})).toBeNull()
     expect(getAppMode(fakeApp, {})).toEqual({
       mode: 'default',
       portableDir: null,
-      activeConfigDir: path.join(fakeApp.root, 'home', '.claude'),
+      activeConfigDir: path.join(fakeApp.root, 'home', '.sciencex'),
       configDirSource: 'system',
     })
   })
@@ -75,7 +75,9 @@ describe('Electron app mode service', () => {
     expect(determineStartupPortableDir(fakeApp, env)).toBe(customDir)
     expect(applyStartupPortableMode(fakeApp, env)).toBe(customDir)
     expect(env).toMatchObject({
-      CLAUDE_CONFIG_DIR: customDir,
+      SCIENCEX_HOME: customDir,
+      SCIENCEX_LEGACY_CONFIG_DIR: path.join(fakeApp.root, 'home', '.claude'),
+      CLAUDE_CONFIG_DIR: path.join(customDir, 'claude'),
       SCIX_APP_PORTABLE_DIR: '1',
       WEBVIEW2_USER_DATA_FOLDER: path.join(customDir, 'EBWebView'),
     })
@@ -94,7 +96,12 @@ describe('Electron app mode service', () => {
 
     expect(determineStartupPortableDir(fakeApp, env)).toBeNull()
     expect(applyStartupPortableMode(fakeApp, env)).toBeNull()
-    expect(env).toEqual({ CLAUDE_CONFIG_DIR: externalDir })
+    expect(env).toEqual({
+      SCIENCEX_HOME: externalDir,
+      SCIENCEX_LEGACY_CONFIG_DIR: externalDir,
+      CLAUDE_CONFIG_DIR: path.join(externalDir, 'claude'),
+      SCIX_APP_EXTERNAL_DIR: '1',
+    })
     expect(getAppMode(fakeApp, env)).toEqual({
       mode: 'portable',
       portableDir: externalDir,
@@ -102,7 +109,7 @@ describe('Electron app mode service', () => {
       configDirSource: 'environment',
     })
     expect(() => setAppMode(fakeApp, { mode: 'default', portableDir: null }, env))
-      .toThrow('CLAUDE_CONFIG_DIR is controlled by the launch environment')
+      .toThrow('SCIENCEX_HOME is controlled by the launch environment')
   })
 
   it('rejects relative or install-contained external custom directories', () => {
@@ -120,7 +127,7 @@ describe('Electron app mode service', () => {
     })).toThrow('outside the application install directory')
   })
 
-  it('drops inherited app-managed env so switching back to ~/.claude survives relaunch', () => {
+  it('drops inherited app-managed env so switching back to ~/.sciencex survives relaunch', () => {
     const fakeApp = app()
     writeMode(fakeApp, { mode: 'default', portable_dir: null })
     const oldCustomDir = path.join(fakeApp.root, 'old-custom')
@@ -131,8 +138,11 @@ describe('Electron app mode service', () => {
     }
 
     expect(applyStartupPortableMode(fakeApp, env)).toBeNull()
-    expect(env.CLAUDE_CONFIG_DIR).toBeUndefined()
+    expect(env.SCIENCEX_HOME).toBe(systemClaudeConfigDir(fakeApp))
+    expect(env.SCIENCEX_LEGACY_CONFIG_DIR).toBe(path.join(fakeApp.root, 'home', '.claude'))
+    expect(env.CLAUDE_CONFIG_DIR).toBe(path.join(systemClaudeConfigDir(fakeApp), 'claude'))
     expect(env.SCIX_APP_PORTABLE_DIR).toBeUndefined()
+    expect(env.SCIX_APP_SYSTEM_DIR).toBe('1')
     expect(env.WEBVIEW2_USER_DATA_FOLDER).toBeUndefined()
     expect(getAppMode(fakeApp, env)).toMatchObject({
       mode: 'default',
@@ -151,7 +161,8 @@ describe('Electron app mode service', () => {
     }
 
     expect(applyStartupPortableMode(fakeApp, env)).toBe(newCustomDir)
-    expect(env.CLAUDE_CONFIG_DIR).toBe(newCustomDir)
+    expect(env.SCIENCEX_HOME).toBe(newCustomDir)
+    expect(env.CLAUDE_CONFIG_DIR).toBe(path.join(newCustomDir, 'claude'))
     expect(env.WEBVIEW2_USER_DATA_FOLDER).toBe(path.join(newCustomDir, 'EBWebView'))
   })
 

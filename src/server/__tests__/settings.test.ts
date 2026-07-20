@@ -536,7 +536,7 @@ describe('Settings API', () => {
     })
 
     const raw = await fs.readFile(
-      path.join(projectRoot, '.claude', 'settings.local.json'),
+      path.join(projectRoot, '.sciencex', 'settings.local.json'),
       'utf-8',
     )
     const settings = JSON.parse(raw)

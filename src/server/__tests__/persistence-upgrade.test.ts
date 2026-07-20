@@ -29,6 +29,8 @@ describe('persistent storage upgrade migrations', () => {
   afterEach(async () => {
     resetPersistentStorageMigrationsForTests()
     delete process.env.CLAUDE_CONFIG_DIR
+    delete process.env.SCIENCEX_HOME
+    delete process.env.SCIENCEX_LEGACY_CONFIG_DIR
     await fs.rm(tempDir, { recursive: true, force: true })
   })
 
@@ -282,5 +284,49 @@ describe('persistent storage upgrade migrations', () => {
 
     const backups = (await listFiles(scixDir)).filter((file) => file.startsWith('settings.json.bak-before-migration-'))
     expect(backups.length).toBe(1)
+  })
+
+  test('copies ScienceX-owned legacy files into the structured .sciencex home without deleting sources', async () => {
+    const legacyRoot = path.join(tempDir, 'legacy-claude')
+    const scienceXHome = path.join(tempDir, '.sciencex')
+    process.env.SCIENCEX_HOME = scienceXHome
+    process.env.SCIENCEX_LEGACY_CONFIG_DIR = legacyRoot
+    process.env.CLAUDE_CONFIG_DIR = path.join(scienceXHome, 'claude')
+    resetPersistentStorageMigrationsForTests()
+
+    await fs.mkdir(path.join(legacyRoot, 'sciencex', 'db'), { recursive: true })
+    await fs.writeFile(
+      path.join(legacyRoot, 'sciencex', 'providers.json'),
+      JSON.stringify({
+        schemaVersion: CURRENT_PROVIDER_INDEX_SCHEMA_VERSION,
+        activeId: null,
+        providers: [],
+        providerOrder: ['claude-official', 'openai-official', 'grok-official'],
+        futureField: { keep: true },
+      }),
+      'utf-8',
+    )
+    await fs.writeFile(path.join(legacyRoot, 'sciencex', 'oauth.json'), '{"token":"legacy"}', 'utf-8')
+    await fs.writeFile(path.join(legacyRoot, 'sciencex', 'db', 'index-v1.sqlite'), 'index-data', 'utf-8')
+    await fs.writeFile(path.join(legacyRoot, 'adapters.json'), '{"telegram":{}}', 'utf-8')
+    await fs.writeFile(path.join(legacyRoot, 'window-state.json'), '{"width":1280}', 'utf-8')
+
+    const report = await ensurePersistentStorageUpgraded()
+
+    expect(report.failures).toEqual([])
+    expect(JSON.parse(await fs.readFile(path.join(scienceXHome, 'config', 'providers.json'), 'utf-8')))
+      .toMatchObject({ futureField: { keep: true } })
+    expect(await fs.readFile(path.join(scienceXHome, 'credentials', 'oauth.json'), 'utf-8'))
+      .toBe('{"token":"legacy"}')
+    expect(await fs.readFile(path.join(scienceXHome, 'data', 'db', 'index-v1.sqlite'), 'utf-8'))
+      .toBe('index-data')
+    expect(await fs.readFile(path.join(scienceXHome, 'config', 'adapters.json'), 'utf-8'))
+      .toBe('{"telegram":{}}')
+    expect(await fs.readFile(path.join(scienceXHome, 'state', 'window-state.json'), 'utf-8'))
+      .toBe('{"width":1280}')
+    expect(await fs.readFile(path.join(legacyRoot, 'sciencex', 'oauth.json'), 'utf-8'))
+      .toBe('{"token":"legacy"}')
+    expect(JSON.parse(await fs.readFile(path.join(scienceXHome, 'state', 'migration-v1.json'), 'utf-8')))
+      .toMatchObject({ schemaVersion: 1, source: legacyRoot, failures: [] })
   })
 })

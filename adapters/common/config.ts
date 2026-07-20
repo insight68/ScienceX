@@ -7,6 +7,7 @@
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import * as path from 'node:path'
+import { adapterConfigPath, whatsappAuthDir } from './storage-paths.js'
 
 export type PairedUser = {
   userId: string | number
@@ -85,8 +86,7 @@ export type AdapterPlatformConfig =
   | WhatsAppConfig
 
 function getConfigPath(): string {
-  const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-  return path.join(configDir, 'adapters.json')
+  return adapterConfigPath()
 }
 
 function loadFile(): Record<string, any> {
@@ -205,8 +205,7 @@ function resolveExistingDirectory(value: string | undefined): string | null {
 }
 
 function defaultWhatsAppAuthDir(): string {
-  const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-  return path.join(configDir, 'whatsapp-auth', 'default')
+  return whatsappAuthDir()
 }
 
 function resolveConfiguredPath(value: string): string {

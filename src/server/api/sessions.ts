@@ -1082,12 +1082,13 @@ let recentProjectsCache: {
   timestamp: number
 } | null = null
 const RECENT_PROJECTS_CACHE_TTL = 30_000
-const DESKTOP_WORKTREE_MARKER = '/.claude/worktrees/'
+const DESKTOP_WORKTREE_MARKERS = ['/.sciencex/worktrees/', '/.claude/worktrees/'] as const
 
 function projectNameForRecentPath(realPath: string, fallback: string): string {
   const normalizedRealPath = realPath.replace(/\\/g, '/')
-  const displayRoot = normalizedRealPath.includes(DESKTOP_WORKTREE_MARKER)
-    ? normalizedRealPath.slice(0, normalizedRealPath.indexOf(DESKTOP_WORKTREE_MARKER))
+  const marker = DESKTOP_WORKTREE_MARKERS.find(candidate => normalizedRealPath.includes(candidate))
+  const displayRoot = marker
+    ? normalizedRealPath.slice(0, normalizedRealPath.indexOf(marker))
     : normalizedRealPath
   return displayRoot.split('/').filter(Boolean).pop() || fallback
 }

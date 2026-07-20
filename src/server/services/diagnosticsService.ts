@@ -7,6 +7,11 @@ import type { Dirent } from 'node:fs'
 import { localIndexCoordinator } from './localIndex/coordinator.js'
 import type { LocalIndexStatus } from './localIndex/types.js'
 import {
+  getClaudeConfigHomeDir,
+  getScienceXConfigDir,
+  getScienceXDiagnosticsDir,
+} from '../../utils/envUtils.js'
+import {
   buildDiagnosticsIssueReport,
   projectDiagnosticEventForSharing,
   type SharedDiagnosticEvent,
@@ -100,7 +105,7 @@ export class DiagnosticsService {
   private writeQueue: Promise<void> = Promise.resolve()
 
   getLogDir(): string {
-    return path.join(this.getConfigDir(), 'sciencex', 'diagnostics')
+    return getScienceXDiagnosticsDir()
   }
 
   getDiagnosticsPath(): string {
@@ -481,7 +486,7 @@ export class DiagnosticsService {
   }
 
   private getConfigDir(): string {
-    return process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
+    return getClaudeConfigHomeDir()
   }
 
   private formatConsoleArgs(args: unknown[]): string {
@@ -614,7 +619,7 @@ export class DiagnosticsService {
   }
 
   private async buildProvidersSummary(): Promise<Record<string, unknown>> {
-    const providerPath = path.join(this.getConfigDir(), 'sciencex', 'providers.json')
+    const providerPath = path.join(getScienceXConfigDir(), 'providers.json')
     try {
       const raw = await fs.readFile(providerPath, 'utf-8')
       const parsed = JSON.parse(raw) as {

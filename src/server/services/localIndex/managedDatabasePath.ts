@@ -84,8 +84,24 @@ export function prepareManagedDatabasePath(options: {
   databasePath: string
   filename: string
   scope?: string
+  managedDataDir?: string
 }): void {
   const databasePath = resolve(options.databasePath)
+  if (options.managedDataDir) {
+    const lexicalDataDir = resolve(options.managedDataDir)
+    const expectedPath = join(lexicalDataDir, 'db', options.filename)
+    if (databasePath !== expectedPath) throw new UnsafeLocalIndexPathError()
+
+    mkdirSync(lexicalDataDir, { recursive: true })
+    const trustRoot = realpathSync(lexicalDataDir)
+    const dataSnapshot = lstatSync(lexicalDataDir)
+    if (!dataSnapshot.isDirectory() && !dataSnapshot.isSymbolicLink()) {
+      throw new UnsafeLocalIndexPathError()
+    }
+    ensureRealManagedDirectory(join(lexicalDataDir, 'db'), trustRoot)
+    assertDatabaseFamilySafe(databasePath)
+    return
+  }
   if (!options.scope) {
     mkdirSync(dirname(databasePath), { recursive: true })
     assertDatabaseFamilySafe(databasePath)

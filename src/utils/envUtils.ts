@@ -2,19 +2,105 @@ import memoize from 'lodash-es/memoize.js'
 import { homedir } from 'os'
 import { join } from 'path'
 
+export const SCIENCEX_HOME_ENV = 'SCIENCEX_HOME'
+export const SCIENCEX_LEGACY_CONFIG_DIR_ENV = 'SCIENCEX_LEGACY_CONFIG_DIR'
+
 // Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
 // tests that change the env var get a fresh value without explicit cache.clear.
 export const getClaudeConfigHomeDir = memoize(
   (): string => {
     return (
-      process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')
+      process.env.CLAUDE_CONFIG_DIR ?? join(
+        process.env[SCIENCEX_HOME_ENV] ?? join(homedir(), '.sciencex'),
+        'claude',
+      )
     ).normalize('NFC')
   },
   () => process.env.CLAUDE_CONFIG_DIR,
 )
 
+/**
+ * Root for ScienceX-owned configuration and state.
+ *
+ * CLAUDE_CONFIG_DIR deliberately does not change this root. It belongs to the
+ * embedded Claude-compatible runtime. Callers that still set only
+ * CLAUDE_CONFIG_DIR use the legacy layout helpers below until they migrate to
+ * SCIENCEX_HOME.
+ */
+export const getScienceXHomeDir = memoize(
+  (): string => {
+    return (
+      process.env[SCIENCEX_HOME_ENV] ?? join(homedir(), '.sciencex')
+    ).normalize('NFC')
+  },
+  () => process.env[SCIENCEX_HOME_ENV],
+)
+
+export function usesLegacyScienceXLayout(): boolean {
+  return !process.env[SCIENCEX_HOME_ENV] && Boolean(process.env.CLAUDE_CONFIG_DIR)
+}
+
+export function getLegacyScienceXConfigRoot(): string {
+  const explicitLegacyRoot = process.env[SCIENCEX_LEGACY_CONFIG_DIR_ENV]
+  if (explicitLegacyRoot) return explicitLegacyRoot.normalize('NFC')
+  if (!process.env[SCIENCEX_HOME_ENV]) {
+    return (
+      process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')
+    ).normalize('NFC')
+  }
+  return join(homedir(), '.claude').normalize('NFC')
+}
+
+export function getScienceXConfigDir(): string {
+  return usesLegacyScienceXLayout()
+    ? join(getClaudeConfigHomeDir(), 'sciencex')
+    : join(getScienceXHomeDir(), 'config')
+}
+
+export function getScienceXCredentialsDir(): string {
+  return usesLegacyScienceXLayout()
+    ? join(getClaudeConfigHomeDir(), 'sciencex')
+    : join(getScienceXHomeDir(), 'credentials')
+}
+
+export function getScienceXDataDir(): string {
+  return usesLegacyScienceXLayout()
+    ? join(getClaudeConfigHomeDir(), 'sciencex')
+    : join(getScienceXHomeDir(), 'data')
+}
+
+export function getScienceXStateDir(): string {
+  return usesLegacyScienceXLayout()
+    ? getClaudeConfigHomeDir()
+    : join(getScienceXHomeDir(), 'state')
+}
+
+export function getScienceXRuntimeDir(): string {
+  return usesLegacyScienceXLayout()
+    ? join(getClaudeConfigHomeDir(), '.runtime')
+    : join(getScienceXHomeDir(), 'runtime')
+}
+
+export function getScienceXComputerUseRuntimeDir(): string {
+  return usesLegacyScienceXLayout()
+    ? getScienceXRuntimeDir()
+    : join(getScienceXRuntimeDir(), 'computer-use')
+}
+
+export function getScienceXDiagnosticsDir(): string {
+  return usesLegacyScienceXLayout()
+    ? join(getClaudeConfigHomeDir(), 'sciencex', 'diagnostics')
+    : join(getScienceXHomeDir(), 'diagnostics')
+}
+
+export function getScienceXProjectRegistryDir(): string {
+  return usesLegacyScienceXLayout()
+    ? join(getClaudeConfigHomeDir(), 'science')
+    : join(getScienceXDataDir(), 'science')
+}
+
 export function getCcscixDir(): string {
-  return join(getClaudeConfigHomeDir(), 'sciencex')
+  return getScienceXDataDir()
 }
 
 export function getTeamsDir(): string {

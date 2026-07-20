@@ -102,7 +102,7 @@ export function Market() {
           confirmUninstall
             ? t('market.uninstall.confirmMessage', {
                 name: confirmUninstall.name,
-                path: `~/.claude/skills/${confirmUninstall.slug}/`,
+                path: `~/.sciencex/claude/skills/${confirmUninstall.slug}/`,
               })
             : ''
         }

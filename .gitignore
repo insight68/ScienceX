@@ -38,6 +38,11 @@ coverage/
 /.tg-attachments/
 /.omx/
 /.claude/
+/.sciencex/worktrees/
+/.sciencex/settings.local.json
+/.sciencex/scheduled_tasks.json
+/.sciencex/*.sqlite-shm
+/.sciencex/*.sqlite-wal
 /.codex-logs/
 /.superpowers/
 /openspec/

@@ -1,11 +1,23 @@
 import * as fs from 'fs/promises'
-import * as os from 'os'
+import { constants as fsConstants } from 'node:fs'
 import * as path from 'path'
 import { randomBytes } from 'node:crypto'
 import { normalizeLegacyDeepSeekManagedEnv } from '../../utils/providerManagedEnvCompat.js'
 import { isOpenAIOfficialProviderId } from './openaiOfficialProvider.js'
 import { isGrokOfficialProviderId } from './grokOfficialProvider.js'
 import { BUILT_IN_PROVIDER_IDS } from '../types/provider.js'
+import {
+  getLegacyScienceXConfigRoot,
+  getScienceXConfigDir,
+  getScienceXComputerUseRuntimeDir,
+  getScienceXCredentialsDir,
+  getScienceXDataDir,
+  getScienceXDiagnosticsDir,
+  getScienceXHomeDir,
+  getScienceXProjectRegistryDir,
+  getScienceXStateDir,
+  usesLegacyScienceXLayout,
+} from '../../utils/envUtils.js'
 
 export const CURRENT_PROVIDER_INDEX_SCHEMA_VERSION = 2
 
@@ -30,11 +42,7 @@ type LegacyRootProvider = {
 }
 
 let migrationPromise: Promise<MigrationReport> | null = null
-let migrationConfigDir: string | null = null
-
-function getConfigDir(): string {
-  return process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-}
+let migrationStorageKey: string | null = null
 
 function isRecord(value: unknown): value is JsonObject {
   return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -144,6 +152,90 @@ async function writeJsonFile(filePath: string, value: unknown): Promise<void> {
   } catch (error) {
     await fs.unlink(tmpPath).catch(() => {})
     throw error
+  }
+}
+
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath)
+    return true
+  } catch (error) {
+    if (errnoCode(error) === 'ENOENT') return false
+    throw error
+  }
+}
+
+async function copyEntryIfTargetMissing(
+  sourcePath: string,
+  targetPath: string,
+  entryName: string,
+  report: MigrationReport,
+): Promise<void> {
+  if (path.resolve(sourcePath) === path.resolve(targetPath)) return
+  try {
+    if (!await pathExists(sourcePath) || await pathExists(targetPath)) return
+    await fs.mkdir(path.dirname(targetPath), { recursive: true })
+    const temporaryPath = `${targetPath}.tmp.${process.pid}.${Date.now()}-${randomBytes(3).toString('hex')}`
+    try {
+      const source = await fs.lstat(sourcePath)
+      if (source.isSymbolicLink()) {
+        throw new Error('refusing to migrate symbolic link')
+      }
+      if (source.isDirectory()) {
+        await fs.cp(sourcePath, temporaryPath, {
+          recursive: true,
+          errorOnExist: true,
+          force: false,
+          preserveTimestamps: true,
+        })
+      } else if (source.isFile()) {
+        await fs.copyFile(sourcePath, temporaryPath, fsConstants.COPYFILE_EXCL)
+        await fs.chmod(temporaryPath, source.mode & 0o777)
+      } else {
+        throw new Error('unsupported filesystem entry')
+      }
+      await fs.rename(temporaryPath, targetPath)
+      report.migratedEntries.push(entryName)
+    } catch (error) {
+      await fs.rm(temporaryPath, { recursive: true, force: true }).catch(() => {})
+      throw error
+    }
+  } catch (error) {
+    report.failures.push(`${entryName}: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+async function migrateScienceXOwnedStorage(
+  legacyRoot: string,
+  report: MigrationReport,
+): Promise<void> {
+  if (usesLegacyScienceXLayout()) return
+
+  const legacyScienceXDir = path.join(legacyRoot, 'sciencex')
+  const mappings: Array<[string, string, string]> = [
+    [path.join(legacyScienceXDir, 'providers.json'), path.join(getScienceXConfigDir(), 'providers.json'), 'legacy sciencex/providers.json'],
+    [path.join(legacyScienceXDir, 'settings.json'), path.join(getScienceXConfigDir(), 'settings.json'), 'legacy sciencex/settings.json'],
+    [path.join(legacyScienceXDir, 'desktop-ui.json'), path.join(getScienceXConfigDir(), 'desktop-ui.json'), 'legacy sciencex/desktop-ui.json'],
+    [path.join(legacyScienceXDir, 'profile'), path.join(getScienceXConfigDir(), 'profile'), 'legacy sciencex/profile'],
+    [path.join(legacyScienceXDir, 'oauth.json'), path.join(getScienceXCredentialsDir(), 'oauth.json'), 'legacy sciencex/oauth.json'],
+    [path.join(legacyScienceXDir, 'openai-oauth.json'), path.join(getScienceXCredentialsDir(), 'openai-oauth.json'), 'legacy sciencex/openai-oauth.json'],
+    [path.join(legacyScienceXDir, 'grok-oauth.json'), path.join(getScienceXCredentialsDir(), 'grok-oauth.json'), 'legacy sciencex/grok-oauth.json'],
+    [path.join(legacyScienceXDir, 'openai-oauth-file-backed'), path.join(getScienceXCredentialsDir(), 'openai-oauth-file-backed'), 'legacy sciencex/openai-oauth-file-backed'],
+    [path.join(legacyScienceXDir, 'db'), path.join(getScienceXDataDir(), 'db'), 'legacy sciencex/db'],
+    [path.join(legacyScienceXDir, 'traces'), path.join(getScienceXDataDir(), 'traces'), 'legacy sciencex/traces'],
+    [path.join(legacyScienceXDir, 'diagnostics'), getScienceXDiagnosticsDir(), 'legacy sciencex/diagnostics'],
+    [path.join(legacyRoot, 'science'), getScienceXProjectRegistryDir(), 'legacy science registry'],
+    [path.join(legacyRoot, 'adapters.json'), path.join(getScienceXConfigDir(), 'adapters.json'), 'legacy adapters.json'],
+    [path.join(legacyRoot, 'adapter-sessions.json'), path.join(getScienceXStateDir(), 'adapter-sessions.json'), 'legacy adapter-sessions.json'],
+    [path.join(legacyRoot, 'window-state.json'), path.join(getScienceXStateDir(), 'window-state.json'), 'legacy window-state.json'],
+    [path.join(legacyRoot, 'terminal-config.json'), path.join(getScienceXStateDir(), 'terminal-config.json'), 'legacy terminal-config.json'],
+    [path.join(legacyRoot, 'scheduled_tasks.json'), path.join(getScienceXStateDir(), 'scheduled_tasks.json'), 'legacy scheduled_tasks.json'],
+    [path.join(legacyRoot, 'im-downloads'), path.join(getScienceXDataDir(), 'im-downloads'), 'legacy im-downloads'],
+    [path.join(legacyRoot, '.runtime'), getScienceXComputerUseRuntimeDir(), 'legacy computer-use runtime'],
+  ]
+
+  for (const [sourcePath, targetPath, entryName] of mappings) {
+    await copyEntryIfTargetMissing(sourcePath, targetPath, entryName, report)
   }
 }
 
@@ -370,38 +462,55 @@ async function migrateLegacyRootProviders(
   }
 }
 
-async function runPersistentStorageMigrations(configDir: string): Promise<MigrationReport> {
+async function runPersistentStorageMigrations(
+  legacyRoot: string,
+  configDir: string,
+): Promise<MigrationReport> {
   const report: MigrationReport = { migratedEntries: [], failures: [] }
-  const scixDir = path.join(configDir, 'sciencex')
+  await migrateScienceXOwnedStorage(legacyRoot, report)
 
-  await migrateLegacyRootProviders(configDir, scixDir, report)
+  await migrateLegacyRootProviders(legacyRoot, configDir, report)
 
   await migrateJsonEntry(
-    path.join(scixDir, 'providers.json'),
+    path.join(configDir, 'providers.json'),
     'sciencex/providers.json',
     report,
     migrateProvidersIndex,
   )
   await migrateJsonEntry(
-    path.join(scixDir, 'settings.json'),
+    path.join(configDir, 'settings.json'),
     'sciencex/settings.json',
     report,
     migrateManagedSettings,
   )
 
+  if (!usesLegacyScienceXLayout()) {
+    await writeJsonFile(path.join(getScienceXStateDir(), 'migration-v1.json'), {
+      schemaVersion: 1,
+      source: legacyRoot,
+      completedAt: new Date().toISOString(),
+      migratedEntries: report.migratedEntries,
+      failures: report.failures,
+    }).catch((error) => {
+      report.failures.push(`migration-v1.json: ${error instanceof Error ? error.message : String(error)}`)
+    })
+  }
+
   return report
 }
 
 export function ensurePersistentStorageUpgraded(): Promise<MigrationReport> {
-  const configDir = getConfigDir()
-  if (!migrationPromise || migrationConfigDir !== configDir) {
-    migrationConfigDir = configDir
-    migrationPromise = runPersistentStorageMigrations(configDir)
+  const legacyRoot = getLegacyScienceXConfigRoot()
+  const configDir = getScienceXConfigDir()
+  const storageKey = `${getScienceXHomeDir()}\0${legacyRoot}\0${configDir}`
+  if (!migrationPromise || migrationStorageKey !== storageKey) {
+    migrationStorageKey = storageKey
+    migrationPromise = runPersistentStorageMigrations(legacyRoot, configDir)
   }
   return migrationPromise
 }
 
 export function resetPersistentStorageMigrationsForTests(): void {
   migrationPromise = null
-  migrationConfigDir = null
+  migrationStorageKey = null
 }

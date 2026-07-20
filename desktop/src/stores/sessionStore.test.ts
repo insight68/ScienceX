@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { branchMock, createMock, deleteMock, batchDeleteMock, listMock, invalidateRecentProjectsCacheMock } = vi.hoisted(() => ({
+const { branchMock, createMock, deleteMock, batchDeleteMock, listMock, renameMock, invalidateRecentProjectsCacheMock } = vi.hoisted(() => ({
   branchMock: vi.fn(),
   createMock: vi.fn(),
   deleteMock: vi.fn(),
   batchDeleteMock: vi.fn(),
   listMock: vi.fn(),
+  renameMock: vi.fn(),
   invalidateRecentProjectsCacheMock: vi.fn(),
 }))
 
@@ -16,7 +17,7 @@ vi.mock('../api/sessions', () => ({
     list: listMock,
     delete: deleteMock,
     batchDelete: batchDeleteMock,
-    rename: vi.fn(),
+    rename: renameMock,
   },
 }))
 
@@ -82,6 +83,7 @@ describe('sessionStore', () => {
     deleteMock.mockReset()
     batchDeleteMock.mockReset()
     listMock.mockReset()
+    renameMock.mockReset()
     invalidateRecentProjectsCacheMock.mockReset()
     useSessionStore.setState({
       ...initialState,
@@ -228,6 +230,24 @@ describe('sessionStore', () => {
       modelId: 'anthropic/claude-opus-4.7',
       effortLevel: 'max',
     })
+  })
+
+  it('syncs a successfully renamed session title into its open tab', async () => {
+    renameMock.mockResolvedValue({ ok: true })
+    useSessionStore.setState({
+      sessions: [makeSession('session-rename-1', '2026-05-07T00:00:00.000Z', 'Original title')],
+    })
+    useTabStore.getState().openTab('session-rename-1', 'Original title')
+    useTabStore.getState().openTab('other-session', 'Unchanged tab')
+
+    await useSessionStore.getState().renameSession('session-rename-1', 'Renamed title')
+
+    expect(renameMock).toHaveBeenCalledWith('session-rename-1', 'Renamed title')
+    expect(useSessionStore.getState().sessions[0]?.title).toBe('Renamed title')
+    expect(useTabStore.getState().tabs).toEqual([
+      expect.objectContaining({ sessionId: 'session-rename-1', title: 'Renamed title' }),
+      expect.objectContaining({ sessionId: 'other-session', title: 'Unchanged tab' }),
+    ])
   })
 
   it('updates a session message count without changing other metadata', () => {

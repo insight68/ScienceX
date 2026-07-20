@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs'
 import { Database } from 'bun:sqlite'
-import { getClaudeConfigHomeDir } from '../../../utils/envUtils.js'
+import { getCcscixDir } from '../../../utils/envUtils.js'
 import { getLocalIndexDatabasePath } from './config.js'
 import {
   LOCAL_INDEX_BUSY_TIMEOUT_MS,
@@ -114,7 +114,8 @@ export function openLocalIndexDatabase(options?: {
   prepareManagedDatabasePath({
     databasePath,
     filename: 'index-v1.sqlite',
-    scope: options?.scope ?? (options?.path ? undefined : getClaudeConfigHomeDir()),
+    scope: options?.scope,
+    managedDataDir: options?.scope || options?.path ? undefined : getCcscixDir(),
   })
   const database = new Database(databasePath)
 

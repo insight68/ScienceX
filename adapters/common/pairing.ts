@@ -7,10 +7,10 @@
  */
 
 import * as fs from 'node:fs'
-import * as os from 'node:os'
 import * as path from 'node:path'
 import * as crypto from 'node:crypto'
 import type { PairedUser, PairingState } from './config.js'
+import { adapterConfigPath } from './storage-paths.js'
 
 const SAFE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // 排除 0/O/1/I/L
 export type ImPlatform = 'telegram' | 'feishu' | 'wechat' | 'dingtalk' | 'whatsapp'
@@ -44,8 +44,7 @@ const CODE_LENGTH = 6
 const CODE_TTL_MS = 60 * 60 * 1000 // 60 minutes
 
 function getConfigPath(): string {
-  const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-  return path.join(configDir, 'adapters.json')
+  return adapterConfigPath()
 }
 
 function readConfigFile(): Record<string, any> {

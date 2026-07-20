@@ -12,7 +12,7 @@ describe('updateCronTask integration', () => {
 
   beforeEach(async () => {
     // Create temp project structure
-    await mkdir(join(tmpDir, '.claude'), { recursive: true })
+    await mkdir(join(tmpDir, '.sciencex'), { recursive: true })
   })
 
   afterEach(async () => {
@@ -23,14 +23,14 @@ describe('updateCronTask integration', () => {
     // Import and verify the file relative path
     const { getCronFilePath } = await import('../cronTasks.js')
     const filePath = getCronFilePath(tmpDir)
-    expect(filePath).toContain('.claude')
+    expect(filePath).toContain('.sciencex')
     expect(filePath).toContain('scheduled_tasks.json')
   })
 
   test('getCronFilePath returns correct path', async () => {
     const { getCronFilePath } = await import('../cronTasks.js')
     const filePath = getCronFilePath(tmpDir)
-    expect(filePath).toBe(join(tmpDir, '.claude', 'scheduled_tasks.json'))
+    expect(filePath).toBe(join(tmpDir, '.sciencex', 'scheduled_tasks.json'))
   })
 
   test('getCronFilePath uses project root when no dir provided', async () => {
@@ -96,7 +96,7 @@ describe('readCronTasks backward compatibility', () => {
     await mkdir(join(tmpDir, '.claude'), { recursive: true })
 
     // Write malformed JSON
-    const filePath = join(tmpDir, '.claude', 'scheduled_tasks.json')
+    const filePath = join(tmpDir, '.sciencex', 'scheduled_tasks.json')
     await writeFile(filePath, 'not valid json{{{')
 
     const tasks = await readCronTasks(tmpDir)
@@ -111,7 +111,7 @@ describe('readCronTasks backward compatibility', () => {
     await mkdir(join(tmpDir, '.claude'), { recursive: true })
 
     // Write task with invalid cron
-    const filePath = join(tmpDir, '.claude', 'scheduled_tasks.json')
+    const filePath = join(tmpDir, '.sciencex', 'scheduled_tasks.json')
     await writeFile(
       filePath,
       JSON.stringify({
@@ -190,7 +190,7 @@ describe('writeCronTasks strips runtime fields', () => {
     await writeCronTasks([taskWithRuntimeFields as any], tmpDir)
 
     // Read back and verify runtime fields are stripped
-    const filePath = join(tmpDir, '.claude', 'scheduled_tasks.json')
+    const filePath = join(tmpDir, '.sciencex', 'scheduled_tasks.json')
     const { readFileSync } = await import('fs')
     const raw = readFileSync(filePath, 'utf-8')
     const parsed = JSON.parse(raw)

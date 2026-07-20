@@ -229,6 +229,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         session.id === id ? { ...session, title } : session,
       ),
     }))
+    useTabStore.getState().updateTabTitle(id, title)
   },
 
   updateSessionTitle: (id, title) => {

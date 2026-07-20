@@ -6,7 +6,6 @@
  *   POST /api/computer-use/setup   — 创建 venv 并安装依赖
  */
 
-import { homedir } from 'os'
 import { join } from 'path'
 import { access, readFile, mkdir, writeFile, rm } from 'fs/promises'
 import { createHash } from 'crypto'
@@ -22,6 +21,7 @@ import {
   normalizePythonPath,
   saveStoredComputerUseConfig,
 } from '../../utils/computerUse/preauthorizedConfig.js'
+import { getScienceXComputerUseRuntimeDir } from '../../utils/envUtils.js'
 // Embed helper scripts at compile time so they're available in bundled mode
 // @ts-ignore — Bun text import
 import MAC_HELPER_CONTENT from '../../../runtime/mac_helper.py' with { type: 'text' }
@@ -35,8 +35,7 @@ import REQUIREMENTS_WIN32 from '../../../runtime/requirements-win.txt' with { ty
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(__dirname, '../../..')
 const devRuntimeRoot = join(projectRoot, 'runtime')
-const claudeHome = process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude')
-const runtimeStateRoot = join(claudeHome, '.runtime')
+const runtimeStateRoot = getScienceXComputerUseRuntimeDir()
 const venvRoot = join(runtimeStateRoot, 'venv')
 const installStampPath = join(runtimeStateRoot, 'requirements.sha256')
 // 记录上次创建 venv 时所用的 config.pythonPath 原值。读取该文件来判断当前

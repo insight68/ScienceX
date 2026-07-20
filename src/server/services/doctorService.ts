@@ -3,6 +3,10 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 import type { Dirent } from 'node:fs'
 import { getClaudeConfigHomeDir } from '../../utils/envUtils.js'
+import {
+  getScienceXConfigDir,
+  getScienceXCredentialsDir,
+} from '../../utils/envUtils.js'
 import { ProvidersIndexSchema } from '../types/provider.js'
 import { diagnosticsService } from './diagnosticsService.js'
 
@@ -86,12 +90,20 @@ type DoctorTarget = {
 
 export class DoctorService {
   private readonly configDir: string
+  private readonly scienceXConfigDir: string
+  private readonly scienceXCredentialsDir: string
   private readonly homeDir: string
   private readonly projectRoot?: string
   private readonly usesConfigDirOverride: boolean
 
   constructor(options: DoctorServiceOptions = {}) {
     this.configDir = options.configDir || getClaudeConfigHomeDir()
+    this.scienceXConfigDir = options.configDir
+      ? path.join(options.configDir, 'sciencex')
+      : getScienceXConfigDir()
+    this.scienceXCredentialsDir = options.configDir
+      ? path.join(options.configDir, 'sciencex')
+      : getScienceXCredentialsDir()
     this.homeDir = options.homeDir || inferHomeDir(this.configDir)
     this.projectRoot = options.projectRoot
     this.usesConfigDirOverride = Boolean(options.configDir || process.env.CLAUDE_CONFIG_DIR)
@@ -169,13 +181,13 @@ export class DoctorService {
         'sciencex-providers',
         'Managed providers',
         'user',
-        path.join(this.configDir, 'sciencex', 'providers.json'),
+        path.join(this.scienceXConfigDir, 'providers.json'),
       ),
       this.jsonTarget(
         'sciencex-settings',
         'Managed provider settings',
         'user',
-        path.join(this.configDir, 'sciencex', 'settings.json'),
+        path.join(this.scienceXConfigDir, 'settings.json'),
       ),
       this.jsonTarget('adapters', 'Adapters config', 'user', path.join(this.configDir, 'adapters.json')),
       this.jsonTarget(
@@ -194,18 +206,18 @@ export class DoctorService {
         path.join(this.configDir, 'cowork_plugins'),
       ),
       this.jsonTarget('user-mcp', 'User MCP config', 'user', this.getUserMcpConfigPath()),
-      this.jsonTarget('oauth', 'OAuth tokens', 'user', path.join(this.configDir, 'sciencex', 'oauth.json')),
+      this.jsonTarget('oauth', 'OAuth tokens', 'user', path.join(this.scienceXCredentialsDir, 'oauth.json')),
       this.jsonTarget(
         'openai-oauth',
         'OpenAI OAuth tokens',
         'user',
-        path.join(this.configDir, 'sciencex', 'openai-oauth.json'),
+        path.join(this.scienceXCredentialsDir, 'openai-oauth.json'),
       ),
       this.jsonTarget(
         'grok-oauth',
         'Grok OAuth tokens',
         'user',
-        path.join(this.configDir, 'sciencex', 'grok-oauth.json'),
+        path.join(this.scienceXCredentialsDir, 'grok-oauth.json'),
       ),
     ]
 
@@ -215,13 +227,13 @@ export class DoctorService {
           'project-settings',
           'Project settings',
           'project',
-          path.join(this.projectRoot, '.claude', 'settings.json'),
+          path.join(this.projectRoot, '.sciencex', 'settings.json'),
         ),
         this.directoryTarget(
           'project-skills',
           'Project skills',
           'project',
-          path.join(this.projectRoot, '.claude', 'skills'),
+          path.join(this.projectRoot, '.sciencex', 'skills'),
         ),
         this.jsonTarget(
           'project-mcp',

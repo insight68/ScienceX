@@ -76,6 +76,7 @@ export const DANGEROUS_DIRECTORIES = [
   '.vscode',
   '.idea',
   '.claude',
+  '.sciencex',
 ] as const
 
 /**
@@ -105,6 +106,10 @@ export function getClaudeSkillScope(
   const absolutePathLower = normalizeCaseForComparison(absolutePath)
 
   const bases = [
+    {
+      dir: expandPath(join(getOriginalCwd(), '.sciencex', 'skills')),
+      prefix: '/.sciencex/skills/',
+    },
     {
       dir: expandPath(join(getOriginalCwd(), '.claude', 'skills')),
       prefix: '/.claude/skills/',
@@ -208,6 +213,8 @@ export function isClaudeSettingsPath(filePath: string): boolean {
 
   // Use platform separator so endsWith checks work on both Unix (/) and Windows (\)
   if (
+    normalizedPath.endsWith(`${sep}.sciencex${sep}settings.json`) ||
+    normalizedPath.endsWith(`${sep}.sciencex${sep}settings.local.json`) ||
     normalizedPath.endsWith(`${sep}.claude${sep}settings.json`) ||
     normalizedPath.endsWith(`${sep}.claude${sep}settings.local.json`)
   ) {
@@ -233,8 +240,14 @@ function isClaudeConfigFilePath(filePath: string): boolean {
   const commandsDir = join(getOriginalCwd(), '.claude', 'commands')
   const agentsDir = join(getOriginalCwd(), '.claude', 'agents')
   const skillsDir = join(getOriginalCwd(), '.claude', 'skills')
+  const scienceXCommandsDir = join(getOriginalCwd(), '.sciencex', 'commands')
+  const scienceXAgentsDir = join(getOriginalCwd(), '.sciencex', 'agents')
+  const scienceXSkillsDir = join(getOriginalCwd(), '.sciencex', 'skills')
 
   return (
+    pathInWorkingPath(filePath, scienceXCommandsDir) ||
+    pathInWorkingPath(filePath, scienceXAgentsDir) ||
+    pathInWorkingPath(filePath, scienceXSkillsDir) ||
     pathInWorkingPath(filePath, commandsDir) ||
     pathInWorkingPath(filePath, agentsDir) ||
     pathInWorkingPath(filePath, skillsDir)
@@ -464,17 +477,16 @@ function isDangerousFilePathToAutoEdit(
         continue
       }
 
-      // Special case: .claude/worktrees/ is a structural path (where Claude stores
-      // git worktrees), not a user-created dangerous directory. Skip the .claude
-      // segment when it's followed by 'worktrees'. Any nested .claude directories
+      // Special case: managed worktrees are structural paths, not user-created
+      // dangerous directories. Any nested protected directories
       // within the worktree (not followed by 'worktrees') are still blocked.
-      if (dir === '.claude') {
+      if (dir === '.claude' || dir === '.sciencex') {
         const nextSegment = pathSegments[i + 1]
         if (
           nextSegment &&
           normalizeCaseForComparison(nextSegment) === 'worktrees'
         ) {
-          break // Skip this .claude, continue checking other segments
+          break // Skip this structural directory, continue checking other segments
         }
       }
 

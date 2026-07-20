@@ -300,10 +300,18 @@ export function getRelativeSettingsFilePathForSource(
 ): string {
   switch (source) {
     case 'projectSettings':
-      return join('.claude', 'settings.json')
+      return join('.sciencex', 'settings.json')
     case 'localSettings':
-      return join('.claude', 'settings.local.json')
+      return join('.sciencex', 'settings.local.json')
   }
+}
+
+function getLegacyRelativeSettingsFilePathForSource(
+  source: 'projectSettings' | 'localSettings',
+): string {
+  return source === 'projectSettings'
+    ? join('.claude', 'settings.json')
+    : join('.claude', 'settings.local.json')
 }
 
 export function getSettingsForSource(
@@ -348,6 +356,21 @@ function getSettingsForSourceUncached(
   const { settings: fileSettings } = settingsFilePath
     ? parseSettingsFile(settingsFilePath)
     : { settings: null }
+
+  if (source === 'projectSettings' || source === 'localSettings') {
+    const legacyPath = join(
+      getSettingsRootPathForSource(source),
+      getLegacyRelativeSettingsFilePathForSource(source),
+    )
+    const { settings: legacySettings } = parseSettingsFile(legacyPath)
+    if (legacySettings || fileSettings) {
+      return mergeWith(
+        legacySettings || {},
+        fileSettings || {},
+        settingsMergeCustomizer,
+      ) as SettingsJson
+    }
+  }
 
   // For flagSettings, merge in any inline settings set via the SDK
   if (source === 'flagSettings') {

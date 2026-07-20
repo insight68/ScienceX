@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import * as os from 'node:os'
+import { adapterSessionPath } from './storage-paths.js'
 
 export type SessionEntry = {
   sessionId: string
@@ -11,8 +11,7 @@ export type SessionEntry = {
 type StoreData = Record<string, SessionEntry>
 
 function getDefaultPath(): string {
-  const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
-  return path.join(configDir, 'adapter-sessions.json')
+  return adapterSessionPath()
 }
 
 export class SessionStore {

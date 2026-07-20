@@ -1413,9 +1413,11 @@ export class SessionService {
     if (gitRoot) return gitRoot
 
     if (workDir) {
-      const marker = `${path.sep}.claude${path.sep}worktrees${path.sep}`
-      const markerIndex = canonicalCandidate.indexOf(marker)
-      if (markerIndex > 0) return canonicalCandidate.slice(0, markerIndex)
+      for (const directory of ['.sciencex', '.claude']) {
+        const marker = `${path.sep}${directory}${path.sep}worktrees${path.sep}`
+        const markerIndex = canonicalCandidate.indexOf(marker)
+        if (markerIndex > 0) return canonicalCandidate.slice(0, markerIndex)
+      }
     }
 
     return canonicalCandidate
@@ -4142,13 +4144,15 @@ export class SessionService {
     }
 
     const normalizedWorkDir = this.normalizeWorkspacePath(workDir)
-    const marker = '/.claude/worktrees/'
-    const markerIndex = normalizedWorkDir.indexOf(marker)
-    if (markerIndex <= 0) return false
-    return this.sameWorkspacePath(
-      normalizedWorkDir.slice(0, markerIndex),
-      projectRoot,
-    )
+    for (const marker of ['/.sciencex/worktrees/', '/.claude/worktrees/']) {
+      const markerIndex = normalizedWorkDir.indexOf(marker)
+      if (markerIndex <= 0) continue
+      return this.sameWorkspacePath(
+        normalizedWorkDir.slice(0, markerIndex),
+        projectRoot,
+      )
+    }
+    return false
   }
 
   private sameWorkspacePath(

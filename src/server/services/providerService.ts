@@ -8,8 +8,8 @@
 
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import * as os from 'os'
 import { ApiError } from '../middleware/errorHandler.js'
+import { getScienceXConfigDir } from '../../utils/envUtils.js'
 import { readRecoverableJsonFile } from './recoverableJsonFile.js'
 import { ManagedSettingsService } from './managedSettingsService.js'
 import { anthropicToOpenaiChat } from '../proxy/transform/anthropicToOpenaiChat.js'
@@ -141,11 +141,11 @@ export class ProviderService {
     return ProviderService.serverPort
   }
   private getConfigDir(): string {
-    return process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
+    return getScienceXConfigDir()
   }
 
   private getCcscixDir(): string {
-    return path.join(this.getConfigDir(), 'sciencex')
+    return this.getConfigDir()
   }
 
   private getIndexPath(): string {

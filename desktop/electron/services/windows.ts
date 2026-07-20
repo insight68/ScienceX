@@ -28,7 +28,9 @@ export type WindowChromeOptions = Pick<
 >
 
 export function windowStatePath(app: App, env: NodeJS.ProcessEnv = process.env): string {
-  return path.join(env.CLAUDE_CONFIG_DIR || path.join(app.getPath('home'), '.claude'), WINDOW_STATE_FILE)
+  return env.SCIENCEX_HOME
+    ? path.join(env.SCIENCEX_HOME, 'state', WINDOW_STATE_FILE)
+    : path.join(env.CLAUDE_CONFIG_DIR || path.join(app.getPath('home'), '.claude'), WINDOW_STATE_FILE)
 }
 
 export function isPersistableWindowState(state: StoredWindowState): boolean {
@@ -94,9 +96,13 @@ export function readWindowState(
   platform = process.platform,
 ): StoredWindowState | null {
   let statePath = windowStatePath(app, env)
-  if (!existsSync(statePath) && !env.CLAUDE_CONFIG_DIR) {
-    const legacyStatePath = path.join(app.getPath('userData'), WINDOW_STATE_FILE)
-    if (existsSync(legacyStatePath)) statePath = legacyStatePath
+  if (!existsSync(statePath)) {
+    const legacyCandidates = [
+      path.join(app.getPath('home'), '.claude', WINDOW_STATE_FILE),
+      path.join(app.getPath('userData'), WINDOW_STATE_FILE),
+    ]
+    const legacyStatePath = legacyCandidates.find(candidate => existsSync(candidate))
+    if (legacyStatePath) statePath = legacyStatePath
   }
   if (!existsSync(statePath)) return null
 

@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileNoThrow } from '../execFileNoThrow.js'
 import { logForDebugging } from '../debug.js'
-import { getClaudeConfigHomeDir } from '../envUtils.js'
+import { getScienceXComputerUseRuntimeDir } from '../envUtils.js'
 import { buildPipInstallAttempts } from './pipInstall.js'
 import { loadStoredComputerUseConfig } from './preauthorizedConfig.js'
 
@@ -14,7 +14,7 @@ const projectRoot = path.resolve(__dirname, '../../..')
 // All runtime state lives in ~/.claude/.runtime — writable in both dev and
 // bundled (Tauri app) modes. The setup API (or ensureRuntimeFiles below)
 // populates requirements.txt and mac_helper.py here.
-const runtimeStateRoot = path.join(getClaudeConfigHomeDir(), '.runtime')
+const runtimeStateRoot = getScienceXComputerUseRuntimeDir()
 const venvRoot = path.join(runtimeStateRoot, 'venv')
 const installStampPath = path.join(runtimeStateRoot, 'requirements.sha256')
 

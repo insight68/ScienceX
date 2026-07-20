@@ -5,7 +5,7 @@ import * as path from 'node:path'
 import { Database } from 'bun:sqlite'
 import { dsvFormat } from 'd3-dsv'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
-import { getClaudeConfigHomeDir } from '../../utils/envUtils.js'
+import { getScienceXProjectRegistryDir } from '../../utils/envUtils.js'
 import { ApiError } from '../middleware/errorHandler.js'
 
 const SCIENCE_PROJECT_SCHEMA_VERSION = 2
@@ -283,7 +283,7 @@ function migrateProjectDatabase(database: Database): void {
 }
 
 function registryDatabasePath(): string {
-  return path.join(getClaudeConfigHomeDir(), 'science', REGISTRY_DATABASE_NAME)
+  return path.join(getScienceXProjectRegistryDir(), REGISTRY_DATABASE_NAME)
 }
 
 function projectScienceDirectory(rootDir: string): string {

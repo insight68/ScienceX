@@ -21,7 +21,7 @@ type Props = {
 
 type DirEntry = { name: string; path: string; isDirectory: boolean }
 
-const DESKTOP_WORKTREE_MARKER = '/.claude/worktrees/'
+const DESKTOP_WORKTREE_MARKERS = ['/.sciencex/worktrees/', '/.claude/worktrees/'] as const
 const DROPDOWN_WIDTH = 400
 const DROPDOWN_VIEWPORT_MARGIN = 12
 const DROPDOWN_HEIGHT = 380 // approximate max height
@@ -31,8 +31,9 @@ function isDesktopRuntime() {
 }
 
 function projectNameFromPath(filePath: string) {
-  const displayRoot = filePath.includes(DESKTOP_WORKTREE_MARKER)
-    ? filePath.slice(0, filePath.indexOf(DESKTOP_WORKTREE_MARKER))
+  const marker = DESKTOP_WORKTREE_MARKERS.find(candidate => filePath.includes(candidate))
+  const displayRoot = marker
+    ? filePath.slice(0, filePath.indexOf(marker))
     : filePath
   return displayRoot.split('/').filter(Boolean).pop() || filePath
 }

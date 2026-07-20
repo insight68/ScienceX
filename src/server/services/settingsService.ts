@@ -57,11 +57,27 @@ export class SettingsService {
     if (!root) {
       throw ApiError.badRequest('Project root is required for project settings')
     }
+    return path.join(root, '.sciencex', 'settings.json')
+  }
+
+  private getLegacyProjectSettingsPath(projectRoot?: string): string {
+    const root = projectRoot || this.projectRoot
+    if (!root) {
+      throw ApiError.badRequest('Project root is required for project settings')
+    }
     return path.join(root, '.claude', 'settings.json')
   }
 
   /** 项目本地设置文件路径（不建议提交到仓库） */
   private getLocalSettingsPath(projectRoot?: string): string {
+    const root = projectRoot || this.projectRoot
+    if (!root) {
+      throw ApiError.badRequest('Project root is required for local settings')
+    }
+    return path.join(root, '.sciencex', 'settings.local.json')
+  }
+
+  private getLegacyLocalSettingsPath(projectRoot?: string): string {
     const root = projectRoot || this.projectRoot
     if (!root) {
       throw ApiError.badRequest('Project root is required for local settings')
@@ -103,12 +119,20 @@ export class SettingsService {
 
   /** 获取项目级设置 */
   async getProjectSettings(projectRoot?: string): Promise<Record<string, unknown>> {
-    return this.readJsonFile(this.getProjectSettingsPath(projectRoot))
+    const [legacy, current] = await Promise.all([
+      this.readJsonFile(this.getLegacyProjectSettingsPath(projectRoot)),
+      this.readJsonFile(this.getProjectSettingsPath(projectRoot)),
+    ])
+    return Object.assign({}, legacy, current)
   }
 
   /** 获取项目本地设置 */
   async getLocalSettings(projectRoot?: string): Promise<Record<string, unknown>> {
-    return this.readJsonFile(this.getLocalSettingsPath(projectRoot))
+    const [legacy, current] = await Promise.all([
+      this.readJsonFile(this.getLegacyLocalSettingsPath(projectRoot)),
+      this.readJsonFile(this.getLocalSettingsPath(projectRoot)),
+    ])
+    return Object.assign({}, legacy, current)
   }
 
   // ---------------------------------------------------------------------------
@@ -187,7 +211,7 @@ export class SettingsService {
   ): Promise<void> {
     const filePath = this.getProjectSettingsPath(projectRoot)
     await this.withWriteLock(filePath, async () => {
-      const current = await this.readJsonFile(filePath)
+      const current = await this.getProjectSettings(projectRoot)
       const merged = Object.assign({}, current, settings)
       await this.writeJsonFile(filePath, merged)
     })
@@ -201,12 +225,12 @@ export class SettingsService {
     const root = projectRoot || this.projectRoot
     const filePath = this.getLocalSettingsPath(projectRoot)
     await this.withWriteLock(filePath, async () => {
-      const current = await this.readJsonFile(filePath)
+      const current = await this.getLocalSettings(projectRoot)
       const merged = Object.assign({}, current, settings)
       await this.writeJsonFile(filePath, merged)
     })
     if (root) {
-      void addFileGlobRuleToGitignore('.claude/settings.local.json', root)
+      void addFileGlobRuleToGitignore('.sciencex/settings.local.json', root)
     }
   }
 

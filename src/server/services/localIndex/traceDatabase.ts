@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
-import { getCcscixDir, getClaudeConfigHomeDir } from '../../../utils/envUtils.js'
+import { getCcscixDir } from '../../../utils/envUtils.js'
 import {
   LOCAL_INDEX_BUSY_TIMEOUT_MS,
   prepareManagedDatabasePath,
@@ -62,7 +62,8 @@ export function openTraceIndexDatabase(options?: {
   prepareManagedDatabasePath({
     databasePath,
     filename: 'trace-index-v1.sqlite',
-    scope: options?.scope ?? (options?.path ? undefined : getClaudeConfigHomeDir()),
+    scope: options?.scope,
+    managedDataDir: options?.scope || options?.path ? undefined : getCcscixDir(),
   })
   const database = new Database(databasePath)
 

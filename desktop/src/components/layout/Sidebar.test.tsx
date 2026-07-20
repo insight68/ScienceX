@@ -206,6 +206,7 @@ describe('Sidebar', () => {
   const createSession = vi.fn()
   const deleteSession = vi.fn()
   const deleteSessions = vi.fn()
+  const renameSession = vi.fn()
   const addToast = vi.fn()
 
   beforeEach(() => {
@@ -215,6 +216,7 @@ describe('Sidebar', () => {
     createSession.mockReset()
     deleteSession.mockReset()
     deleteSessions.mockReset()
+    renameSession.mockReset()
     addToast.mockReset()
     desktopUiPreferencesApiMock.getPreferences.mockReset()
     desktopUiPreferencesApiMock.updateSidebarPreferences.mockReset()
@@ -255,6 +257,7 @@ describe('Sidebar', () => {
       createSession,
       deleteSession,
       deleteSessions,
+      renameSession,
     })
     useChatStore.setState({
       connectToSession,
@@ -1032,6 +1035,78 @@ describe('Sidebar', () => {
     })
 
     expect(useTabStore.getState().tabs).toEqual([])
+  })
+
+  it('offers an accessible Rename action for each non-batch session and commits a trimmed title with Enter', async () => {
+    renameSession.mockResolvedValue(undefined)
+    useSessionStore.setState({
+      sessions: [
+        makeSession('session-rename-1', 'Original title', '/workspace/project', new Date().toISOString()),
+      ],
+    })
+
+    render(<Sidebar />)
+
+    const row = screen.getByRole('button', { name: /Original title/ })
+    const renameButton = within(row.parentElement!).getByRole('button', { name: 'Rename' })
+    fireEvent.click(renameButton)
+
+    const input = screen.getByDisplayValue('Original title')
+    fireEvent.change(input, { target: { value: '  Renamed title  ' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    await waitFor(() => {
+      expect(renameSession).toHaveBeenCalledWith('session-rename-1', 'Renamed title')
+    })
+    expect(screen.queryByDisplayValue('  Renamed title  ')).not.toBeInTheDocument()
+  })
+
+  it('submits a rename only once when Enter is followed by blur', async () => {
+    let resolveRename!: () => void
+    renameSession.mockReturnValue(new Promise<void>((resolve) => {
+      resolveRename = resolve
+    }))
+    useSessionStore.setState({
+      sessions: [
+        makeSession('session-rename-1', 'Original title', '/workspace/project', new Date().toISOString()),
+      ],
+    })
+
+    render(<Sidebar />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    const input = screen.getByDisplayValue('Original title')
+    fireEvent.change(input, { target: { value: 'Renamed title' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.blur(input)
+
+    expect(renameSession).toHaveBeenCalledTimes(1)
+
+    resolveRename()
+    await waitFor(() => {
+      expect(screen.queryByDisplayValue('Renamed title')).not.toBeInTheDocument()
+    })
+  })
+
+  it('reports rename failures and keeps the title available for retry', async () => {
+    renameSession.mockRejectedValue(new Error('rename failed'))
+    useSessionStore.setState({
+      sessions: [
+        makeSession('session-rename-1', 'Original title', '/workspace/project', new Date().toISOString()),
+      ],
+    })
+
+    render(<Sidebar />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    const input = screen.getByDisplayValue('Original title')
+    fireEvent.change(input, { target: { value: 'Renamed title' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    await waitFor(() => {
+      expect(addToast).toHaveBeenCalledWith({ type: 'error', message: 'rename failed' })
+    })
+    expect(screen.getByDisplayValue('Renamed title')).toBeInTheDocument()
   })
 
   it('requires confirmation before deleting a session from the sidebar', async () => {

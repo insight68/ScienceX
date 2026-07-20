@@ -5,6 +5,9 @@ import process from 'node:process'
 import type { AppModeConfig, AppModeSetInput } from '../../src/lib/desktopHost/types'
 
 const APP_MODE_FILE = 'app-mode.json'
+const APP_MANAGED_SYSTEM_HOME = 'SCIX_APP_SYSTEM_DIR'
+const APP_MANAGED_PORTABLE_HOME = 'SCIX_APP_PORTABLE_DIR'
+const APP_MANAGED_EXTERNAL_HOME = 'SCIX_APP_EXTERNAL_DIR'
 
 export type AppModeAppLike = {
   getPath(name: 'exe' | 'home' | 'userData'): string
@@ -16,7 +19,7 @@ type PersistedAppModeConfig = {
 }
 
 export function systemClaudeConfigDir(app: AppModeAppLike): string {
-  return path.join(app.getPath('home'), '.claude')
+  return path.join(app.getPath('home'), '.sciencex')
 }
 
 function readAppModeConfig(configDir: string): PersistedAppModeConfig | null {
@@ -90,14 +93,20 @@ function normalizedCustomDir(app: AppModeAppLike, value: string | null | undefin
 }
 
 function externallyControlled(env: NodeJS.ProcessEnv): boolean {
-  return Boolean(env.CLAUDE_CONFIG_DIR && env.SCIX_APP_PORTABLE_DIR !== '1')
+  return Boolean(
+    env[APP_MANAGED_EXTERNAL_HOME] === '1' || (
+      (env.SCIENCEX_HOME || env.CLAUDE_CONFIG_DIR) &&
+      env[APP_MANAGED_PORTABLE_HOME] !== '1' &&
+      env[APP_MANAGED_SYSTEM_HOME] !== '1'
+    ),
+  )
 }
 
 export function determineStartupPortableDir(
   app: AppModeAppLike,
   env: NodeJS.ProcessEnv = process.env,
 ): string | null {
-  if (env.CLAUDE_CONFIG_DIR) return null
+  if (externallyControlled(env)) return null
 
   const config = readAppModeConfig(app.getPath('userData'))
   if (config?.mode !== 'portable' || !config.portable_dir || !path.isAbsolute(config.portable_dir)) return null
@@ -115,22 +124,51 @@ export function applyStartupPortableMode(
 ): string | null {
   // app.relaunch() inherits process.env. Discard the previous app-managed
   // selection so the persisted two-mode record remains authoritative.
-  if (env.SCIX_APP_PORTABLE_DIR === '1') {
+  if (
+    env[APP_MANAGED_PORTABLE_HOME] === '1' ||
+    env[APP_MANAGED_SYSTEM_HOME] === '1'
+  ) {
+    delete env.SCIENCEX_HOME
+    delete env.SCIENCEX_LEGACY_CONFIG_DIR
     delete env.CLAUDE_CONFIG_DIR
-    delete env.SCIX_APP_PORTABLE_DIR
+    delete env[APP_MANAGED_PORTABLE_HOME]
+    delete env[APP_MANAGED_SYSTEM_HOME]
     delete env.WEBVIEW2_USER_DATA_FOLDER
   }
-  if (env.CLAUDE_CONFIG_DIR) {
-    env.CLAUDE_CONFIG_DIR = normalizedCustomDir(app, env.CLAUDE_CONFIG_DIR)
+
+  if (env.SCIENCEX_HOME) {
+    const scienceXHome = normalizedCustomDir(app, env.SCIENCEX_HOME)
+    env.SCIENCEX_HOME = scienceXHome
+    env.SCIENCEX_LEGACY_CONFIG_DIR ||= path.join(app.getPath('home'), '.claude')
+    env.CLAUDE_CONFIG_DIR = path.join(scienceXHome, 'claude')
     return null
   }
+
+  if (env.CLAUDE_CONFIG_DIR) {
+    const legacyRoot = normalizedCustomDir(app, env.CLAUDE_CONFIG_DIR)
+    env.SCIENCEX_HOME = legacyRoot
+    env.SCIENCEX_LEGACY_CONFIG_DIR = legacyRoot
+    env.CLAUDE_CONFIG_DIR = path.join(legacyRoot, 'claude')
+    env[APP_MANAGED_EXTERNAL_HOME] = '1'
+    return null
+  }
+
   const customDir = determineStartupPortableDir(app, env)
-  if (!customDir) return null
+  if (!customDir) {
+    const scienceXHome = systemClaudeConfigDir(app)
+    env.SCIENCEX_HOME = scienceXHome
+    env.SCIENCEX_LEGACY_CONFIG_DIR = path.join(app.getPath('home'), '.claude')
+    env.CLAUDE_CONFIG_DIR = path.join(scienceXHome, 'claude')
+    env[APP_MANAGED_SYSTEM_HOME] = '1'
+    return null
+  }
 
   const webViewDataDir = path.join(customDir, 'EBWebView')
   fs.mkdirSync(webViewDataDir, { recursive: true })
-  env.CLAUDE_CONFIG_DIR = customDir
-  env.SCIX_APP_PORTABLE_DIR = '1'
+  env.SCIENCEX_HOME = customDir
+  env.SCIENCEX_LEGACY_CONFIG_DIR = path.join(app.getPath('home'), '.claude')
+  env.CLAUDE_CONFIG_DIR = path.join(customDir, 'claude')
+  env[APP_MANAGED_PORTABLE_HOME] = '1'
   env.WEBVIEW2_USER_DATA_FOLDER = webViewDataDir
   return customDir
 }
@@ -139,17 +177,22 @@ export function getAppMode(
   app: AppModeAppLike,
   env: NodeJS.ProcessEnv = process.env,
 ): AppModeConfig {
-  const envConfigDir = env.CLAUDE_CONFIG_DIR
-    ? normalizedCustomDir(app, env.CLAUDE_CONFIG_DIR)
+  const envConfigDir = env.SCIENCEX_HOME
+    ? normalizedCustomDir(app, env.SCIENCEX_HOME)
+    : env.CLAUDE_CONFIG_DIR && externallyControlled(env)
+      ? normalizedCustomDir(app, env.CLAUDE_CONFIG_DIR)
     : null
-  const persistedCustomDir = envConfigDir ? null : determineStartupPortableDir(app, env)
+  const isSystem = env[APP_MANAGED_SYSTEM_HOME] === '1'
+  const persistedCustomDir = envConfigDir || externallyControlled(env)
+    ? null
+    : determineStartupPortableDir(app, env)
   const customDir = envConfigDir || persistedCustomDir
-  if (customDir) {
+  if (customDir && !isSystem) {
     return {
       mode: 'portable',
       portableDir: customDir,
       activeConfigDir: customDir,
-      configDirSource: envConfigDir && env.SCIX_APP_PORTABLE_DIR !== '1'
+      configDirSource: externallyControlled(env)
         ? 'environment'
         : 'portable',
     }
@@ -169,7 +212,7 @@ export function setAppMode(
   env: NodeJS.ProcessEnv = process.env,
 ): void {
   if (externallyControlled(env)) {
-    throw new Error('CLAUDE_CONFIG_DIR is controlled by the launch environment')
+    throw new Error('SCIENCEX_HOME is controlled by the launch environment')
   }
 
   if (input.mode === 'default') {

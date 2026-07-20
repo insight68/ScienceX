@@ -1159,7 +1159,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                             <div
                               key={session.id}
                               data-sidebar-session-id={session.id}
-                              className="relative mb-0.5 last:mb-0"
+                              className="relative"
                             >
                               {renamingId === session.id ? (
                                 <input
@@ -1177,7 +1177,8 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   className="w-full rounded-[var(--radius-md)] border border-[var(--color-border-focus)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none"
                                 />
                               ) : (
-                                <button
+                                <div className="group/session mb-0.5 flex items-center gap-1 last:mb-0">
+                                  <button
                                   onClick={(event) => {
                                     if (isBatchMode) {
                                       handleBatchSessionClick(event, session.id)
@@ -1201,7 +1202,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, session.id)}
                                   className={`
-                                    group/session w-full rounded-lg px-2.5 ${isMobile ? 'py-3' : 'py-1.5'} text-left text-[13px] transition-[background,filter,color] duration-200
+                                    min-w-0 flex-1 rounded-lg px-2.5 ${isMobile ? 'py-3' : 'py-1.5'} text-left text-[13px] transition-[background,filter,color] duration-200
                                     ${selectedSessionIds.has(session.id)
                                       ? 'sidebar-session-row--selected bg-[var(--color-sidebar-item-active)] text-[var(--color-text-primary)]'
                                       : session.id === activeTabId
@@ -1244,6 +1245,21 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                     />
                                   </span>
                                 </button>
+                                  {!isBatchMode && (
+                                    <button
+                                      type="button"
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        handleStartRename(session.id, session.title || '')
+                                      }}
+                                      className={`flex flex-shrink-0 items-center justify-center rounded-lg text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ${isMobile ? 'h-10 w-10' : 'h-7 w-7'}`}
+                                      aria-label={t('common.rename')}
+                                      title={t('common.rename')}
+                                    >
+                                      <SquarePen className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
                           ))}
@@ -2004,7 +2020,7 @@ function projectSubtitle(projectRoot: string | null | undefined, fallbackKey: st
 
 function isWorktreeSession(session: SessionListItem): boolean {
   if (!session.workDir) return false
-  if (/[\\/]\.claude[\\/]worktrees[\\/]/.test(session.workDir)) return true
+  if (/[\\/]\.(?:sciencex|claude)[\\/]worktrees[\\/]/.test(session.workDir)) return true
   if (!session.projectRoot || session.workDir === session.projectRoot) return false
   return !isSameOrChildPath(session.workDir, session.projectRoot)
 }
