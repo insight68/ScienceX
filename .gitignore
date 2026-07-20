@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials*.json
+
+# OS and editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+
+# Logs and language caches
+*.log
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+
+# Test, quality, and debug output
+/artifacts/
+coverage/
+/.playwright-mcp/
+/e2e-*.png
+/*.png
+/bug_attachments/
+/sidebar-snapshot.md
+
+# Local runtime and tool state
+/.runtime/
+/extracted-natives/
+/.lark-attachments/
+/.tg-attachments/
+/.omx/
+/.claude/
+/.codex-logs/
+/.superpowers/
+/openspec/
+
+# Desktop build output
+/desktop/dist/
+/desktop/electron-dist/
+/desktop/build-artifacts/
+/desktop/src-tauri/binaries/
+/desktop/src-tauri/target/
+/desktop/src-tauri/gen/
+/desktop/brand-assets/
+/desktop/package-lock.json
+
+# Documentation build output and local plans
+/docs/.vitepress/dist/
+/docs/.vitepress/cache/
+/docs/superpowers/

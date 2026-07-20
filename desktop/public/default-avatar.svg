@@ -1,0 +1,17 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="128" cy="128" r="124" fill="#071D52"/>
+  <g>
+    <ellipse cx="128" cy="128" rx="92" ry="44" transform="rotate(-31 128 128)" stroke="#5EE7F1" stroke-width="5" opacity="0.8"/>
+    <circle cx="194" cy="72" r="13" fill="#FF9A1F" opacity="0.18"/>
+    <circle cx="194" cy="72" r="7" fill="#FF9A1F"/>
+    <circle cx="119" cy="136" r="72" fill="white"/>
+    <circle cx="119" cy="136" r="54" fill="#071D52"/>
+    <rect x="119" y="55" width="72" height="162" fill="#071D52"/>
+    <circle cx="119" cy="64" r="9" fill="white"/>
+    <circle cx="119" cy="208" r="9" fill="white"/>
+    <path d="M99 110C115 91 138 81 164 82C173 82 180 90 179 99C178 108 171 114 162 114C145 114 130 121 120 133C114 140 104 141 97 135C90 129 93 117 99 110Z" fill="#5EE7F1"/>
+    <path d="M99 151C105 144 116 143 123 149C134 161 149 168 166 168C175 168 182 176 182 185C181 194 174 201 165 200C138 200 114 189 97 169C91 162 92 157 99 151Z" fill="#62B9FF"/>
+    <rect x="78" y="130" width="44" height="12" rx="6" fill="#FF9A1F"/>
+  </g>
+  <circle cx="128" cy="128" r="123" stroke="white" stroke-opacity="0.16" stroke-width="2"/>
+</svg>
