@@ -9,6 +9,8 @@ node_modules/
 *.key
 *.p12
 credentials*.json
+.serena/
+.claude/
 
 # OS and editor metadata
 .DS_Store
