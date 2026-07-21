@@ -60,10 +60,10 @@ Claude Code 从 6 个不同来源加载 Skills，按优先级从高到低：
 
 ### 3. User（用户 Skills）
 
-用户个人定义，存放在 `~/.claude/skills/`。
+用户个人定义，存放在 `~/.sciencex/claude/skills/`。
 
 ```
-~/.claude/skills/
+~/.sciencex/claude/skills/
 ├── my-review/
 │   └── SKILL.md          ← 主 Skill 文件
 ├── deploy-check/
@@ -73,11 +73,11 @@ Claude Code 从 6 个不同来源加载 Skills，按优先级从高到低：
 
 ### 4. Project（项目 Skills）
 
-项目级别定义，存放在 `.claude/skills/`，可提交到版本控制。
+项目级别定义，存放在 `.sciencex/skills/`，可提交到版本控制。
 
 ```
 your-project/
-└── .claude/
+└── .sciencex/
     └── skills/
         ├── lint-fix/
         │   └── SKILL.md
@@ -311,7 +311,7 @@ paths: "src/**/*.ts, test/**/*.ts"
 ```
 1. 用户操作某个深层目录中的文件
 2. discoverSkillDirsForPaths() 从文件路径向上遍历
-3. 寻找 .claude/skills/ 目录（不超过 cwd）
+3. 寻找 `.sciencex/skills/` 目录（不超过 cwd；不存在时回退到 `.claude/skills/`）
 4. 跳过 .gitignore 忽略的目录
 5. 发现新目录 → addSkillDirectories() → 加载并注册
 ```
@@ -352,10 +352,10 @@ Allow? (y)es / (n)o / (a)lways allow / (d)eny
 
 ```bash
 # 1. 创建目录
-mkdir -p ~/.claude/skills/my-skill
+mkdir -p ~/.sciencex/claude/skills/my-skill
 
 # 2. 创建 SKILL.md
-cat > ~/.claude/skills/my-skill/SKILL.md << 'EOF'
+cat > ~/.sciencex/claude/skills/my-skill/SKILL.md << 'EOF'
 ---
 name: 我的技能
 description: 一个示例 Skill
@@ -372,8 +372,8 @@ EOF
 
 | 操作 | 方法 |
 |------|------|
-| 创建 Skill | `~/.claude/skills/<name>/SKILL.md` |
-| 项目级 Skill | `.claude/skills/<name>/SKILL.md` |
+| 创建 Skill | `~/.sciencex/claude/skills/<name>/SKILL.md` |
+| 项目级 Skill | `.sciencex/skills/<name>/SKILL.md` |
 | 调用 Skill | 终端输入 `/skill-name` |
 | 查看可用 Skills | 终端输入 `/skills` |
 | 用 AI 创建 Skill | `/skillify` |

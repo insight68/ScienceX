@@ -1,7 +1,7 @@
 /**
  * Adapter 配置加载
  *
- * 优先级：环境变量 > ~/.claude/adapters.json > 默认值
+ * 优先级：环境变量 > ~/.sciencex/config/adapters.json > 默认值
  */
 
 import * as fs from 'node:fs'

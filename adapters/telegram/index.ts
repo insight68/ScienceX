@@ -51,7 +51,7 @@ const TELEGRAM_STREAMING_TEXT_LIMIT = TELEGRAM_TEXT_LIMIT - 2 // reserve room fo
 
 const config = loadConfig()
 if (!config.telegram.botToken) {
-  console.error('[Telegram] Missing TELEGRAM_BOT_TOKEN. Set env or ~/.claude/adapters.json')
+  console.error('[Telegram] Missing TELEGRAM_BOT_TOKEN. Set env or ~/.sciencex/config/adapters.json')
   process.exit(1)
 }
 

@@ -170,7 +170,7 @@ sciencex --no-computer-use
 CLAUDE_COMPUTER_USE_ENABLED=0 sciencex
 ```
 
-也可以写入全局配置文件 `~/.claude/sciencex/computer-use-config.json`：
+也可以写入全局配置文件 `~/.sciencex/config/computer-use-config.json`：
 
 ```json
 {

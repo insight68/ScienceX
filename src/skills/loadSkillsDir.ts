@@ -85,12 +85,29 @@ export function getSkillsPath(
     case 'userSettings':
       return join(getClaudeConfigHomeDir(), dir)
     case 'projectSettings':
-      return `.claude/${dir}`
+      return `.sciencex/${dir}`
     case 'plugin':
       return 'plugin'
     default:
       return ''
   }
+}
+
+async function getExactProjectConfigSubdir(
+  projectDir: string,
+  subdir: 'skills' | 'commands',
+): Promise<string> {
+  const fs = getFsImplementation()
+  for (const directory of ['.sciencex', '.claude']) {
+    const candidate = join(projectDir, directory, subdir)
+    try {
+      await fs.stat(candidate)
+      return candidate
+    } catch (error) {
+      if (!isENOENT(error)) throw error
+    }
+  }
+  return join(projectDir, '.sciencex', subdir)
 }
 
 /**
@@ -663,9 +680,9 @@ export const getSkillDirCommands = memoize(
         return []
       }
       const additionalSkillsNested = await Promise.all(
-        additionalDirs.map(dir =>
+        additionalDirs.map(async dir =>
           loadSkillsFromSkillsDir(
-            join(dir, '.claude', 'skills'),
+            await getExactProjectConfigSubdir(dir, 'skills'),
             'projectSettings',
           ),
         ),
@@ -698,9 +715,9 @@ export const getSkillDirCommands = memoize(
         : Promise.resolve([]),
       projectSettingsEnabled
         ? Promise.all(
-            additionalDirs.map(dir =>
+            additionalDirs.map(async dir =>
               loadSkillsFromSkillsDir(
-                join(dir, '.claude', 'skills'),
+                await getExactProjectConfigSubdir(dir, 'skills'),
                 'projectSettings',
               ),
             ),
@@ -874,12 +891,13 @@ export async function discoverSkillDirsForPaths(
     // CWD-level skills are already loaded at startup, so we only discover nested ones
     // Use prefix+separator check to avoid matching /project-backup when cwd is /project
     while (currentDir.startsWith(resolvedCwd + pathSep)) {
-      const skillDir = join(currentDir, '.claude', 'skills')
+      for (const configDirectory of ['.sciencex', '.claude']) {
+        const skillDir = join(currentDir, configDirectory, 'skills')
 
-      // Skip if we've already checked this path (hit or miss) — avoids
-      // repeating the same failed stat on every Read/Write/Edit call when
-      // the directory doesn't exist (the common case).
-      if (!dynamicSkillDirs.has(skillDir)) {
+        // Skip if we've already checked this path (hit or miss) — avoids
+        // repeating the same failed stat on every Read/Write/Edit call when
+        // the directory doesn't exist (the common case).
+        if (dynamicSkillDirs.has(skillDir)) continue
         dynamicSkillDirs.add(skillDir)
         try {
           await fs.stat(skillDir)
@@ -893,9 +911,10 @@ export async function discoverSkillDirsForPaths(
             logForDebugging(
               `[skills] Skipped gitignored skills dir: ${skillDir}`,
             )
-            continue
+            break
           }
           newDirs.push(skillDir)
+          break
         } catch {
           // Directory doesn't exist — already recorded above, continue
         }

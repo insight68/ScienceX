@@ -22,7 +22,7 @@
 4. 等待桌面端显示「钉钉机器人已绑定」。
 5. 点击保存，或确认当前配置已经写入本地。
 
-授权成功后，桌面端会把 `clientId` 和 `clientSecret` 写入 `~/.claude/adapters.json` 的 `dingtalk` 配置。发布版桌面端会重启 adapter sidecar，让新凭据立即生效。
+授权成功后，桌面端会把 `clientId` 和 `clientSecret` 写入 `~/.sciencex/config/adapters.json` 的 `dingtalk` 配置。发布版桌面端会重启 adapter sidecar，让新凭据立即生效。
 
 ![钉钉机器人绑定和手动凭据配置](../images/im/dingding/dingding01.png)
 
@@ -56,7 +56,7 @@
 
 如果没有配置默认项目，adapter 会返回最近项目列表。回复编号、项目名或绝对路径后，会新建会话并绑定到当前钉钉 chat。
 
-后续消息会复用 `~/.claude/adapter-sessions.json` 里的 chat 到 session 映射。发送 `/new` 可以重新选择项目并开启新会话。
+后续消息会复用 `~/.sciencex/state/adapter-sessions.json` 里的 chat 到 session 映射。发送 `/new` 可以重新选择项目并开启新会话。
 
 ## 支持的命令
 
@@ -132,7 +132,7 @@ export ADAPTER_SERVER_URL="ws://127.0.0.1:3456"
 
 ### adapter 启动时报缺少 clientId / clientSecret
 
-说明 `DINGTALK_CLIENT_ID / DINGTALK_CLIENT_SECRET` 和 `~/.claude/adapters.json` 里的 `dingtalk.clientId / dingtalk.clientSecret` 都没有生效。先在桌面端钉钉标签页完成扫码绑定或手动填写凭据。
+说明 `DINGTALK_CLIENT_ID / DINGTALK_CLIENT_SECRET` 和 `~/.sciencex/config/adapters.json` 里的 `dingtalk.clientId / dingtalk.clientSecret` 都没有生效。先在桌面端钉钉标签页完成扫码绑定或手动填写凭据。
 
 ### 权限卡片没有出现
 
@@ -151,12 +151,12 @@ export ADAPTER_SERVER_URL="ws://127.0.0.1:3456"
 - 桌面端是否正在运行。
 - 钉钉标签页是否显示已绑定。
 - 当前用户是否已经配对或在 `Allowed Users` 中。
-- `~/.claude/adapters.json` 是否能正常写入。
+- `~/.sciencex/config/adapters.json` 是否能正常写入。
 - 本地开发时 `ADAPTER_SERVER_URL` 是否指向正在运行的 Desktop server WebSocket 地址。
 
 ### 会话没恢复
 
-检查 `~/.claude/adapter-sessions.json` 是否能正常写入，以及 Desktop server 里的 session 是否仍存在。
+检查 `~/.sciencex/state/adapter-sessions.json` 是否能正常写入，以及 Desktop server 里的 session 是否仍存在。
 
 ## 源码入口
 

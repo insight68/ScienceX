@@ -5,8 +5,8 @@ import { join } from 'path'
 export const SCIENCEX_HOME_ENV = 'SCIENCEX_HOME'
 export const SCIENCEX_LEGACY_CONFIG_DIR_ENV = 'SCIENCEX_LEGACY_CONFIG_DIR'
 
-// Memoized: 150+ callers, many on hot paths. Keyed off CLAUDE_CONFIG_DIR so
-// tests that change the env var get a fresh value without explicit cache.clear.
+// Memoized: 150+ callers, many on hot paths. Keyed off both supported roots so
+// tests that change either env var get a fresh value without explicit cache.clear.
 export const getClaudeConfigHomeDir = memoize(
   (): string => {
     return (
@@ -16,7 +16,7 @@ export const getClaudeConfigHomeDir = memoize(
       )
     ).normalize('NFC')
   },
-  () => process.env.CLAUDE_CONFIG_DIR,
+  () => `${process.env.CLAUDE_CONFIG_DIR ?? ''}\0${process.env[SCIENCEX_HOME_ENV] ?? ''}`,
 )
 
 /**

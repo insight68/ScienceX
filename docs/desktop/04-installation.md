@@ -69,6 +69,6 @@ bun run dev --host 127.0.0.1 --port 2024
 
 **Q: 这个版本会自动更新吗？**
 
-`v0.4.3` 起的正式 Release 会通过 GitHub Releases 检查更新，并下载对应平台的更新包。覆盖安装或应用内更新不会删除本地配置和会话数据（`~/.claude`）。
+`v0.4.3` 起的正式 Release 会通过 GitHub Releases 检查更新，并下载对应平台的更新包。覆盖安装或应用内更新不会删除本地配置和会话数据（当前为 `~/.sciencex`，旧版 `~/.claude` 也会保留）。
 
 正式公开的 macOS Release 需要签名和公证；draft/unsigned 临时包仍可能需要手动放行。Windows 签名不是发布阻塞项，未签名安装包仍可更新，但可能出现 SmartScreen 提示。

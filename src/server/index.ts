@@ -524,7 +524,7 @@ export function startServer(port = PORT, host = HOST) {
   // full-text backfill cannot make the sidebar slower on low-memory machines.
   beginBackgroundIndexStartup()
 
-  // Start watching ~/.claude/teams/ for real-time WebSocket push
+  // Start watching ~/.sciencex/claude/teams/ for real-time WebSocket push
   teamWatcher.start()
 
   // Start the cron scheduler to execute scheduled tasks

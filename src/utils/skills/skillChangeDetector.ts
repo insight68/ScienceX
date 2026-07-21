@@ -194,40 +194,51 @@ async function getWatchablePaths(): Promise<string[]> {
     }
   }
 
-  // Project skills directory (.claude/skills)
+  // Project skills directory (.sciencex/skills with legacy fallback)
   const projectSkillsPath = getSkillsPath('projectSettings', 'skills')
   if (projectSkillsPath) {
-    try {
-      // For project settings, resolve to absolute path
-      const absolutePath = platformPath.resolve(projectSkillsPath)
-      await fs.stat(absolutePath)
-      paths.push(absolutePath)
-    } catch {
-      // Path doesn't exist, skip it
+    for (const candidate of [
+      platformPath.resolve(projectSkillsPath),
+      platformPath.resolve('.claude', 'skills'),
+    ]) {
+      try {
+        await fs.stat(candidate)
+        paths.push(candidate)
+        break
+      } catch {
+        // Try the compatibility path next.
+      }
     }
   }
 
-  // Project commands directory (.claude/commands)
+  // Project commands directory (.sciencex/commands with legacy fallback)
   const projectCommandsPath = getSkillsPath('projectSettings', 'commands')
   if (projectCommandsPath) {
-    try {
-      // For project settings, resolve to absolute path
-      const absolutePath = platformPath.resolve(projectCommandsPath)
-      await fs.stat(absolutePath)
-      paths.push(absolutePath)
-    } catch {
-      // Path doesn't exist, skip it
+    for (const candidate of [
+      platformPath.resolve(projectCommandsPath),
+      platformPath.resolve('.claude', 'commands'),
+    ]) {
+      try {
+        await fs.stat(candidate)
+        paths.push(candidate)
+        break
+      } catch {
+        // Try the compatibility path next.
+      }
     }
   }
 
   // Additional directories (--add-dir) skills
   for (const dir of getAdditionalDirectoriesForClaudeMd()) {
-    const additionalSkillsPath = platformPath.join(dir, '.claude', 'skills')
-    try {
-      await fs.stat(additionalSkillsPath)
-      paths.push(additionalSkillsPath)
-    } catch {
-      // Path doesn't exist, skip it
+    for (const configDirectory of ['.sciencex', '.claude']) {
+      const additionalSkillsPath = platformPath.join(dir, configDirectory, 'skills')
+      try {
+        await fs.stat(additionalSkillsPath)
+        paths.push(additionalSkillsPath)
+        break
+      } catch {
+        // Try the compatibility path next.
+      }
     }
   }
 

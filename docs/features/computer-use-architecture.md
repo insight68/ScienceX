@@ -226,7 +226,7 @@ await adapter.ensureOsPermissions()
 #### Gate 3：全局互斥锁
 ```typescript
 await tryAcquireComputerUseLock(sessionId)
-// 文件锁: ~/.claude/computer-use.lock
+// 文件锁: ~/.sciencex/claude/computer-use.lock
 // JSON: { sessionId, pid, acquiredAt }
 ```
 确保同一时间只有一个 Claude 会话可以控制电脑。支持 stale PID 恢复。
@@ -560,7 +560,7 @@ bindSessionContext 闭包
 | `gates.ts` | 51 | GrowthBook 灰度控制（`getChicagoEnabled` 绕过） | ✅ 修改 |
 | `wrapper.tsx` | 300+ | 会话上下文构建、权限对话框、锁管理 | 未修改 |
 | `setup.ts` | 54 | MCP 配置初始化 | 未修改 |
-| `computerUseLock.ts` | 216 | 全局文件锁（`~/.claude/computer-use.lock`） | 未修改 |
+| `computerUseLock.ts` | 216 | 全局文件锁（`~/.sciencex/claude/computer-use.lock`） | 未修改 |
 | `common.ts` | 62 | 常量定义（server name、bundle ID） | 未修改 |
 | `cleanup.ts` | — | turn-end 清理（应用恢复、剪贴板恢复） | 未修改 |
 | `toolRendering.tsx` | — | 工具结果 UI 渲染 | 未修改 |

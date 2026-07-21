@@ -13,6 +13,8 @@
 | `API_TIMEOUT_MS` | No | API request timeout, default `600000` (10min) |
 | `DISABLE_TELEMETRY` | No | Set to `1` to disable telemetry |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | No | Set to `1` to disable non-essential network traffic |
+| `SCIENCEX_HOME` | No | ScienceX user-data root; defaults to `~/.sciencex` |
+| `CLAUDE_CONFIG_DIR` | No | Embedded Claude-compatible runtime directory; defaults to `$SCIENCEX_HOME/claude` |
 
 ## Configuration Methods
 
@@ -46,7 +48,7 @@ DISABLE_TELEMETRY=1
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 ```
 
-### Option 2: `~/.claude/settings.json`
+### Option 2: `~/.sciencex/claude/settings.json`
 
 ```json
 {
@@ -58,4 +60,6 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 }
 ```
 
-> Priority: Environment variables > `.env` file > `~/.claude/settings.json`
+> Priority: Environment variables > `.env` file > `~/.sciencex/claude/settings.json`
+
+See [Configuration and data directories](./storage-layout.md) for the complete layout and legacy `.claude` migration rules.

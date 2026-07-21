@@ -243,7 +243,7 @@ When a background agent finishes, the primary agent receives an XML-formatted no
   <task-id>abc123</task-id>
   <status>completed</status>
   <summary>Agent "Explore frontend" completed</summary>
-  <output-file>~/.claude/temp/.../tasks/abc123.output</output-file>
+  <output-file>~/.sciencex/claude/temp/.../tasks/abc123.output</output-file>
 </task-notification>
 ```
 
@@ -269,8 +269,8 @@ TeamCreate({
 ```
 
 After team creation:
-- A team configuration file is generated: `~/.claude/teams/{team_name}/config.json`
-- A shared task directory is created: `~/.claude/tasks/{team_name}/`
+- A team configuration file is generated: `~/.sciencex/claude/teams/{team_name}/config.json`
+- A shared task directory is created: `~/.sciencex/claude/tasks/{team_name}/`
 - The current agent automatically becomes the **Team Lead**
 
 ### Adding Team Members
@@ -352,7 +352,7 @@ In addition to built-in agents, you can create your own specialized agents.
 
 ### Definition Format
 
-Create a `.md` file in the `.claude/agents/` directory:
+Create a `.md` file in the `.sciencex/agents/` directory:
 
 ```markdown
 ---
@@ -400,8 +400,8 @@ Custom agents are loaded according to the following priority:
 
 1. **Built-in agents** (built-in) — System predefined
 2. **Plugin agents** (plugin) — Registered via plugins
-3. **User agents** (user) — `~/.claude/agents/`
-4. **Project agents** (project) — `.claude/agents/` (project-level)
+3. **User agents** (user) — `~/.sciencex/claude/agents/`
+4. **Project agents** (project) — `.sciencex/agents/` (project-level)
 5. **Flag agents** (flag) — Registered via API
 6. **Policy agents** (policy) — Organization policies
 
@@ -438,6 +438,6 @@ Each agent can be configured with a different permission mode:
 | Broadcast a message | `SendMessage({ to: "*", message: "..." })` |
 | Request shutdown | `SendMessage({ to: "name", message: { type: "shutdown_request" } })` |
 | Delete a team | `TeamDelete()` |
-| Custom agent | Create a definition file in `.claude/agents/*.md` |
+| Custom agent | Create a definition file in `.sciencex/agents/*.md` |
 | Specify a model | `Agent({ ..., model: "haiku" })` |
 | Name an agent | `Agent({ ..., name: "researcher" })` |

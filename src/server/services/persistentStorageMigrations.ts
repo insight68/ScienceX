@@ -7,6 +7,7 @@ import { isOpenAIOfficialProviderId } from './openaiOfficialProvider.js'
 import { isGrokOfficialProviderId } from './grokOfficialProvider.js'
 import { BUILT_IN_PROVIDER_IDS } from '../types/provider.js'
 import {
+  getClaudeConfigHomeDir,
   getLegacyScienceXConfigRoot,
   getScienceXConfigDir,
   getScienceXComputerUseRuntimeDir,
@@ -212,6 +213,7 @@ async function migrateScienceXOwnedStorage(
   if (usesLegacyScienceXLayout()) return
 
   const legacyScienceXDir = path.join(legacyRoot, 'sciencex')
+  const claudeRuntimeDir = getClaudeConfigHomeDir()
   const mappings: Array<[string, string, string]> = [
     [path.join(legacyScienceXDir, 'providers.json'), path.join(getScienceXConfigDir(), 'providers.json'), 'legacy sciencex/providers.json'],
     [path.join(legacyScienceXDir, 'settings.json'), path.join(getScienceXConfigDir(), 'settings.json'), 'legacy sciencex/settings.json'],
@@ -232,6 +234,17 @@ async function migrateScienceXOwnedStorage(
     [path.join(legacyRoot, 'scheduled_tasks.json'), path.join(getScienceXStateDir(), 'scheduled_tasks.json'), 'legacy scheduled_tasks.json'],
     [path.join(legacyRoot, 'im-downloads'), path.join(getScienceXDataDir(), 'im-downloads'), 'legacy im-downloads'],
     [path.join(legacyRoot, '.runtime'), getScienceXComputerUseRuntimeDir(), 'legacy computer-use runtime'],
+    [path.join(legacyRoot, 'settings.json'), path.join(claudeRuntimeDir, 'settings.json'), 'legacy Claude settings'],
+    [path.join(legacyRoot, 'CLAUDE.md'), path.join(claudeRuntimeDir, 'CLAUDE.md'), 'legacy Claude instructions'],
+    [path.join(legacyRoot, 'rules'), path.join(claudeRuntimeDir, 'rules'), 'legacy Claude rules'],
+    [path.join(legacyRoot, 'skills'), path.join(claudeRuntimeDir, 'skills'), 'legacy Claude skills'],
+    [path.join(legacyRoot, 'agents'), path.join(claudeRuntimeDir, 'agents'), 'legacy Claude agents'],
+    [path.join(legacyRoot, 'plugins'), path.join(claudeRuntimeDir, 'plugins'), 'legacy Claude plugins'],
+    [path.join(legacyRoot, 'projects'), path.join(claudeRuntimeDir, 'projects'), 'legacy Claude sessions'],
+    [path.join(legacyRoot, 'teams'), path.join(claudeRuntimeDir, 'teams'), 'legacy Claude teams'],
+    [path.join(legacyRoot, 'tasks'), path.join(claudeRuntimeDir, 'tasks'), 'legacy Claude tasks'],
+    [path.join(legacyRoot, 'history.jsonl'), path.join(claudeRuntimeDir, 'history.jsonl'), 'legacy Claude history'],
+    [path.join(legacyRoot, 'keybindings.json'), path.join(claudeRuntimeDir, 'keybindings.json'), 'legacy Claude keybindings'],
   ]
 
   for (const [sourcePath, targetPath, entryName] of mappings) {

@@ -75,7 +75,7 @@ export const getAutoMemPath = memoize(
 | `\\server\share` | UNC network path |
 | Contains `\0` | Null byte, can truncate in system calls |
 
-**Security restriction**: Project-level `.claude/settings.json` is **not allowed** to set `autoMemoryDirectory`, preventing malicious repositories from gaining write access to sensitive directories like `~/.ssh`.
+**Security restriction**: Project-level `.sciencex/settings.json` is **not allowed** to set `autoMemoryDirectory`, preventing malicious repositories from gaining write access to sensitive directories like `~/.ssh`.
 
 ### Enable Conditions
 
@@ -340,7 +340,7 @@ Sub-agents (launched via the Agent tool) have an independent three-level memory 
 
 | Scope | Path | Description |
 |-------|------|-------------|
-| **user** | `~/.claude/agent-memory/{agentType}/` | Global user-level |
+| **user** | `~/.sciencex/claude/agent-memory/{agentType}/` | Global user-level |
 | **project** | `.claude/agent-memory/{agentType}/` | Project-level (committed to VCS) |
 | **local** | `.claude/agent-memory-local/{agentType}/` | Local-level (not committed) |
 
@@ -358,7 +358,7 @@ When the `TEAMMEM` feature flag is enabled:
 ### Directory Structure
 
 ```
-~/.claude/projects/{hash}/memory/
+~/.sciencex/claude/projects/{hash}/memory/
 ├── MEMORY.md           <- Personal memory index
 ├── user_*.md           <- Personal memories
 └── team/               <- Team shared directory

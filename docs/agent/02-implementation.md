@@ -396,7 +396,7 @@ agentDefinition.model               ← Agent 定义
 ### TeamFile 结构
 
 ```typescript
-// 存储路径：~/.claude/teams/{team_name}/config.json
+// 存储路径：~/.sciencex/claude/teams/{team_name}/config.json
 {
   name: string                        // 团队名称
   description?: string                // 团队描述
@@ -430,7 +430,7 @@ agentDefinition.model               ← Agent 定义
 
 ![Teams 邮箱系统](./images/09-teams-mailbox.png)
 
-**存储路径**：`~/.claude/teams/{team_name}/inboxes/{agent_name}.json`
+**存储路径**：`~/.sciencex/claude/teams/{team_name}/inboxes/{agent_name}.json`
 
 ```typescript
 // src/utils/teammateMailbox.ts
@@ -603,7 +603,7 @@ function enqueuePendingNotification(taskId, result) {
 
 ### 输出管理
 
-**存储路径**：`~/.claude/temp/{sessionId}/tasks/{taskId}.output`
+**存储路径**：`~/.sciencex/claude/temp/{sessionId}/tasks/{taskId}.output`
 
 | 参数 | 值 |
 |------|----|

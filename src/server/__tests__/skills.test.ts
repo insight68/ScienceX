@@ -135,6 +135,30 @@ describe('Skills API', () => {
     expect(body.skills).toContainEqual(expect.objectContaining({ name: 'linked-skill', source: 'user' }))
   })
 
+  it('prefers project .sciencex skills and ignores the matching legacy directory', async () => {
+    const projectRoot = path.join(tmpHome, 'workspace')
+    const cwd = path.join(projectRoot, 'packages', 'app')
+
+    await writeSkill(
+      path.join(projectRoot, '.sciencex', 'skills'),
+      'primary-skill',
+      ['---', 'description: ScienceX primary', '---', '', '# Primary'].join('\n'),
+    )
+    await writeSkill(
+      path.join(projectRoot, '.claude', 'skills'),
+      'legacy-skill',
+      ['---', 'description: Legacy compatibility', '---', '', '# Legacy'].join('\n'),
+    )
+
+    const { req, url, segments } = makeRequest(`/api/skills?cwd=${encodeURIComponent(cwd)}`)
+    const res = await handleSkillsApi(req, url, segments)
+
+    expect(res.status).toBe(200)
+    const body = await res.json() as { skills: Array<{ name: string; source: string }> }
+    expect(body.skills).toContainEqual(expect.objectContaining({ name: 'primary-skill', source: 'project' }))
+    expect(body.skills).not.toContainEqual(expect.objectContaining({ name: 'legacy-skill' }))
+  })
+
   it('resolves project skill details from the nearest project skills directory', async () => {
     const projectRoot = path.join(tmpHome, 'workspace')
     const nestedRoot = path.join(projectRoot, 'packages', 'app')

@@ -217,7 +217,7 @@ For a research project at `/work/my-study`, one completed run produces:
 The global project index defaults to:
 
 ```text
-~/.claude/science/projects-v1.sqlite
+~/.sciencex/data/science/projects-v1.sqlite
 ```
 
 When `CLAUDE_CONFIG_DIR` is set, or a portable data directory is enabled in desktop settings, the index is stored at:

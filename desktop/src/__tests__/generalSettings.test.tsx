@@ -218,7 +218,7 @@ describe('Settings > General tab', () => {
       autoDreamEnabled: false,
       skipWebFetchPreflight: true,
       desktopNotificationsEnabled: true,
-      traceCapture: { enabled: true, storageDir: '/Users/test/.claude/sciencex/traces' },
+      traceCapture: { enabled: true, storageDir: '/Users/test/.sciencex/data/traces' },
       chatSendBehavior: 'enter',
       responseLanguage: '',
       uiZoom: 1,
@@ -298,7 +298,7 @@ describe('Settings > General tab', () => {
       appMode: {
         mode: 'default',
         portableDir: null,
-        activeConfigDir: '/Users/test/.claude',
+        activeConfigDir: '/Users/test/.sciencex',
         configDirSource: 'system',
       },
       appModeRequiresRestart: false,
@@ -308,7 +308,7 @@ describe('Settings > General tab', () => {
           appMode: {
             mode,
             portableDir: mode === 'portable' ? portableDir ?? null : null,
-            activeConfigDir: mode === 'portable' ? portableDir ?? null : '/Users/test/.claude',
+            activeConfigDir: mode === 'portable' ? portableDir ?? null : '/Users/test/.sciencex',
             configDirSource: mode === 'portable' ? 'portable' : 'system',
           },
           appModeRequiresRestart: true,
@@ -540,7 +540,7 @@ describe('Settings > General tab', () => {
     })
   })
 
-  it('switches back to ~/.claude without deleting custom data', async () => {
+  it('switches back to ~/.sciencex without deleting custom data', async () => {
     useSettingsStore.setState({
       appMode: {
         mode: 'portable',
@@ -592,7 +592,7 @@ describe('Settings > General tab', () => {
     expect(await screen.findByText('Could not open the folder picker. Paste the folder path manually.')).toBeInTheDocument()
   })
 
-  it('treats external CLAUDE_CONFIG_DIR as the controlling data source', async () => {
+  it('treats external SCIENCEX_HOME as the controlling data source', async () => {
     useSettingsStore.setState({
       appMode: {
         mode: 'portable',
@@ -605,7 +605,7 @@ describe('Settings > General tab', () => {
     render(<Settings />)
 
     fireEvent.click(screen.getByText('General'))
-    expect(screen.getByText(/The current directory is controlled by the CLAUDE_CONFIG_DIR environment variable/)).toBeInTheDocument()
+    expect(screen.getByText(/The current directory is controlled by the SCIENCEX_HOME environment variable/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Use system directory/ }))
     expect(screen.getByText(/Remove it from the launch environment before switching back/)).toBeInTheDocument()

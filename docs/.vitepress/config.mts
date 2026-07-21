@@ -21,6 +21,7 @@ const zhSidebar = [
     items: [
       { text: '安装与启动', link: '/guide/quick-start' },
       { text: '环境变量', link: '/guide/env-vars' },
+      { text: '配置与数据目录', link: '/guide/storage-layout' },
       { text: '第三方模型', link: '/guide/third-party-models' },
       { text: '全局使用', link: '/guide/global-usage' },
       { text: '常见问题', link: '/guide/faq' },
@@ -121,6 +122,7 @@ const enSidebar = [
     items: [
       { text: 'Quick Start', link: '/en/guide/quick-start' },
       { text: 'Environment Variables', link: '/en/guide/env-vars' },
+      { text: 'Configuration & Data', link: '/en/guide/storage-layout' },
       { text: 'Third-Party Models', link: '/en/guide/third-party-models' },
       { text: 'Global Usage', link: '/en/guide/global-usage' },
       { text: 'FAQ', link: '/en/guide/faq' },

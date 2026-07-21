@@ -101,7 +101,7 @@ export ADAPTER_SERVER_URL="ws://127.0.0.1:3456"
 
 ### bot 启动时报缺少 token
 
-说明 `TELEGRAM_BOT_TOKEN` 和 `~/.claude/adapters.json` 里的 `telegram.botToken` 都没有生效。
+说明 `TELEGRAM_BOT_TOKEN` 和 `~/.sciencex/config/adapters.json` 里的 `telegram.botToken` 都没有生效。
 
 ### 能打开设置页但 bot 不工作
 
@@ -116,7 +116,7 @@ Webapp 只负责配置，不会自动拉起 `bun run telegram`（桌面端发布
 
 ### 每次重启后会话丢失
 
-检查 `~/.claude/adapter-sessions.json` 是否能正常写入，以及 Desktop server 的 session 是否仍存在。
+检查 `~/.sciencex/state/adapter-sessions.json` 是否能正常写入，以及 Desktop server 的 session 是否仍存在。
 
 ## 源码入口
 

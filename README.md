@@ -8,7 +8,7 @@
 **Claude Science 的开源、本地优先替代方案**
 </div>
 
-ScienceX 是一个面向科学研究的开源 AI 工作台，目标成为 [Claude Science](https://www.anthropic.com/news/claude-science-ai-workbench) 的本地优先、可自部署替代方案。它把实验数据、Agent 会话、可复现运行、Provenance 和研究产物放进同一个 macOS / Windows / Linux 桌面环境，同时允许研究者选择模型提供商、扩展 Skills / MCP，并保留对本地文件和计算过程的控制。
+.
 
 > **独立项目声明：** ScienceX 不是 Anthropic 产品，也不隶属于或代表 Anthropic。当前版本正在建设 Claude Science 式的开放科研工作流，不宣称与官方产品功能完全对等。
 

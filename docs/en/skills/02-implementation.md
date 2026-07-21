@@ -92,8 +92,8 @@ const loadAllCommands = memoize(async (cwd: string): Promise<Command[]> => {
 getSkillDirCommands(cwd)
 ├─ Determine loading paths
 │  ├─ managed: ${MANAGED_PATH}/.claude/skills/
-│  ├─ user:    ~/.claude/skills/
-│  ├─ project: .claude/skills/ (traverse upward to HOME)
+│  ├─ user:    ~/.sciencex/claude/skills/
+│  ├─ project: .sciencex/skills/ (legacy .claude/skills/ fallback)
 │  └─ additional: paths specified via --add-dir
 │
 ├─ Parallel loading (Promise.all)
@@ -647,7 +647,7 @@ export async function discoverSkillDirsForPaths(
     let currentDir = dirname(filePath)
     // Traverse upward from the file's directory to cwd (excluding cwd itself)
     while (currentDir.startsWith(resolvedCwd + pathSep)) {
-      const skillDir = join(currentDir, '.claude', 'skills')
+      const skillDir = join(currentDir, '.sciencex', 'skills')
       if (!dynamicSkillDirs.has(skillDir)) {
         dynamicSkillDirs.add(skillDir)
         await fs.stat(skillDir)  // Check if it exists

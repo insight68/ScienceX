@@ -194,11 +194,11 @@ CLAUDE.md 是用户自定义指令系统，按**优先级从低到高**加载（
 ```
 /etc/claude-code/CLAUDE.md          ← 全局管理配置（最低优先级）
   ↓
-~/.claude/CLAUDE.md                 ← 用户全局指令
+~/.sciencex/claude/CLAUDE.md                 ← 用户全局指令
   ↓
 项目根目录/CLAUDE.md                 ← 项目级指令
-项目根目录/.claude/CLAUDE.md
-项目根目录/.claude/rules/*.md
+项目根目录/.sciencex/CLAUDE.md
+项目根目录/.sciencex/rules/*.md
   ↓
 项目根目录/CLAUDE.local.md           ← 本地私有指令（最高优先级）
 ```
@@ -404,9 +404,9 @@ type BundledSkillDefinition = {
   ↓
 插件技能（plugin）          ← 插件注册
   ↓
-用户技能（~/.claude/skills/） ← 用户全局
+用户技能（~/.sciencex/claude/skills/） ← 用户全局
   ↓
-项目技能（.claude/skills/）   ← 项目级
+项目技能（.sciencex/skills/）   ← 项目级
   ↓
 策略技能（policy）           ← 组织管理
 ```

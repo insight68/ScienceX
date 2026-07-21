@@ -361,7 +361,7 @@
 **执行记录（2026-05-31）：**
 
 - 已选择 Node PTY 方案：新增运行时依赖 `node-pty@1.1.0`，Electron main process 负责 `pty.spawn()`，renderer 只通过 preload IPC 发送 spawn/write/resize/kill。Context7 `/microsoft/node-pty` 文档确认主进程集成方式为 `spawn` + `onData`/`onExit` + `write`/`resize`/`kill`。
-- 新增 `desktop/electron/services/terminal.ts`，保留 Tauri 终端语义：`CLAUDE_CONFIG_DIR/terminal-config.json` 优先，其次 Electron `userData/terminal-config.json`；继续读取 `~/.claude/settings.json` 的 `desktopTerminal` Windows shell 配置；保留 Windows `bash_path`、`COMSPEC`、POSIX `SHELL`、`/bin/zsh`/`/bin/bash` 默认 shell 选择。
+- 新增 `desktop/electron/services/terminal.ts`，保留 Tauri 终端语义：`CLAUDE_CONFIG_DIR/terminal-config.json` 优先，其次 Electron `userData/terminal-config.json`；继续读取 `~/.sciencex/claude/settings.json` 的 `desktopTerminal` Windows shell 配置；保留 Windows `bash_path`、`COMSPEC`、POSIX `SHELL`、`/bin/zsh`/`/bin/bash` 默认 shell 选择。
 - `terminal_spawn` 等价实现最小尺寸限制：`cols >= 20`、`rows >= 8`；默认 cwd 仍按 `cwd -> CLAUDE_CONFIG_DIR -> HOME/USERPROFILE -> process.cwd()`；环境变量合并 login shell env，并强制 UTF-8 locale，补充 `TERM=xterm-256color` 与 `COLORTERM=truecolor`。
 - `desktop/electron/main.ts` 已注册 `desktop:terminal:*` IPC：`spawn/write/resize/kill/get-bash-path/set-bash-path`，并通过 `desktop:terminal:output`、`desktop:terminal:exit` 事件回传现有 renderer payload。
 - `desktop/electron/ipc/capabilities.ts` 收紧 `terminalSpawn` payload 校验，避免 renderer 传入非数字尺寸或非字符串 cwd/shell。
@@ -423,14 +423,14 @@
 - [x] 运行 `bun run check:desktop && bun run check:electron`。
 
 **通过标准：** 老配置可升级，unknown fields 保留。
-**阻断条件：** 写入 `~/.claude/settings.json` 或受保护配置路径。
+**阻断条件：** 写入 `~/.sciencex/claude/settings.json` 或受保护配置路径。
 
 **执行记录（2026-05-31）：**
 
 - 新增 `desktop/electron/services/appMode.ts`，复刻 Tauri `app-mode.json` 语义：启动时按 `external CLAUDE_CONFIG_DIR -> default portable app-mode.json -> system app-mode.json -> default portable data auto-detect` 判定是否设置 `CLAUDE_CONFIG_DIR`。
 - Electron `app.whenReady()` 后、server sidecar 启动前调用 `applyStartupPortableMode(app)`，保证 sidecar、window state、terminal config 都能看到 portable env；同时设置 `SCIX_APP_PORTABLE_DIR=1` 与 `WEBVIEW2_USER_DATA_FOLDER=<portable>/EBWebView`。
 - `desktop:app-mode:get` 返回现有 renderer 形状：`mode`、`portableDir`、`defaultPortableDir`、`activeConfigDir`、`configDirSource`；`configDirSource` 区分 `system`、外部环境变量 `environment`、应用切换产生的 `portable`。
-- `desktop:app-mode:set` 在当前 active config、目标 portable dir、系统默认 `userData` 三处写入 `app-mode.json`，不写 `~/.claude/settings.json`，也不移动/删除已有数据。
+- `desktop:app-mode:set` 在当前 active config、目标 portable dir、系统默认 `userData` 三处写入 `app-mode.json`，不写 `~/.sciencex/claude/settings.json`，也不移动/删除已有数据。
 - `desktop:app-mode:restart` 现在 `relaunch()` 后立即 `quit()`，与设置页“切换后重启”的语义一致；`prepareRestart` 继续先停止 server/adapters。
 - 新增 `desktop/electron/services/zoom.ts`，native zoom 统一 clamp 到 `0.5..2.0`，避免 Electron IPC 绕过 renderer 侧限制。
 - 新增 `appMode.test.ts` 与 `zoom.test.ts`，覆盖 portable 数据探测、启动模式解析、env 设置、返回形状、三处 app-mode 写入、zoom clamp。
@@ -630,7 +630,7 @@
 - 2026-06-01 SubAgent gap follow-up：renderer 生产代码不再用 `isTauriRuntime()` 判断通用桌面能力，新增 `isDesktopRuntime()`，更新弹窗、附件 native picker、设置 app mode、移动布局分支均识别 Electron/Tauri desktop host。
 - 2026-06-01 Electron updater proxy contract 已补齐：renderer 传入的 `{ proxy }` 会进入 Electron main，检查更新前应用到 Electron `app/session` proxy；切回系统代理时会清理手动代理，避免更新检查继续沿用旧 proxy。
 - 2026-06-01 package-smoke 增加发布型包的 installed updater metadata 检查：当 artifact set 含 `.zip/.dmg/latest-mac.yml`、Windows installer/latest.yml 或 Linux package/latest-linux.yml 时，安装后 resources 目录必须包含 `app-update.yml`；纯 `--dir` 开发包会记录 note 但不失败。
-- 2026-06-01 真实 provider smoke 使用本机 `~/.claude/sciencex/providers.json` selector `sub2api-chatgpt:main:sub2api-chatgpt-main` 通过：`artifacts/quality-runs/2026-05-31T21-28-07-154Z/report.md`，`passed=1 failed=0 skipped=0`。该路径复用 sciencex provider 配置，不走 `QUALITY_GATE_PROVIDER_*` 明文 env-only 分支。
+- 2026-06-01 真实 provider smoke 使用当时的旧路径 `~/.claude/sciencex/providers.json` selector `sub2api-chatgpt:main:sub2api-chatgpt-main` 通过：`artifacts/quality-runs/2026-05-31T21-28-07-154Z/report.md`，`passed=1 failed=0 skipped=0`。该路径复用 sciencex provider 配置，不走 `QUALITY_GATE_PROVIDER_*` 明文 env-only 分支。
 - 2026-06-01 `check:native` 已补上打包后验包：根脚本现在会在 Electron `--dir` 打包后运行 `test:package-smoke:current`。最新 `bun run check:native` 通过，package-smoke notes 明确当前纯 `--dir` macOS artifact set 不强制 `app-update.yml`，也不代表 GUI 启动或 Gatekeeper approval。
 - 2026-06-01 final-definition 复测：Computer Use `list_apps` 正常，但 `get_app_state(Finder)` 仍返回 `cgWindowNotFound`；系统 `screencapture -x /tmp/sciencex-cua-retake-final.png` 仍失败为 `could not create image from display`。当前机器继续不能承载真实 GUI 操作验收。
 - 2026-06-01 cross-platform-script 复测：Computer Use `list_apps` 正常且可见 `/Applications/ScienceX.app`，`get_app_state(Finder)` 仍为 `cgWindowNotFound`，`get_app_state(ScienceX)` 返回 `remoteConnection`，系统 `screencapture -x /tmp/sciencex-computer-use-check.png` 仍失败为 `could not create image from display`。当前仍不能完成点击、输入、附件选择、托盘恢复、通知点击等 GUI 验收。

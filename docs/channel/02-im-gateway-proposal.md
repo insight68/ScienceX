@@ -359,7 +359,7 @@ bot.on('callback_query', (ctx) => {
 | `src/server/im/types.ts` | IM 消息协议类型定义 |
 | `src/server/im/gateway.ts` | Gateway 核心 — Adapter 连接管理、chatId->session 路由、消息翻译 |
 | `src/server/im/sessionMap.ts` | chatId-sessionId 映射管理、可选持久化 |
-| `src/server/im/config.ts` | `~/.claude/im-gateway.json` 配置读取 |
+| `src/server/im/config.ts` | `~/.sciencex/claude/im-gateway.json` 配置读取 |
 | `adapters/telegram/index.ts` | Telegram Bot Adapter |
 | `adapters/telegram/package.json` | 依赖 telegraf + ws |
 | `adapters/feishu/index.ts` | 飞书 Adapter |
@@ -367,7 +367,7 @@ bot.on('callback_query', (ctx) => {
 
 ### 配置文件
 
-`~/.claude/im-gateway.json`：
+`~/.sciencex/claude/im-gateway.json`：
 
 ```json
 {

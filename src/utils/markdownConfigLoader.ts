@@ -224,12 +224,12 @@ function resolveStopBoundary(cwd: string): string | null {
  * collecting all .claude directories along the way.
  *
  * Stopping at git root prevents commands/skills from parent directories outside the repository
- * from leaking into projects. For example, if ~/projects/.claude/commands/ exists, it won't
+ * from leaking into projects. For example, if ~/projects/.sciencex/commands/ exists, it won't
  * appear in ~/projects/my-repo/ if my-repo is a git repository.
  *
  * @param subdir Subdirectory (eg. "commands", "agents")
  * @param cwd Current working directory to start from
- * @returns Array of directory paths containing .claude/subdir, from most specific (cwd) to least specific
+ * @returns Array of active project config subdirectories, from most specific (cwd) to least specific
  */
 export function getProjectDirsUpToHome(
   subdir: ClaudeConfigDirectory,
@@ -250,12 +250,14 @@ export function getProjectDirsUpToHome(
       break
     }
 
-    // ScienceX is primary; .claude remains a read-only compatibility layer.
+    // ScienceX is primary; use the legacy directory only when the matching
+    // ScienceX subdirectory is absent so the same skill/agent is not loaded twice.
     for (const configDirectory of ['.sciencex', '.claude']) {
       const configSubdir = join(current, configDirectory, subdir)
       try {
         statSync(configSubdir)
         dirs.push(configSubdir)
+        break
       } catch (e: unknown) {
         if (!isFsInaccessible(e)) throw e
       }
@@ -301,12 +303,12 @@ export const loadMarkdownFilesForSubdir = memoize(
     const managedDir = join(getManagedFilePath(), '.claude', subdir)
     const projectDirs = getProjectDirsUpToHome(subdir, cwd)
 
-    // For git worktrees where the worktree does NOT have .claude/<subdir> checked
+    // For git worktrees where the worktree does not have a config subdirectory checked
     // out (e.g. sparse-checkout), fall back to the main repository's copy.
     // getProjectDirsUpToHome stops at the worktree root (where the .git file is),
     // so it never sees the main repo on its own.
     //
-    // Only add the main repo's copy when the worktree root's .claude/<subdir>
+    // Only add the main repo's copy when the worktree root's config subdirectory
     // is absent. A standard `git worktree add` checks out the full tree, so the
     // worktree already has identical .claude/<subdir> content — loading the main
     // repo's copy too would duplicate every command/agent/skill
@@ -326,8 +328,12 @@ export const loadMarkdownFilesForSubdir = memoize(
       if (!worktreeHasSubdir) {
         for (const directory of ['.sciencex', '.claude']) {
           const mainConfigSubdir = join(canonicalRoot, directory, subdir)
-          if (!projectDirs.includes(mainConfigSubdir)) {
+          try {
+            statSync(mainConfigSubdir)
             projectDirs.push(mainConfigSubdir)
+            break
+          } catch (e: unknown) {
+            if (!isFsInaccessible(e)) throw e
           }
         }
       }

@@ -226,7 +226,7 @@ Reports error if macOS Accessibility or Screen Recording permissions are missing
 #### Gate 3: Global Mutex Lock
 ```typescript
 await tryAcquireComputerUseLock(sessionId)
-// File lock: ~/.claude/computer-use.lock
+// File lock: ~/.sciencex/claude/computer-use.lock
 // JSON: { sessionId, pid, acquiredAt }
 ```
 Ensures only one Claude session can control the computer at a time. Supports stale PID recovery.
@@ -555,7 +555,7 @@ bindSessionContext closure
 | `gates.ts` | 51 | GrowthBook feature flags (`getChicagoEnabled` bypass) | Yes, modified |
 | `wrapper.tsx` | 300+ | Session context construction, permission dialogs, lock management | Unchanged |
 | `setup.ts` | 54 | MCP config initialization | Unchanged |
-| `computerUseLock.ts` | 216 | Global file lock (`~/.claude/computer-use.lock`) | Unchanged |
+| `computerUseLock.ts` | 216 | Global file lock (`~/.sciencex/claude/computer-use.lock`) | Unchanged |
 | `common.ts` | 62 | Constants (server name, bundle ID) | Unchanged |
 | `cleanup.ts` | — | Turn-end cleanup (app restore, clipboard restore) | Unchanged |
 | `toolRendering.tsx` | — | Tool result UI rendering | Unchanged |

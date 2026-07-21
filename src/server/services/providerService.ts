@@ -1,8 +1,8 @@
 /**
  * Provider Service — preset-based provider configuration
  *
- * Storage: ~/.claude/sciencex/providers.json (lightweight index)
- * Active provider env vars written to ~/.claude/sciencex/settings.json
+ * Storage: ~/.sciencex/config/providers.json (lightweight index)
+ * Active provider env vars written to ~/.sciencex/config/settings.json
  * (isolated from the original Claude Code's ~/.claude/settings.json)
  */
 

@@ -111,7 +111,7 @@ describe('GeneralSettings output style', () => {
 
     expect(await screen.findByText('Project Style')).toBeInTheDocument()
     expect(settingsApiMock.getOutputStyles).toHaveBeenCalledWith('/repo')
-    expect(screen.getByText('Saved to .claude/settings.local.json for the active project.')).toBeInTheDocument()
+    expect(screen.getByText('Saved to .sciencex/settings.local.json for the active project.')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Select output style' }))
     fireEvent.click(screen.getByText('Learning'))

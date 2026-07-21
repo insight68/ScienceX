@@ -69,7 +69,7 @@ function getAgentDirectoryPath(location: SettingSource): string {
     case 'policySettings':
       return join(
         getManagedFilePath(),
-        AGENT_PATHS.FOLDER_NAME,
+        '.claude',
         AGENT_PATHS.AGENTS_DIR,
       )
     case 'localSettings':

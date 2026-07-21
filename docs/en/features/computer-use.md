@@ -156,7 +156,7 @@ sciencex --no-computer-use
 CLAUDE_COMPUTER_USE_ENABLED=0 sciencex
 ```
 
-You can also write the global config file at `~/.claude/sciencex/computer-use-config.json`:
+You can also write the global config file at `~/.sciencex/config/computer-use-config.json`:
 
 ```json
 {

@@ -115,6 +115,10 @@ export function getClaudeSkillScope(
       prefix: '/.claude/skills/',
     },
     {
+      dir: expandPath(join(getClaudeConfigHomeDir(), 'skills')),
+      prefix: '~/.sciencex/claude/skills/',
+    },
+    {
       dir: expandPath(join(homedir(), '.claude', 'skills')),
       prefix: '~/.claude/skills/',
     },

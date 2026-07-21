@@ -295,6 +295,8 @@ describe('persistent storage upgrade migrations', () => {
     resetPersistentStorageMigrationsForTests()
 
     await fs.mkdir(path.join(legacyRoot, 'sciencex', 'db'), { recursive: true })
+    await fs.mkdir(path.join(legacyRoot, 'skills', 'legacy-skill'), { recursive: true })
+    await fs.mkdir(path.join(scienceXHome, 'claude'), { recursive: true })
     await fs.writeFile(
       path.join(legacyRoot, 'sciencex', 'providers.json'),
       JSON.stringify({
@@ -310,6 +312,10 @@ describe('persistent storage upgrade migrations', () => {
     await fs.writeFile(path.join(legacyRoot, 'sciencex', 'db', 'index-v1.sqlite'), 'index-data', 'utf-8')
     await fs.writeFile(path.join(legacyRoot, 'adapters.json'), '{"telegram":{}}', 'utf-8')
     await fs.writeFile(path.join(legacyRoot, 'window-state.json'), '{"width":1280}', 'utf-8')
+    await fs.writeFile(path.join(legacyRoot, 'CLAUDE.md'), '# Legacy instructions', 'utf-8')
+    await fs.writeFile(path.join(legacyRoot, 'skills', 'legacy-skill', 'SKILL.md'), '# Legacy skill', 'utf-8')
+    await fs.writeFile(path.join(legacyRoot, 'settings.json'), '{"source":"legacy"}', 'utf-8')
+    await fs.writeFile(path.join(scienceXHome, 'claude', 'settings.json'), '{"source":"current"}', 'utf-8')
 
     const report = await ensurePersistentStorageUpgraded()
 
@@ -324,8 +330,16 @@ describe('persistent storage upgrade migrations', () => {
       .toBe('{"telegram":{}}')
     expect(await fs.readFile(path.join(scienceXHome, 'state', 'window-state.json'), 'utf-8'))
       .toBe('{"width":1280}')
+    expect(await fs.readFile(path.join(scienceXHome, 'claude', 'CLAUDE.md'), 'utf-8'))
+      .toBe('# Legacy instructions')
+    expect(await fs.readFile(path.join(scienceXHome, 'claude', 'skills', 'legacy-skill', 'SKILL.md'), 'utf-8'))
+      .toBe('# Legacy skill')
+    expect(await fs.readFile(path.join(scienceXHome, 'claude', 'settings.json'), 'utf-8'))
+      .toBe('{"source":"current"}')
     expect(await fs.readFile(path.join(legacyRoot, 'sciencex', 'oauth.json'), 'utf-8'))
       .toBe('{"token":"legacy"}')
+    expect(await fs.readFile(path.join(legacyRoot, 'CLAUDE.md'), 'utf-8'))
+      .toBe('# Legacy instructions')
     expect(JSON.parse(await fs.readFile(path.join(scienceXHome, 'state', 'migration-v1.json'), 'utf-8')))
       .toMatchObject({ schemaVersion: 1, source: legacyRoot, failures: [] })
   })

@@ -24,7 +24,7 @@
 
 ![微信未绑定时的扫码入口](../images/im/wechat/wechat01.png)
 
-扫码成功后，桌面端会把微信网关返回的 `accountId`、`botToken`、`baseUrl` 和 `userId` 写入 `~/.claude/adapters.json` 的 `wechat` 配置。发布版桌面端会重启 adapter sidecar，让新凭据立即生效。
+扫码成功后，桌面端会把微信网关返回的 `accountId`、`botToken`、`baseUrl` 和 `userId` 写入 `~/.sciencex/config/adapters.json` 的 `wechat` 配置。发布版桌面端会重启 adapter sidecar，让新凭据立即生效。
 
 绑定成功后，微信标签页会显示「微信已绑定」，并提供「重新扫码」和「解除微信绑定」：
 
@@ -52,7 +52,7 @@
 
 如果没有配置默认项目，微信 adapter 会返回最近项目列表。回复编号、项目名或绝对路径后，会新建会话并绑定到当前微信用户。
 
-后续消息会复用 `~/.claude/adapter-sessions.json` 里的 chat 到 session 映射。发送 `/new` 可以重新选择项目并开启新会话。
+后续消息会复用 `~/.sciencex/state/adapter-sessions.json` 里的 chat 到 session 映射。发送 `/new` 可以重新选择项目并开启新会话。
 
 ## 支持的命令
 
@@ -129,7 +129,7 @@ export ADAPTER_SERVER_URL="ws://127.0.0.1:3456"
 
 ### adapter 启动时报缺少微信账号
 
-说明 `WECHAT_ACCOUNT_ID / WECHAT_BOT_TOKEN` 和 `~/.claude/adapters.json` 里的 `wechat.accountId / wechat.botToken` 都没有生效。先在桌面端微信标签页完成扫码绑定。
+说明 `WECHAT_ACCOUNT_ID / WECHAT_BOT_TOKEN` 和 `~/.sciencex/config/adapters.json` 里的 `wechat.accountId / wechat.botToken` 都没有生效。先在桌面端微信标签页完成扫码绑定。
 
 ### 收不到回复
 
@@ -138,12 +138,12 @@ export ADAPTER_SERVER_URL="ws://127.0.0.1:3456"
 - 桌面端是否正在运行。
 - 微信标签页是否显示已绑定。
 - 当前用户是否已经配对或在 `Allowed Users` 中。
-- `~/.claude/adapters.json` 是否能正常写入。
+- `~/.sciencex/config/adapters.json` 是否能正常写入。
 - 本地开发时 `ADAPTER_SERVER_URL` 是否指向正在运行的 Desktop server WebSocket 地址。
 
 ### 会话没恢复
 
-检查 `~/.claude/adapter-sessions.json` 是否能正常写入，以及 Desktop server 里的 session 是否仍存在。
+检查 `~/.sciencex/state/adapter-sessions.json` 是否能正常写入，以及 Desktop server 里的 session 是否仍存在。
 
 ## 源码入口
 

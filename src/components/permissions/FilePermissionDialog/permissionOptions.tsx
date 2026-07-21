@@ -7,6 +7,7 @@ import { getShortcutDisplay } from '../../../keybindings/shortcutFormat.js';
 import type { ToolPermissionContext } from '../../../Tool.js';
 import { expandPath, getDirectoryForPath } from '../../../utils/path.js';
 import { normalizeCaseForComparison, pathInAllowedWorkingPath } from '../../../utils/permissions/filesystem.js';
+import { getClaudeConfigHomeDir } from '../../../utils/envUtils.js';
 import type { OptionWithDescription } from '../../CustomSelect/select.js';
 /**
  * Check if a path is within the project's .claude/ folder.
@@ -14,16 +15,13 @@ import type { OptionWithDescription } from '../../CustomSelect/select.js';
  */
 export function isInClaudeFolder(filePath: string): boolean {
   const absolutePath = expandPath(filePath);
-  const claudeFolderPath = expandPath(`${getOriginalCwd()}/.claude`);
-
-  // Check if the path is within the project's .claude folder
   const normalizedAbsolutePath = normalizeCaseForComparison(absolutePath);
-  const normalizedClaudeFolderPath = normalizeCaseForComparison(claudeFolderPath);
-
-  // Path must start with the .claude folder path (and be inside it, not just the folder itself)
-  return normalizedAbsolutePath.startsWith(normalizedClaudeFolderPath + sep.toLowerCase()) ||
-  // Also match case where sep is / on posix systems
-  normalizedAbsolutePath.startsWith(normalizedClaudeFolderPath + '/');
+  return ['.sciencex', '.claude'].some(directory => {
+    const configFolderPath = expandPath(`${getOriginalCwd()}/${directory}`);
+    const normalizedConfigFolderPath = normalizeCaseForComparison(configFolderPath);
+    return normalizedAbsolutePath.startsWith(normalizedConfigFolderPath + sep.toLowerCase()) ||
+      normalizedAbsolutePath.startsWith(normalizedConfigFolderPath + '/');
+  });
 }
 
 /**
@@ -33,10 +31,11 @@ export function isInClaudeFolder(filePath: string): boolean {
  */
 export function isInGlobalClaudeFolder(filePath: string): boolean {
   const absolutePath = expandPath(filePath);
-  const globalClaudeFolderPath = join(homedir(), '.claude');
   const normalizedAbsolutePath = normalizeCaseForComparison(absolutePath);
-  const normalizedGlobalClaudeFolderPath = normalizeCaseForComparison(globalClaudeFolderPath);
-  return normalizedAbsolutePath.startsWith(normalizedGlobalClaudeFolderPath + sep.toLowerCase()) || normalizedAbsolutePath.startsWith(normalizedGlobalClaudeFolderPath + '/');
+  return [getClaudeConfigHomeDir(), join(homedir(), '.claude')].some(directory => {
+    const normalizedDirectory = normalizeCaseForComparison(directory);
+    return normalizedAbsolutePath.startsWith(normalizedDirectory + sep.toLowerCase()) || normalizedAbsolutePath.startsWith(normalizedDirectory + '/');
+  });
 }
 export type PermissionOption = {
   type: 'accept-once';

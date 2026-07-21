@@ -2,7 +2,7 @@
  * Local staging directory for IM-downloaded resources.
  *
  * Layout: {root}/{platform}/{sessionId}/{safeName}
- * Default root: ~/.claude/im-downloads
+ * Default root: ~/.sciencex/data/im-downloads
  *
  * Responsibilities:
  *  - Generate unique, safe paths from (platform, sessionId, originalName)

@@ -166,7 +166,9 @@ export function Doctor(t0) {
       getDoctorDiagnostic().then(setDiagnostic);
       (async () => {
         const userAgentsDir = join(getClaudeConfigHomeDir(), "agents");
-        const projectAgentsDir = join(getOriginalCwd(), ".claude", "agents");
+        const scienceXAgentsDir = join(getOriginalCwd(), ".sciencex", "agents");
+        const legacyAgentsDir = join(getOriginalCwd(), ".claude", "agents");
+        const projectAgentsDir = await pathExists(scienceXAgentsDir) ? scienceXAgentsDir : legacyAgentsDir;
         const {
           activeAgents,
           allAgents,

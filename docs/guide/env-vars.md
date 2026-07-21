@@ -13,6 +13,8 @@
 | `API_TIMEOUT_MS` | 否 | API 请求超时，默认 600000 (10min) |
 | `DISABLE_TELEMETRY` | 否 | 设为 `1` 禁用遥测 |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | 否 | 设为 `1` 禁用非必要网络请求 |
+| `SCIENCEX_HOME` | 否 | ScienceX 用户数据根目录，默认 `~/.sciencex` |
+| `CLAUDE_CONFIG_DIR` | 否 | 内嵌 Claude 兼容运行时目录；默认 `$SCIENCEX_HOME/claude` |
 
 ## 配置方式
 
@@ -46,7 +48,7 @@ DISABLE_TELEMETRY=1
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 ```
 
-### 方式二：`~/.claude/settings.json`
+### 方式二：`~/.sciencex/claude/settings.json`
 
 ```json
 {
@@ -58,4 +60,6 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 }
 ```
 
-> 配置优先级：环境变量 > `.env` 文件 > `~/.claude/settings.json`
+> 配置优先级：环境变量 > `.env` 文件 > `~/.sciencex/claude/settings.json`
+
+完整目录结构和旧 `.claude` 迁移规则参见[配置与数据目录](./storage-layout.md)。

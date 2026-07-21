@@ -75,7 +75,7 @@ export const getAutoMemPath = memoize(
 | `\\server\share` | UNC 网络路径 |
 | 含 `\0` | 空字节，可在系统调用中截断 |
 
-**安全限制**：项目级 `.claude/settings.json` **不允许**设置 `autoMemoryDirectory`，防止恶意仓库通过此项获取对 `~/.ssh` 等敏感目录的写权限。
+**安全限制**：项目级 `.sciencex/settings.json` **不允许**设置 `autoMemoryDirectory`，防止恶意仓库通过此项获取对 `~/.ssh` 等敏感目录的写权限。
 
 ### 启用条件
 
@@ -340,7 +340,7 @@ async function scanMemoryFiles(memoryDir, signal): Promise<MemoryHeader[]> {
 
 | 作用域 | 路径 | 说明 |
 |--------|------|------|
-| **user** | `~/.claude/agent-memory/{agentType}/` | 全局用户级 |
+| **user** | `~/.sciencex/claude/agent-memory/{agentType}/` | 全局用户级 |
 | **project** | `.claude/agent-memory/{agentType}/` | 项目级（提交到 VCS） |
 | **local** | `.claude/agent-memory-local/{agentType}/` | 本地级（不提交） |
 
@@ -358,7 +358,7 @@ async function scanMemoryFiles(memoryDir, signal): Promise<MemoryHeader[]> {
 ### 目录结构
 
 ```
-~/.claude/projects/{hash}/memory/
+~/.sciencex/claude/projects/{hash}/memory/
 ├── MEMORY.md           ← 个人记忆索引
 ├── user_*.md           ← 个人记忆
 └── team/               ← 团队共享目录

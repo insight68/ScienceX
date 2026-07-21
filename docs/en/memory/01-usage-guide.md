@@ -91,7 +91,7 @@ Workflow:
 
 The terminal will display a notification:
 ```
-Memory updated in ~/.claude/projects/.../memory/feedback_testing.md · /memory to edit
+Memory updated in ~/.sciencex/claude/projects/.../memory/feedback_testing.md · /memory to edit
 ```
 
 ### Method 2: Explicit Request
@@ -128,7 +128,7 @@ Type `/remember` to trigger the memory review skill, which will:
 ### Directory Structure
 
 ```
-~/.claude/
+~/.sciencex/claude/
 └── projects/
     └── {project-path-hash}/
         └── memory/                    <- Auto-memory directory
@@ -193,7 +193,7 @@ Claude: [Does not use any memory content in this conversation]
 
 ### Manual Editing
 
-Directly edit files under `~/.claude/projects/{hash}/memory/`, or use the `/memory` command.
+Directly edit files under `~/.sciencex/claude/projects/{hash}/memory/`, or use the `/memory` command.
 
 ### Disable Automatic Memory
 
@@ -205,7 +205,7 @@ Directly edit files under `~/.claude/projects/{hash}/memory/`, or use the `/memo
 
 ### Custom Memory Directory
 
-Set in `~/.claude/settings.json`:
+Set in `~/.sciencex/claude/settings.json`:
 
 ```json
 {
@@ -213,7 +213,7 @@ Set in `~/.claude/settings.json`:
 }
 ```
 
-Supports `~/` expansion. For security reasons, the project-level `.claude/settings.json` is **not allowed** to set this option.
+Supports `~/` expansion. For security reasons, the project-level `.sciencex/settings.json` is **not allowed** to set this option.
 
 ---
 
@@ -274,4 +274,4 @@ For a detailed technical analysis, see [AutoDream Memory Consolidation](./03-aut
 | Disable auto-memory | `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` |
 | Disable AutoDream | Set `"autoDreamEnabled": false` in `settings.json` |
 | Manually consolidate memories | `/dream` command |
-| View memory directory | `~/.claude/projects/{hash}/memory/` |
+| View memory directory | `~/.sciencex/claude/projects/{hash}/memory/` |

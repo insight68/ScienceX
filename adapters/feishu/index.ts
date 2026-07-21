@@ -44,7 +44,7 @@ import { isOutsideWorkDir } from './path-safety.js'
 
 const config = loadConfig()
 if (!config.feishu.appId || !config.feishu.appSecret) {
-  console.error('[Feishu] Missing FEISHU_APP_ID / FEISHU_APP_SECRET. Set env or ~/.claude/adapters.json')
+  console.error('[Feishu] Missing FEISHU_APP_ID / FEISHU_APP_SECRET. Set env or ~/.sciencex/config/adapters.json')
   process.exit(1)
 }
 

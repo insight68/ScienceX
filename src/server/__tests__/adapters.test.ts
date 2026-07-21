@@ -6,11 +6,14 @@ import { handleAdaptersApi } from '../api/adapters.js'
 
 let tmpDir: string
 let originalConfigDir: string | undefined
+let originalScienceXHome: string | undefined
 
 async function setup() {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'claude-adapters-test-'))
   originalConfigDir = process.env.CLAUDE_CONFIG_DIR
-  process.env.CLAUDE_CONFIG_DIR = tmpDir
+  originalScienceXHome = process.env.SCIENCEX_HOME
+  process.env.SCIENCEX_HOME = tmpDir
+  process.env.CLAUDE_CONFIG_DIR = path.join(tmpDir, 'claude')
 }
 
 async function teardown() {
@@ -18,6 +21,11 @@ async function teardown() {
     process.env.CLAUDE_CONFIG_DIR = originalConfigDir
   } else {
     delete process.env.CLAUDE_CONFIG_DIR
+  }
+  if (originalScienceXHome !== undefined) {
+    process.env.SCIENCEX_HOME = originalScienceXHome
+  } else {
+    delete process.env.SCIENCEX_HOME
   }
   await fs.rm(tmpDir, { recursive: true, force: true })
 }
@@ -65,7 +73,7 @@ describe('Adapters API', () => {
     })
     expect((await handleAdaptersApi(put.req, put.url, put.segments)).status).toBe(200)
 
-    const configPath = path.join(tmpDir, 'adapters.json')
+    const configPath = path.join(tmpDir, 'config', 'adapters.json')
     const stat = await fs.stat(configPath)
     if (process.platform === 'win32') {
       expect(stat.isFile()).toBe(true)
@@ -101,7 +109,7 @@ describe('Adapters API', () => {
     })
     expect((await handleAdaptersApi(maskedPut.req, maskedPut.url, maskedPut.segments)).status).toBe(200)
 
-    const raw = JSON.parse(await fs.readFile(path.join(tmpDir, 'adapters.json'), 'utf-8')) as any
+    const raw = JSON.parse(await fs.readFile(path.join(tmpDir, 'config', 'adapters.json'), 'utf-8')) as any
     expect(raw.dingtalk.clientSecret).toBe('dingtalk-client-secret')
     expect(raw.dingtalk.allowedUsers).toEqual(['ding-user'])
     expect(raw.dingtalk.permissionCardTemplateId).toBe('permission-template')

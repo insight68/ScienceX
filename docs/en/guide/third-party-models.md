@@ -123,7 +123,7 @@ DISABLE_TELEMETRY=1
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 ```
 
-#### Method B: Via `~/.claude/settings.json`
+#### Method B: Via `~/.sciencex/claude/settings.json`
 
 ```json
 {

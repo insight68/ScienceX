@@ -2,10 +2,11 @@ import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import type { Dirent } from 'node:fs'
-import { getClaudeConfigHomeDir } from '../../utils/envUtils.js'
 import {
+  getClaudeConfigHomeDir,
   getScienceXConfigDir,
   getScienceXCredentialsDir,
+  getScienceXStateDir,
 } from '../../utils/envUtils.js'
 import { ProvidersIndexSchema } from '../types/provider.js'
 import { diagnosticsService } from './diagnosticsService.js'
@@ -92,6 +93,7 @@ export class DoctorService {
   private readonly configDir: string
   private readonly scienceXConfigDir: string
   private readonly scienceXCredentialsDir: string
+  private readonly scienceXStateDir: string
   private readonly homeDir: string
   private readonly projectRoot?: string
   private readonly usesConfigDirOverride: boolean
@@ -104,6 +106,9 @@ export class DoctorService {
     this.scienceXCredentialsDir = options.configDir
       ? path.join(options.configDir, 'sciencex')
       : getScienceXCredentialsDir()
+    this.scienceXStateDir = options.configDir
+      ? options.configDir
+      : getScienceXStateDir()
     this.homeDir = options.homeDir || inferHomeDir(this.configDir)
     this.projectRoot = options.projectRoot
     this.usesConfigDirOverride = Boolean(options.configDir || process.env.CLAUDE_CONFIG_DIR)
@@ -189,12 +194,20 @@ export class DoctorService {
         'user',
         path.join(this.scienceXConfigDir, 'settings.json'),
       ),
-      this.jsonTarget('adapters', 'Adapters config', 'user', path.join(this.configDir, 'adapters.json')),
+      this.jsonTarget(
+        'adapters',
+        'Adapters config',
+        'user',
+        path.join(
+          this.usesConfigDirOverride ? this.configDir : this.scienceXConfigDir,
+          'adapters.json',
+        ),
+      ),
       this.jsonTarget(
         'adapter-sessions',
         'Adapter sessions',
         'user',
-        path.join(this.configDir, 'adapter-sessions.json'),
+        path.join(this.scienceXStateDir, 'adapter-sessions.json'),
       ),
       this.directoryTarget('user-skills', 'User skills', 'user', path.join(this.configDir, 'skills')),
       this.directoryTarget('teams', 'Teams', 'user', path.join(this.configDir, 'teams')),

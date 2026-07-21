@@ -546,7 +546,7 @@ const PluginManifestChannelsSchema = z.object({
 1. `getUnconfiguredChannels()` 检测未满足验证的字段
 2. `PluginOptionsFlow` 组件逐个提示用户输入
 3. 敏感值（如 bot_token）存入 Keychain
-4. 普通值存入 `~/.claude/plugins/options/{pluginId}.json`
+4. 普通值存入 `~/.sciencex/claude/plugins/options/{pluginId}.json`
 
 ```typescript
 // mcpPluginIntegration.ts:290-318

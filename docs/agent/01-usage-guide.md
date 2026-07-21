@@ -243,7 +243,7 @@ Agent({
   <task-id>abc123</task-id>
   <status>completed</status>
   <summary>Agent "探索前端" completed</summary>
-  <output-file>~/.claude/temp/.../tasks/abc123.output</output-file>
+  <output-file>~/.sciencex/claude/temp/.../tasks/abc123.output</output-file>
 </task-notification>
 ```
 
@@ -269,8 +269,8 @@ TeamCreate({
 ```
 
 团队创建后：
-- 生成团队配置文件：`~/.claude/teams/{team_name}/config.json`
-- 创建共享任务目录：`~/.claude/tasks/{team_name}/`
+- 生成团队配置文件：`~/.sciencex/claude/teams/{team_name}/config.json`
+- 创建共享任务目录：`~/.sciencex/claude/tasks/{team_name}/`
 - 当前代理自动成为 **Team Lead**（团队负责人）
 
 ### 添加团队成员
@@ -352,7 +352,7 @@ Agent Teams 支持两种执行后端：
 
 ### 定义格式
 
-在 `.claude/agents/` 目录下创建 `.md` 文件：
+在 `.sciencex/agents/` 目录下创建 `.md` 文件：
 
 ```markdown
 ---
@@ -400,8 +400,8 @@ maxTurns: 10
 
 1. **内置 Agent**（built-in）— 系统预定义
 2. **插件 Agent**（plugin）— 通过插件注册
-3. **用户 Agent**（user）— `~/.claude/agents/`
-4. **项目 Agent**（project）— `.claude/agents/`（项目级）
+3. **用户 Agent**（user）— `~/.sciencex/claude/agents/`
+4. **项目 Agent**（project）— `.sciencex/agents/`（项目级）
 5. **标记 Agent**（flag）— 通过 API 注册
 6. **策略 Agent**（policy）— 组织策略
 
@@ -438,6 +438,6 @@ maxTurns: 10
 | 广播消息 | `SendMessage({ to: "*", message: "..." })` |
 | 请求关停 | `SendMessage({ to: "name", message: { type: "shutdown_request" } })` |
 | 删除团队 | `TeamDelete()` |
-| 自定义 Agent | 在 `.claude/agents/*.md` 创建定义文件 |
+| 自定义 Agent | 在 `.sciencex/agents/*.md` 创建定义文件 |
 | 指定模型 | `Agent({ ..., model: "haiku" })` |
 | 命名 Agent | `Agent({ ..., name: "researcher" })` |

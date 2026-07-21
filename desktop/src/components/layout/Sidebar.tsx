@@ -112,6 +112,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
   const sidebarPreferenceRevisionRef = useRef(0)
   const sessionScrollAreaRef = useRef<HTMLDivElement>(null)
   const pendingSessionScrollAnchorRef = useRef<SessionScrollAnchor | null>(null)
+  const renameInFlightRef = useRef(false)
   const refreshSessionsNow = useSessionListAutoRefresh(fetchSessions)
 
   useEffect(() => useSessionStore.subscribe((nextState, previousState) => {
@@ -662,12 +663,28 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
   }, [])
 
   const handleFinishRename = useCallback(async () => {
-    if (renamingId && renameValue.trim()) {
-      await renameSession(renamingId, renameValue.trim())
+    const title = renameValue.trim()
+    if (renameInFlightRef.current || !renamingId) return
+    if (!title) {
+      setRenamingId(null)
+      setRenameValue('')
+      return
     }
-    setRenamingId(null)
-    setRenameValue('')
-  }, [renamingId, renameValue, renameSession])
+
+    renameInFlightRef.current = true
+    try {
+      await renameSession(renamingId, title)
+      setRenamingId(null)
+      setRenameValue('')
+    } catch (error) {
+      addToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : t('sidebar.sessionListFailed'),
+      })
+    } finally {
+      renameInFlightRef.current = false
+    }
+  }, [addToast, renamingId, renameValue, renameSession, t])
 
   useEffect(() => {
     if (!isBatchMode) return
@@ -1252,7 +1269,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                         event.stopPropagation()
                                         handleStartRename(session.id, session.title || '')
                                       }}
-                                      className={`flex flex-shrink-0 items-center justify-center rounded-lg text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ${isMobile ? 'h-10 w-10' : 'h-7 w-7'}`}
+                                      className={`flex flex-shrink-0 items-center justify-center rounded-lg text-[var(--color-text-tertiary)] opacity-0 transition-all group-hover/session:opacity-100 hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ${isMobile ? 'h-10 w-10' : 'h-7 w-7'}`}
                                       aria-label={t('common.rename')}
                                       title={t('common.rename')}
                                     >

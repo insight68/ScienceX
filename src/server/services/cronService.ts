@@ -1,7 +1,7 @@
 /**
  * CronService — 管理定时任务的增删改查
  *
- * 任务持久化到 ~/.claude/scheduled_tasks.json（JSON 文件）。
+ * 任务持久化到 ~/.sciencex/state/scheduled_tasks.json（JSON 文件）。
  * 文件格式: { "tasks": [ CronTask, ... ] }
  */
 

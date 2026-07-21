@@ -23,10 +23,10 @@ beforeEach(async () => {
   await fs.mkdir(path.join(configDir, 'projects', 'demo-project'), { recursive: true })
   await fs.mkdir(path.join(configDir, 'skills', 'alpha-skill'), { recursive: true })
   await fs.mkdir(path.join(configDir, 'sciencex'), { recursive: true })
-  await fs.mkdir(path.join(projectRoot, '.claude', 'skills', 'beta-skill'), { recursive: true })
+  await fs.mkdir(path.join(projectRoot, '.sciencex', 'skills', 'beta-skill'), { recursive: true })
 
   await fs.writeFile(path.join(configDir, 'settings.json'), '{"defaultMode":', 'utf-8')
-  await fs.writeFile(path.join(projectRoot, '.claude', 'settings.json'), '{"model":', 'utf-8')
+  await fs.writeFile(path.join(projectRoot, '.sciencex', 'settings.json'), '{"model":', 'utf-8')
   await fs.writeFile(
     path.join(configDir, 'projects', 'demo-project', 'session-1.jsonl'),
     '{"type":"message"}\n{bad json}\n',
@@ -43,7 +43,7 @@ beforeEach(async () => {
     'utf-8',
   )
   await fs.writeFile(
-    path.join(projectRoot, '.claude', 'skills', 'beta-skill', 'SKILL.md'),
+    path.join(projectRoot, '.sciencex', 'skills', 'beta-skill', 'SKILL.md'),
     '# Beta\n',
     'utf-8',
   )
@@ -152,7 +152,7 @@ describe('DoctorService', () => {
     expect(userSettings?.status).toBe('invalid_json')
 
     const projectSettings = report.items.find(
-      (item) => item.path === '<project>/.claude/settings.json',
+      (item) => item.path === '<project>/.sciencex/settings.json',
     )
     expect(projectSettings).toBeDefined()
     expect(projectSettings?.protected).toBe(true)
@@ -170,7 +170,7 @@ describe('DoctorService', () => {
     expect(report.protectedSkips).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ path: '~/.claude/settings.json', reason: 'protected' }),
-        expect.objectContaining({ path: '<project>/.claude/settings.json', reason: 'protected' }),
+        expect.objectContaining({ path: '<project>/.sciencex/settings.json', reason: 'protected' }),
         expect.objectContaining({
           path: '~/.claude/projects/demo-project/session-1.jsonl',
           reason: 'protected',
@@ -182,7 +182,7 @@ describe('DoctorService', () => {
   test('safe repair skips protected malformed files without modifying them', async () => {
     const service = new DoctorService({ configDir, homeDir, projectRoot })
     const userSettingsPath = path.join(configDir, 'settings.json')
-    const projectSettingsPath = path.join(projectRoot, '.claude', 'settings.json')
+    const projectSettingsPath = path.join(projectRoot, '.sciencex', 'settings.json')
     const beforeUser = await fs.readFile(userSettingsPath, 'utf-8')
     const beforeProject = await fs.readFile(projectSettingsPath, 'utf-8')
 
@@ -193,7 +193,7 @@ describe('DoctorService', () => {
     expect(result.skips).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ path: '~/.claude/settings.json', reason: 'protected' }),
-        expect.objectContaining({ path: '<project>/.claude/settings.json', reason: 'protected' }),
+        expect.objectContaining({ path: '<project>/.sciencex/settings.json', reason: 'protected' }),
       ]),
     )
 

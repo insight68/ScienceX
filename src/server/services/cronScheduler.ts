@@ -4,7 +4,7 @@
  * Periodically checks all scheduled tasks and executes those whose cron
  * expression matches the current time. Tasks are run by spawning a CLI
  * subprocess with the task's prompt. Execution history is persisted to
- * ~/.claude/scheduled_tasks_log.json.
+ * ~/.sciencex/state/scheduled_tasks_log.json.
  */
 
 import * as fs from 'fs/promises'

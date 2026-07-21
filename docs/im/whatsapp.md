@@ -51,7 +51,7 @@ WhatsApp 方案适合用自己的 WhatsApp 个人号在私聊里远程驱动 Sci
 默认 auth 目录：
 
 ```text
-~/.claude/whatsapp-auth/default
+~/.sciencex/credentials/whatsapp-auth/default
 ```
 
 配置记录写在：
@@ -60,7 +60,7 @@ WhatsApp 方案适合用自己的 WhatsApp 个人号在私聊里远程驱动 Sci
 {
   "whatsapp": {
     "accountJid": "15551234567@s.whatsapp.net",
-    "authDir": "~/.claude/whatsapp-auth/default",
+    "authDir": "~/.sciencex/credentials/whatsapp-auth/default",
     "allowedUsers": [],
     "pairedUsers": []
   }
@@ -117,7 +117,7 @@ WhatsApp adapter 不依赖 WhatsApp message edit 做 token 级流式更新。它
 ## 环境变量覆盖（可选）
 
 ```bash
-export WHATSAPP_AUTH_DIR="$HOME/.claude/whatsapp-auth/default"
+export WHATSAPP_AUTH_DIR="$HOME/.sciencex/credentials/whatsapp-auth/default"
 export WHATSAPP_ACCOUNT_JID="15551234567@s.whatsapp.net"
 export ADAPTER_SERVER_URL="ws://127.0.0.1:3456"
 ```

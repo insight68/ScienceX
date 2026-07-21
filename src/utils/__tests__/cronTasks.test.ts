@@ -49,7 +49,7 @@ describe('CronTaskMeta type coverage', () => {
 
     // Create a task with all metadata fields (durable=true writes to disk in test dir)
     const tmpDir = join('/tmp', `cron-meta-test-${randomUUID().slice(0, 8)}`)
-    await mkdir(join(tmpDir, '.claude'), { recursive: true })
+    await mkdir(join(tmpDir, '.sciencex'), { recursive: true })
 
     const id = await addCronTask(
       '0 9 * * *',
@@ -81,7 +81,7 @@ describe('readCronTasks backward compatibility', () => {
   test('handles empty file', async () => {
     const { readCronTasks } = await import('../cronTasks.js')
     const tmpDir = join('/tmp', `cron-empty-${randomUUID().slice(0, 8)}`)
-    await mkdir(join(tmpDir, '.claude'), { recursive: true })
+    await mkdir(join(tmpDir, '.sciencex'), { recursive: true })
 
     const tasks = await readCronTasks(tmpDir)
     expect(Array.isArray(tasks)).toBe(true)
@@ -93,7 +93,7 @@ describe('readCronTasks backward compatibility', () => {
   test('skips malformed JSON', async () => {
     const { readCronTasks } = await import('../cronTasks.js')
     const tmpDir = join('/tmp', `cron-malformed-${randomUUID().slice(0, 8)}`)
-    await mkdir(join(tmpDir, '.claude'), { recursive: true })
+    await mkdir(join(tmpDir, '.sciencex'), { recursive: true })
 
     // Write malformed JSON
     const filePath = join(tmpDir, '.sciencex', 'scheduled_tasks.json')
@@ -108,7 +108,7 @@ describe('readCronTasks backward compatibility', () => {
   test('skips tasks with invalid cron strings', async () => {
     const { readCronTasks } = await import('../cronTasks.js')
     const tmpDir = join('/tmp', `cron-invalid-${randomUUID().slice(0, 8)}`)
-    await mkdir(join(tmpDir, '.claude'), { recursive: true })
+    await mkdir(join(tmpDir, '.sciencex'), { recursive: true })
 
     // Write task with invalid cron
     const filePath = join(tmpDir, '.sciencex', 'scheduled_tasks.json')

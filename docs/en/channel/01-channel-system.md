@@ -546,7 +546,7 @@ After enabling a plugin, if a Channel has unconfigured `userConfig` fields:
 1. `getUnconfiguredChannels()` detects fields that haven't passed validation
 2. `PluginOptionsFlow` component prompts the user for each field
 3. Sensitive values (like bot_token) stored in Keychain
-4. Regular values stored in `~/.claude/plugins/options/{pluginId}.json`
+4. Regular values stored in `~/.sciencex/claude/plugins/options/{pluginId}.json`
 
 ```typescript
 // mcpPluginIntegration.ts:290-318

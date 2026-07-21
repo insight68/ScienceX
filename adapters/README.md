@@ -18,7 +18,7 @@
 ```text
 Desktop Webapp Settings
   -> /api/adapters
-  -> ~/.claude/adapters.json
+  -> ~/.sciencex/config/adapters.json
   -> adapters/<platform>/index.ts
   -> /api/sessions + /ws/:sessionId
   -> Claude Code session
@@ -96,7 +96,7 @@ adapters/
 - Telegram: photo、document、video、audio、voice
 - WhatsApp: image、document、video、audio、sticker
 
-下载落地到 `~/.claude/im-downloads/{platform}/{sessionId}/`,24 小时后自动 GC(`.part` 孤文件 10 分钟超时)。大小限制:单张图 ≤10 MB、单个文件 ≤30 MB,超限直接拒收并在 IM 里提示。
+下载落地到 `~/.sciencex/data/im-downloads/{platform}/{sessionId}/`,24 小时后自动 GC(`.part` 孤文件 10 分钟超时)。大小限制:单张图 ≤10 MB、单个文件 ≤30 MB,超限直接拒收并在 IM 里提示。
 
 **出站(Claude → 用户):**
 
