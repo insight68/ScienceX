@@ -200,7 +200,7 @@ describe('Electron window service', () => {
     })
     expect(windowChromeOptionsForPlatform('darwin')).toEqual({
       titleBarStyle: 'hiddenInset',
-      fullscreenable: false,
+      fullscreenable: true,
     })
     expect(windowChromeOptionsForPlatform('linux')).toEqual({
       titleBarStyle: 'default',

@@ -166,7 +166,7 @@ export function windowChromeOptionsForPlatform(
   if (platform === 'darwin') {
     return {
       titleBarStyle: 'hiddenInset',
-      fullscreenable: false,
+      fullscreenable: true,
     }
   }
 
