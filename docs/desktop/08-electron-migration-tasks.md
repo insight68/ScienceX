@@ -217,7 +217,7 @@
 - `bun run check:desktop` 通过，现有 React/Tauri 主干未被 `openPath` contract 破坏。
 - 2026-06-01 Electron dev 壳 Computer Use 复测附件选择：点击 composer `添加文件或图片` 打开 macOS 原生 `打开` 面板，选择 `/Users/nanmi/sciencex-cua-attachment-smoke.txt` 后回到应用，composer 显示 `sciencex-cua-attachment-smoke.txt` 附件 chip。
 - 2026-06-01 Electron dev 壳 Computer Use 复测 Python 路径选择：在 Computer Use 设置中点击 `选择` 打开 macOS 原生 `选择 Python 解释器` 面板，选择 `/Users/nanmi/sciencex-cua-python3-smoke` 后应用解析并保存为 `/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/bin/python3.14`；随后恢复自动检测，`/api/computer-use/authorized-apps` 返回 `pythonPath: null`。
-- 2026-06-01 Electron dev 壳 Computer Use 复测外链：点击关于页 GitHub 项目卡片后，系统浏览器 Google Chrome 被拉到前台，地址栏为 `github.com/NanmiCoder/sciencex`；Electron renderer 仍停留在 `localhost:1420/`，未在应用内导航外链。
+- 2026-06-01 Electron dev 壳 Computer Use 复测外链：点击关于页 GitHub 项目卡片后，系统浏览器 Google Chrome 被拉到前台，地址栏为 `github.com/insight68/sciencex`；Electron renderer 仍停留在 `localhost:1420/`，未在应用内导航外链。
 
 **通过标准：** 所有原 `plugin-dialog` 和 `plugin-shell` 用户路径可用。
 **阻断条件：** 任一路径绕过 preload 或接受未校验目标。
@@ -326,7 +326,7 @@
 - 新增 `desktop/electron/services/updater.ts`；`autoDownload=false`，`checkForUpdates()` 只返回 metadata，`downloadUpdate()` 将 electron-updater `download-progress` 转成现有 `DesktopUpdateDownloadEvent`，`relaunch()` 阶段调用 `quitAndInstall(false, true)`。
 - 扩展 Electron IPC：`desktop:update:download`、`desktop:update:install` 和 `desktop:update:download-event`。
 - `desktop/src/lib/desktopHost/electronHost.ts` 将 Electron update metadata 包装成现有 `DesktopUpdate` 对象，renderer `updateStore` 不需要改状态机。
-- `desktop/package.json` 已加入 Electron builder metadata：`appId=com.ScienceX.desktop`、GitHub publish 到 `NanmiCoder/sciencex`、macOS `dmg/zip`、Windows `nsis`、Linux `AppImage/deb`；packaged runtime 使用 `asar=true`，并通过 `asarUnpack` 保留 `node-pty` 与 sidecar binaries。
+- `desktop/package.json` 已加入 Electron builder metadata：`appId=com.ScienceX.desktop`、GitHub publish 到 `insight68/sciencex`、macOS `dmg/zip`、Windows `nsis`、Linux `AppImage/deb`；packaged runtime 使用 `asar=true`，并通过 `asarUnpack` 保留 `node-pty` 与 sidecar binaries。
 - `bun run check:electron` 通过：36 tests passed，Electron main/preload 构建成功。
 - `bun run check:desktop` 通过：desktop `tsc --noEmit`、Vitest 全量 146 test files / 1127 tests passed，production build 成功。
 

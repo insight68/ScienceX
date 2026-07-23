@@ -5,7 +5,7 @@
   "description": "Desktop coding agent workbench for ScienceX.",
   "homepage": "https://github.com/insight68/ScienceX",
   "author": {
-    "name": "NanmiCoder",
+    "name": "insight68",
     "email": "relakkes@gmail.com"
   },
   "type": "module",
@@ -66,12 +66,12 @@
       ],
       "icon": "src-tauri/icons",
       "category": "Development",
-      "maintainer": "NanmiCoder <relakkes@gmail.com>"
+      "maintainer": "insight68 <relakkes@gmail.com>"
     },
     "publish": [
       {
         "provider": "github",
-        "owner": "NanmiCoder",
+        "owner": "insight68",
         "repo": "sciencex"
       }
     ]

@@ -114,9 +114,9 @@ describe('release desktop workflow', () => {
 
     expect(desktopPackage.description).toBeTruthy()
     expect(desktopPackage.homepage).toBe('https://github.com/insight68/ScienceX')
-    expect(desktopPackage.author?.name).toBe('NanmiCoder')
+    expect(desktopPackage.author?.name).toBe('insight68')
     expect(desktopPackage.author?.email).toBe('relakkes@gmail.com')
-    expect(desktopPackage.build?.linux?.maintainer).toBe('NanmiCoder <relakkes@gmail.com>')
+    expect(desktopPackage.build?.linux?.maintainer).toBe('insight68 <relakkes@gmail.com>')
   })
 
   test('release workflow requires macOS Gatekeeper launch approval for signed builds', () => {
@@ -447,7 +447,7 @@ describe('release desktop workflow', () => {
     expect(desktopPackage.build.publish).toEqual([
       {
         provider: 'github',
-        owner: 'NanmiCoder',
+        owner: 'insight68',
         repo: 'sciencex',
       },
     ])
