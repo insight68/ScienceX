@@ -49,7 +49,7 @@ afterEach(async () => {
 function initialProjection(overrides: Partial<SessionListSummary> = {}): TranscriptProjection {
   return {
     summary: {
-      title: 'Untitled Session',
+      title: '新课题',
       createdAt: '2026-01-01T00:00:00.000Z',
       modifiedAt: '2026-01-01T00:00:00.000Z',
       messageCount: 0,

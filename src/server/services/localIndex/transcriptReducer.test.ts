@@ -12,7 +12,7 @@ const mtime = '2026-01-02T00:00:00.000Z'
 function initialProjection(overrides: Partial<SessionListSummary> = {}): TranscriptProjection {
   return {
     summary: {
-      title: 'Untitled Session',
+      title: '新课题',
       createdAt: birthtime,
       modifiedAt: mtime,
       messageCount: 0,
@@ -380,7 +380,7 @@ describe('reduceTranscript', () => {
     const result = reduceTranscript(chunks, initialProjection())
 
     expect(result.summary).toEqual({
-      title: 'Untitled Session',
+      title: '新课题',
       createdAt: birthtime,
       modifiedAt: mtime,
       messageCount: 0,

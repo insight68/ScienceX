@@ -947,7 +947,7 @@ export class SessionService {
   ): Promise<SessionListSummary> {
     let projection: TranscriptProjection = {
       summary: {
-        title: 'Untitled Session',
+        title: '新课题',
         createdAt: stat.birthtime.toISOString(),
         modifiedAt: stat.mtime.toISOString(),
         messageCount: 0,
@@ -1922,7 +1922,7 @@ export class SessionService {
       }
     }
 
-    return 'Untitled Session'
+    return '新课题'
   }
 
   // --------------------------------------------------------------------------

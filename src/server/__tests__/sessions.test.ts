@@ -741,7 +741,7 @@ describe('SessionService', () => {
 
     expect(result.sessions).toHaveLength(1)
     expect(result.sessions[0]).toMatchObject({
-      title: 'Untitled Session',
+      title: '新课题',
       modifiedAt: fallbackTime.toISOString(),
       messageCount: 0,
     })
@@ -841,7 +841,7 @@ describe('SessionService', () => {
     chunks.push({ text: incompleteTail, byteStart, completeLine: false })
     const seed: TranscriptProjection = {
       summary: {
-        title: 'Untitled Session',
+        title: '新课题',
         createdAt: stat.birthtime.toISOString(),
         modifiedAt: stat.mtime.toISOString(),
         messageCount: 0,
@@ -933,7 +933,7 @@ describe('SessionService', () => {
 
     const seed: TranscriptProjection = {
       summary: {
-        title: 'Untitled Session',
+        title: '新课题',
         createdAt: stat.birthtime.toISOString(),
         modifiedAt: stat.mtime.toISOString(),
         messageCount: 0,
@@ -2866,12 +2866,12 @@ describe('SessionService', () => {
     expect(detail!.title.endsWith('...')).toBe(true)
   })
 
-  it('should fall back to "Untitled Session" when no user message', async () => {
+  it('should fall back to default title when no user message', async () => {
     const sessionId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
     await writeSessionFile('-tmp-project', sessionId, [makeSnapshotEntry()])
 
     const detail = await service.getSession(sessionId)
-    expect(detail!.title).toBe('Untitled Session')
+    expect(detail!.title).toBe('新课题')
   })
 
   it('should detect placeholder launch info for desktop-created sessions', async () => {

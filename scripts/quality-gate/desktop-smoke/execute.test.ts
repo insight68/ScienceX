@@ -68,7 +68,7 @@ describe('desktop smoke restored session detection', () => {
     ].join('\n'), 'project')).toBe(false)
 
     expect(desktopSmokeTextShowsProject([
-      'Untitled Session',
+      '新课题',
       '让 Claude 编辑、调试或解释代码...',
       'folder',
       'project',

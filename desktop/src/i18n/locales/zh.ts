@@ -1972,7 +1972,7 @@ export const zh: Record<TranslationKey, string> = {
   'update.failed': '更新失败: {error}',
 
   // ─── 活跃会话 ──────────────────────────────────────
-  'session.untitled': '未命名会话',
+  'session.untitled': '新课题',
   'session.active': '会话活跃中',
   'session.lastUpdated': '最后更新 {time}',
   'session.messages': '{count} 条消息',

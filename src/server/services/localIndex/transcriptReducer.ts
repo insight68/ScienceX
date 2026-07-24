@@ -465,7 +465,7 @@ function summaryFromState(state: ReducerState): SessionListSummary {
       state.goalTitle ||
       state.aiTitle ||
       state.firstUserTitle ||
-      'Untitled Session',
+      '新课题',
     createdAt: state.hasCreatedAt ? state.createdAt : state.fallbackCreatedAt,
     modifiedAt: state.semanticModifiedAt ?? state.fallbackModifiedAt,
     messageCount: state.messageCount,

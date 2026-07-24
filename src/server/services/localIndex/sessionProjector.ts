@@ -188,7 +188,7 @@ function sameReadSnapshot(left: SourceFingerprint, right: SourceFingerprint): bo
 function initialProjection(candidate: SessionSourceCandidate): TranscriptProjection {
   return {
     summary: {
-      title: 'Untitled Session',
+      title: '新课题',
       createdAt: candidate.fallbackCreatedAt,
       modifiedAt: candidate.fallbackModifiedAt,
       messageCount: 0,
