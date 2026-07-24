@@ -1,7 +1,7 @@
 {
   "name": "claude-code-desktop",
   "private": true,
-  "version": "0.4.9",
+  "version": "0.2.0",
   "description": "Desktop coding agent workbench for ScienceX.",
   "homepage": "https://github.com/insight68/ScienceX",
   "author": {

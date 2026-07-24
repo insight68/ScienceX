@@ -148,7 +148,8 @@ try {
     }
   }
 
-  $args = @('electron-builder', '--win', 'nsis', '--x64', '--publish', 'never')
+  $publishMode = if ($env:PUBLISH) { $env:PUBLISH } else { 'never' }
+  $args = @('electron-builder', '--win', 'nsis', '--x64', '--publish', $publishMode)
   $remainingArgs = @($BuilderArgs)
   if ($remainingArgs.Count -gt 0) {
     $args += $remainingArgs

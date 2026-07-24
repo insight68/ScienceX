@@ -111,7 +111,7 @@ fi
 echo "[build-macos-arm64] Cleaning empty dmg-builder cache directories..."
 (cd "${DESKTOP_DIR}" && bash ./scripts/clean-dmg-builder-cache.sh)
 
-BUILDER_ARGS=(node "${ELECTRON_BUILDER_CLI}" --mac "${MAC_TARGET_ARRAY[@]}" --arm64 --publish never)
+BUILDER_ARGS=(node "${ELECTRON_BUILDER_CLI}" --mac "${MAC_TARGET_ARRAY[@]}" --arm64 --publish "${PUBLISH:-never}")
 if [[ "${SIGN_BUILD:-0}" != "1" ]]; then
   export CSC_IDENTITY_AUTO_DISCOVERY=false
   # package.json sets mac.notarize=true for the signed CI release path. A local

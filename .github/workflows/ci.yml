@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 服务端测试 + 策略 ─────────────────────────────────
+  server:
+    name: Server tests & policy
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run policy tests
+        run: bun run check:policy
+      - name: Run server tests
+        run: bun run check:server
+        env:
+          # 确保测试在无网络、无真实凭据、无真实用户目录下运行
+          CI: 'true'
+          SCIENCE_X_TEST_MODE: 'ci'
+
+  # ── 桌面端 lint + 测试 + 构建 ──────────────────────────
+  desktop:
+    name: Desktop lint, test & build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install desktop dependencies
+        run: |
+          cd desktop
+          bun install --frozen-lockfile
+      - name: Type check (lint)
+        run: |
+          cd desktop
+          bun run lint
+      - name: Unit tests
+        run: |
+          cd desktop
+          bun run test -- --run
+      - name: Build renderer
+        run: |
+          cd desktop
+          bun run build
+
+  # ── 适配器测试 ────────────────────────────────────────
+  adapters:
+    name: Adapter tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install adapter dependencies
+        run: |
+          cd adapters
+          bun install --frozen-lockfile
+      - name: Run adapter tests
+        run: bun run check:adapters

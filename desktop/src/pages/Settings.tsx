@@ -4397,8 +4397,7 @@ const GITHUB_REPO = 'https://github.com/insight68/ScienceX'
 const GITHUB_ISSUES = `${GITHUB_REPO}/issues`
 const GITHUB_RELEASES = `${GITHUB_REPO}/releases`
 const AUTHOR_GITHUB = 'https://github.com/insight68'
-const SOCIAL_LINKS = [
-] as const
+const SOCIAL_LINKS: readonly { name: string; url: string; icon: string; label: string }[] = []
 
 function isValidHttpProxyUrl(value: string) {
   try {

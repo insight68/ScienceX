@@ -1,6 +1,6 @@
 # ScienceX
 <p align="center">
-  <img src="docs/images/desktop_ui/Sciencex202607193.png" alt="ScienceX" width="480">
+  <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
 </p>
 
 
@@ -51,6 +51,9 @@ ScienceX is not a single-purpose chat box. It combines a research layer for proj
 | 🚧 In development | Rich scientific artifacts | Code-linked figures, manuscripts, domain renderers, and reviewer agents                                     |
 
 The current `table-quality-v1` recipe profiles at most 100 safely parsed sample rows. It checks structure and data quality; it is **not full-dataset statistics, significance testing, or a scientific conclusion**.
+<p align="center">
+  <img src="docs/images/desktop_ui/Sciencex202607193.png" alt="ScienceX" width="800">
+</p>
 
 ## Core workflow
 

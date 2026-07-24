@@ -95,7 +95,7 @@ if [[ "${REBUILD_NATIVE:-0}" == "1" ]]; then
   (cd "${DESKTOP_DIR}" && bun run prepare:node-pty)
 fi
 
-BUILDER_ARGS=(bunx electron-builder --linux "${LINUX_TARGET_ARRAY[@]}" "--${BUILDER_ARCH}" --publish never)
+BUILDER_ARGS=(bunx electron-builder --linux "${LINUX_TARGET_ARRAY[@]}" "--${BUILDER_ARCH}" --publish "${PUBLISH:-never}")
 if [[ "$#" -gt 0 ]]; then
   BUILDER_ARGS+=("$@")
 fi
