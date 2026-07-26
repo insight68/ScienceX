@@ -1,0 +1,322 @@
+name: PR Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Scope plan: route quality jobs based on changed files ──
+  scope-plan:
+    name: Scope plan
+    runs-on: ubuntu-22.04
+    outputs:
+      areas: ${{ steps.plan.outputs.areas }}
+      area_labels: ${{ steps.plan.outputs.area_labels }}
+      blocked: ${{ steps.plan.outputs.blocked }}
+      blocking_reasons: ${{ steps.plan.outputs.blocking_reasons }}
+      desktop_checks: ${{ steps.plan.outputs.desktop_checks }}
+      server_checks: ${{ steps.plan.outputs.server_checks }}
+      adapter_checks: ${{ steps.plan.outputs.adapter_checks }}
+      desktop_native_checks: ${{ steps.plan.outputs.desktop_native_checks }}
+      provider_contract_checks: ${{ steps.plan.outputs.provider_contract_checks }}
+      chat_contract_checks: ${{ steps.plan.outputs.chat_contract_checks }}
+      persistence_checks: ${{ steps.plan.outputs.persistence_checks }}
+      policy_checks: ${{ steps.plan.outputs.policy_checks }}
+      docs_checks: ${{ steps.plan.outputs.docs_checks }}
+      coverage_checks: ${{ steps.plan.outputs.coverage_checks }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Compute changed files
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}" --depth=1
+            git diff --name-only "origin/${{ github.base_ref }}...HEAD" > changed-files.txt
+          else
+            git diff --name-only HEAD~1 > changed-files.txt || touch changed-files.txt
+          fi
+      - name: Run scope plan
+        id: plan
+        run: bun run scripts/pr/change-policy.ts --files changed-files.txt --plan-only
+
+  # ── Policy enforcement: deterministic policy regression ──
+  policy-enforcement:
+    name: Policy enforcement
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run policy regression tests
+        run: bun run check:policy
+
+  # ── Desktop checks ──
+  desktop-checks:
+    name: Desktop checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.desktop_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install desktop dependencies
+        run: |
+          cd desktop
+          bun install --frozen-lockfile
+      - name: Run desktop checks
+        run: bun run check:desktop
+
+  # ── Server checks ──
+  server-checks:
+    name: Server checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.server_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run server tests
+        run: bun run check:server
+
+  # ── Provider contract checks ──
+  provider-contract-checks:
+    name: Provider contract checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.provider_contract_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run provider contract tests
+        run: bun run check:provider-contract
+
+  # ── Chat contract checks ──
+  chat-contract-checks:
+    name: Chat contract checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.chat_contract_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run chat contract tests
+        run: bun run check:chat-contract
+
+  # ── Persistence upgrade checks ──
+  persistence-checks:
+    name: Persistence upgrade checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.persistence_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run persistence upgrade tests
+        run: bun run check:persistence-upgrade
+
+  # ── Adapter checks ──
+  adapter-checks:
+    name: Adapter checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.adapter_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install adapter dependencies
+        run: |
+          cd adapters
+          bun install --frozen-lockfile
+      - name: Run adapter tests
+        run: bun run check:adapters
+
+  # ── Desktop native checks ──
+  desktop-native-checks:
+    name: Desktop native checks
+    runs-on: macos-14
+    needs: scope-plan
+    if: needs.scope-plan.outputs.desktop_native_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install desktop dependencies
+        run: |
+          cd desktop
+          bun install --frozen-lockfile
+      - name: Run native checks
+        run: bun run check:native
+
+  # ── Docs checks ──
+  docs-checks:
+    name: Docs checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.docs_checks == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run docs checks
+        run: bun run check:docs
+
+  # ── Coverage checks ──
+  coverage-checks:
+    name: Coverage checks
+    runs-on: ubuntu-22.04
+    needs: scope-plan
+    if: needs.scope-plan.outputs.coverage_checks == 'true'
+    env:
+      COVERAGE_BASE_REF: origin/${{ github.base_ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Run coverage gate
+        run: |
+          bun run check:coverage
+          latest_report="$(find artifacts -name 'coverage-report.md' -type f | head -1)"
+          if [ -n "$latest_report" ]; then
+            cat "$latest_report" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: artifacts/coverage/
+          retention-days: 14
+
+  # ── Required gate job for branch protection ──
+  pr-quality-gate:
+    name: pr-quality-gate
+    runs-on: ubuntu-22.04
+    needs:
+      - scope-plan
+      - policy-enforcement
+      - desktop-checks
+      - server-checks
+      - provider-contract-checks
+      - chat-contract-checks
+      - persistence-checks
+      - adapter-checks
+      - desktop-native-checks
+      - docs-checks
+      - coverage-checks
+    if: always()
+    steps:
+      - name: Evaluate gate
+        run: |
+          set -eu
+          require_success() {
+            local name="$1"
+            local result="$2"
+            if [ "$result" != "success" ]; then
+              echo "::error::Required job $name did not succeed (result: $result)"
+              exit 1
+            fi
+          }
+          require_selected() {
+            local name="$1"
+            local result="$2"
+            local selected="$3"
+            if [ "$selected" = "true" ] && [ "$result" != "success" ]; then
+              echo "::error::Selected job $name did not succeed (result: $result)"
+              exit 1
+            fi
+          }
+          require_success "scope-plan" "${{ needs.scope-plan.result }}"
+          require_success "policy-enforcement" "${{ needs.policy-enforcement.result }}"
+          require_selected "provider-contract-checks" "${{ needs.provider-contract-checks.result }}" "${{ needs.scope-plan.outputs.provider_contract_checks }}"
+          require_selected "chat-contract-checks" "${{ needs.chat-contract-checks.result }}" "${{ needs.scope-plan.outputs.chat_contract_checks }}"
+          require_selected "coverage-checks" "${{ needs.coverage-checks.result }}" "${{ needs.scope-plan.outputs.coverage_checks }}"
+          require_selected "desktop-checks" "${{ needs.desktop-checks.result }}" "${{ needs.scope-plan.outputs.desktop_checks }}"
+          require_selected "server-checks" "${{ needs.server-checks.result }}" "${{ needs.scope-plan.outputs.server_checks }}"
+          require_selected "adapter-checks" "${{ needs.adapter-checks.result }}" "${{ needs.scope-plan.outputs.adapter_checks }}"
+          require_selected "desktop-native-checks" "${{ needs.desktop-native-checks.result }}" "${{ needs.scope-plan.outputs.desktop_native_checks }}"
+          require_selected "persistence-checks" "${{ needs.persistence-checks.result }}" "${{ needs.scope-plan.outputs.persistence_checks }}"
+          require_selected "docs-checks" "${{ needs.docs-checks.result }}" "${{ needs.scope-plan.outputs.docs_checks }}"
+          echo "All required and selected checks passed."

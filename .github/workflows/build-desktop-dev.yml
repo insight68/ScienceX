@@ -1,0 +1,133 @@
+name: Build Desktop (Dev)
+
+# Development desktop packaging workflow. Produces unsigned installers for
+# manual testing. Release publishing is handled by release-desktop.yml.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'src/**'
+      - '.github/workflows/build-desktop-dev.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'src/**'
+      - '.github/workflows/build-desktop-dev.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-desktop-dev-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build (${{ matrix.label }})
+    runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS-ARM64
+            smoke_platform: macos
+            arch: arm64
+            target_triple: aarch64-apple-darwin
+            builder_args: --mac dmg zip --arm64
+            runs_on: macos-14
+          - label: macOS-x64
+            smoke_platform: macos
+            arch: x64
+            target_triple: x86_64-apple-darwin
+            builder_args: --mac dmg zip --x64
+            runs_on: macos-13
+          - label: Linux-x64
+            smoke_platform: linux
+            arch: x64
+            target_triple: x86_64-unknown-linux-gnu
+            builder_args: --linux AppImage deb --x64
+            runs_on: ubuntu-22.04
+          - label: Windows-x64
+            smoke_platform: windows
+            arch: x64
+            target_triple: x86_64-pc-windows-msvc
+            builder_args: --win nsis --x64
+            runs_on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install desktop dependencies
+        run: |
+          cd desktop
+          bun install --frozen-lockfile
+      - name: Prepare bundled ripgrep
+        run: |
+          cd desktop
+          bun run prepare:ripgrep
+        env:
+          SIDECAR_TARGET_TRIPLE: ${{ matrix.target_triple }}
+      - name: Build sidecars
+        run: |
+          cd desktop
+          bun run build:sidecars
+        env:
+          BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache
+          SIDECAR_TARGET_TRIPLE: ${{ matrix.target_triple }}
+      - name: Build Electron app
+        run: |
+          cd desktop
+          bun run build
+          bun run build:electron
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged app structure
+        run: |
+          cd desktop
+          node ./node_modules/electron-builder/out/cli/cli.js --dir --publish never
+      - name: Build Electron installer
+        run: |
+          cd desktop
+          node ./node_modules/electron-builder/out/cli/cli.js ${{ matrix.builder_args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Windows storage recovery test
+        if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
+        run: |
+          cd desktop
+          bun run test:windows-storage-recovery
+      - name: Windows installer smoke test
+        if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
+        run: |
+          cd desktop
+          powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./scripts/windows-installer-smoke.ps1
+      - name: Package smoke test
+        run: bun run test:package-smoke --platform ${{ matrix.smoke_platform }} --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          if [ "${{ matrix.smoke_platform }}" = "macos" ]; then
+            cp desktop/build-artifacts/electron/*.dmg artifacts/ || true
+            cp desktop/build-artifacts/electron/*.yml artifacts/ || true
+            cp desktop/scripts/install-macos-unsigned.sh artifacts/ || true
+          elif [ "${{ matrix.smoke_platform }}" = "linux" ]; then
+            cp desktop/build-artifacts/electron/*.AppImage artifacts/ || true
+            cp desktop/build-artifacts/electron/*.deb artifacts/ || true
+          elif [ "${{ matrix.smoke_platform }}" = "windows" ]; then
+            cp desktop/build-artifacts/electron/*.exe artifacts/ || true
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-dev-artifacts-${{ matrix.label }}
+          path: artifacts/
+          retention-days: 7
