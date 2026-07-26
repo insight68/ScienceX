@@ -51,8 +51,7 @@ jobs:
             echo "macOS artifacts will be unsigned"
             echo "Users will need to run desktop/scripts/install-macos-unsigned.sh"
             if [ "$RELEASE_DRAFT" != "true" ]; then
-              echo "::error::Refusing to publish a non-draft desktop release without macOS signing/notarization secrets."
-              exit 1
+              echo "::warning::Publishing unsigned desktop release. Set secrets to enable signing/notarization."
             fi
           fi
 

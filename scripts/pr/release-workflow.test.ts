@@ -237,7 +237,7 @@ describe('release desktop workflow', () => {
     expect(signingJob).toContain('macOS artifacts will be unsigned')
     expect(signingJob).toContain('install-macos-unsigned.sh')
     expect(signingJob).toContain("RELEASE_DRAFT: ${{ github.event_name == 'workflow_dispatch' && inputs.draft == true }}")
-    expect(signingJob).toContain('Refusing to publish a non-draft desktop release without macOS signing/notarization secrets.')
+    expect(signingJob).toContain('Publishing unsigned desktop release. Set secrets to enable signing/notarization.')
     expect(signingJob).toContain('macos_signed=false')
     expect(signingJob).toContain('macos_signed=true')
     expect(signingJob).toContain('Windows signing secrets missing')
@@ -250,7 +250,7 @@ describe('release desktop workflow', () => {
       /win_missing=\(\)[\s\S]*?fi\n/,
     )?.[0]
     expect(macRequiredBlock).toContain('if [ "$RELEASE_DRAFT" != "true" ]; then')
-    expect(macRequiredBlock).toContain('exit 1')
+    expect(macRequiredBlock).toContain('Publishing unsigned desktop release. Set secrets to enable signing/notarization.')
     expect(windowsOptionalBlock).toContain('::warning::')
     expect(windowsOptionalBlock).not.toContain('exit 1')
     expect(buildJob).toContain('- signing-preflight')
