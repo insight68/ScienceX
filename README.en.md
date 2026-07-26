@@ -1,3 +1,5 @@
+[中文](README.md) | [English](README.en.md)
+
 # ScienceX
 <p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
@@ -79,7 +81,29 @@ Registration stores the source table's absolute path; it does not copy the origi
 
 ### Install the desktop app
 
-Download a macOS / Windows / Linux installer that includes the Science workbench from [Releases](https://github.com/insight68/sciencex/releases). If the latest published release does not include the newest Science work, use the source workflow below.
+Download the installer for your platform from [Releases](https://github.com/insight68/sciencex/releases/latest):
+
+<p align="center">
+  <a href="https://github.com/insight68/sciencex/releases/latest">
+    <img src="https://img.shields.io/badge/macOS-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
+  </a>
+  &nbsp;
+  <a href="https://github.com/insight68/sciencex/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-.exe-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
+  </a>
+  &nbsp;
+  <a href="https://github.com/insight68/sciencex/releases/latest">
+    <img src="https://img.shields.io/badge/Linux-.AppImage_%7C_.deb-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux">
+  </a>
+</p>
+
+| Platform | Architecture | Installer format |
+| --- | --- | --- |
+| macOS | Apple Silicon (ARM64) / Intel (x64) | `.dmg` / `.zip` |
+| Windows | x64 / ARM64 | `.exe` (NSIS) |
+| Linux | x86_64 / ARM64 | `.AppImage` / `.deb` |
+
+If the latest published release does not include the newest Science work, use the source workflow below.
 
 ### Run the complete desktop app from source
 

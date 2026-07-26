@@ -1,3 +1,5 @@
+[English](README.en.md) | [中文](README.md)
+
 # ScienceX
 
 <p align="center">
@@ -84,7 +86,29 @@ ScienceX 的基础不是一个单用途聊天框，而是两层协同的本地�
 
 ### 安装桌面端
 
-从 [Releases](https://github.com/insight68/sciencex/releases) 下载包含 Science 工作台的 macOS / Windows / Linux 安装包。正式 Release 尚未包含最新 Science 功能时，请使用下面的源码方式。
+从 [Releases](https://github.com/insight68/sciencex/releases/latest) 下载对应平台的安装包：
+
+<p align="center">
+  <a href="https://github.com/insight68/sciencex/releases/latest">
+    <img src="https://img.shields.io/badge/macOS-.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
+  </a>
+  &nbsp;
+  <a href="https://github.com/insight68/sciencex/releases/latest">
+    <img src="https://img.shields.io/badge/Windows-.exe-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
+  </a>
+  &nbsp;
+  <a href="https://github.com/insight68/sciencex/releases/latest">
+    <img src="https://img.shields.io/badge/Linux-.AppImage_%7C_.deb-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux">
+  </a>
+</p>
+
+| 平台 | 架构 | 安装包格式 |
+| --- | --- | --- |
+| macOS | Apple Silicon (ARM64) / Intel (x64) | `.dmg` / `.zip` |
+| Windows | x64 / ARM64 | `.exe` (NSIS) |
+| Linux | x86_64 / ARM64 | `.AppImage` / `.deb` |
+
+正式 Release 尚未包含最新 Science 功能时，请使用下面的源码方式。
 
 ### 从源码运行完整桌面端
 
