@@ -126,6 +126,55 @@
     }
   },
   {
+    "id": "dashscope",
+    "name": "阿里云百炼",
+    "baseUrl": "https://dashscope.aliyuncs.com/apps/anthropic",
+    "apiFormat": "anthropic",
+    "defaultModels": {
+      "main": "qwen3.7-max",
+      "haiku": "qwen3.6-flash",
+      "sonnet": "qwen3.7-max",
+      "opus": "qwen3.7-max"
+    },
+    "needsApiKey": true,
+    "websiteUrl": "https://help.aliyun.com/zh/model-studio/",
+    "apiKeyUrl": "https://bailian.console.aliyun.com/?tab=model#/apiKey",
+    "promoText": "阿里云百炼提供 Anthropic 兼容接口，支持通义千问全系模型，按量计费无需订阅，国内网络直连 Claude Code。",
+    "authStrategy": "auth_token",
+    "defaultEnv": {
+      "CLAUDE_CODE_SUBAGENT_MODEL": "qwen3.7-max"
+    },
+    "modelContextWindows": {
+      "qwen3.7-max": 1000000,
+      "qwen3.6-flash": 1000000,
+      "qwen3.7-plus": 1000000,
+      "qwen3-coder-plus": 1000000
+    }
+  },
+  {
+    "id": "volces",
+    "name": "火山方舟",
+    "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
+    "apiFormat": "anthropic",
+    "defaultModels": {
+      "main": "doubao-seed-code-preview-latest",
+      "haiku": "doubao-seed-code-preview-latest",
+      "sonnet": "doubao-seed-code-preview-latest",
+      "opus": "doubao-seed-code-preview-latest"
+    },
+    "needsApiKey": true,
+    "websiteUrl": "https://www.volcengine.com/product/ark",
+    "apiKeyUrl": "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
+    "promoText": "火山方舟 Coding Plan 提供 Anthropic 兼容接口，支持豆包编程模型 Doubao-Seed-Code，专为 Agentic 编程优化，国内直连。",
+    "authStrategy": "auth_token",
+    "defaultEnv": {
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+    },
+    "modelContextWindows": {
+      "doubao-seed-code-preview-latest": 256000
+    }
+  },
+  {
     "id": "jiekouai",
     "name": "接口AI",
     "baseUrl": "https://api.jiekou.ai/anthropic",
