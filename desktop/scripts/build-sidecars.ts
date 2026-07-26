@@ -204,6 +204,12 @@ async function compileExecutable({
       'fflate',
       'sharp',
       'react-devtools-core',
+      // IM adapters 的可选 SDK：声明在 adapters/package.json，根 workspace 不安装。
+      // 运行时按需 import，未安装时由 try/catch 兜底。
+      '@whiskeysockets/baileys',
+      '@larksuiteoapi/node-sdk',
+      'grammy',
+      'dingtalk-stream',
     ],
     compile: {
       target: bunTarget,
