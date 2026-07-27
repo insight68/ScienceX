@@ -9,7 +9,7 @@
  *  - OpenClaw impl:    openclaw-lark/src/messaging/outbound/media.ts:226,281,323,423,454
  */
 
-import * as Lark from '@larksuiteoapi/node-sdk'
+import type * as Lark from '@larksuiteoapi/node-sdk'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { AttachmentStore } from '../common/attachment/attachment-store.js'

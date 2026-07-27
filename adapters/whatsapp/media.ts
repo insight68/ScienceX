@@ -1,15 +1,11 @@
 import * as path from 'node:path'
-import {
-  downloadMediaMessage,
-  normalizeMessageContent,
-  type WAMessage,
-  type proto,
-} from '@whiskeysockets/baileys'
+import type { WAMessage, proto } from '@whiskeysockets/baileys'
 import type { WhatsAppSocket } from './session.js'
 import { AttachmentStore } from '../common/attachment/attachment-store.js'
 import type { LocalAttachment } from '../common/attachment/attachment-types.js'
 
-function unwrapMessage(message: proto.IMessage | undefined): proto.IMessage | undefined {
+async function unwrapMessage(message: proto.IMessage | undefined): Promise<proto.IMessage | undefined> {
+  const { normalizeMessageContent } = await import('@whiskeysockets/baileys')
   return normalizeMessageContent(message)
 }
 
@@ -66,7 +62,7 @@ export class WhatsAppMediaService {
   ) {}
 
   async downloadMessageMedia(message: proto.IWebMessageInfo, sessionId: string): Promise<LocalAttachment | null> {
-    const content = unwrapMessage(message.message as proto.IMessage | undefined)
+    const content = await unwrapMessage(message.message as proto.IMessage | undefined)
     if (!content) return null
     const hasMedia = Boolean(
       content.imageMessage ||
@@ -78,6 +74,7 @@ export class WhatsAppMediaService {
     if (!hasMedia) return null
 
     const mimeType = resolveMediaMime(content) ?? 'application/octet-stream'
+    const { downloadMediaMessage } = await import('@whiskeysockets/baileys')
     const buffer = await downloadMediaMessage(
       message as WAMessage,
       'buffer',

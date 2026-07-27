@@ -6,7 +6,6 @@
  */
 
 import path from 'node:path'
-import { DWClient, TOPIC_CARD, TOPIC_ROBOT } from 'dingtalk-stream'
 import { WsBridge, type ServerMessage, type AttachmentRef } from '../common/ws-bridge.js'
 import { MessageDedup } from '../common/message-dedup.js'
 import { MessageBuffer } from '../common/message-buffer.js'
@@ -650,6 +649,10 @@ async function collectAttachments(
 }
 
 async function start(): Promise<void> {
+  // 动态 import：dingtalk-stream 是可选依赖（声明在 adapters/package.json），
+  // 只有真正启动钉钉适配器时才加载，避免 sidecar 编译时拉入未安装的 SDK
+  const { DWClient, TOPIC_CARD, TOPIC_ROBOT } = await import('dingtalk-stream')
+
   const client = new DWClient({
     clientId: config.dingtalk.clientId,
     clientSecret: config.dingtalk.clientSecret,

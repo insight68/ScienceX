@@ -7,7 +7,7 @@
  * 启动：FEISHU_APP_ID=xxx FEISHU_APP_SECRET=xxx bun run feishu/index.ts
  */
 
-import * as Lark from '@larksuiteoapi/node-sdk'
+import type * as Lark from '@larksuiteoapi/node-sdk'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
 import { WsBridge, type ServerMessage, type AttachmentRef } from '../common/ws-bridge.js'
@@ -48,12 +48,7 @@ if (!config.feishu.appId || !config.feishu.appSecret) {
   process.exit(1)
 }
 
-const larkClient = new Lark.Client({
-  appId: config.feishu.appId,
-  appSecret: config.feishu.appSecret,
-  appType: Lark.AppType.SelfBuild,
-  domain: Lark.Domain.Feishu,
-})
+let larkClient: InstanceType<typeof Lark.Client>
 
 const bridge = new WsBridge(config.serverUrl, 'feishu')
 const dedup = new MessageDedup()
@@ -63,7 +58,7 @@ const httpClient = new AdapterHttpClient(config.serverUrl, { allowedProjectRoots
 
 // Attachment plumbing — shared by inbound (download) and outbound (upload) paths.
 const attachmentStore = new AttachmentStore()
-const media = new FeishuMediaService(larkClient, attachmentStore)
+let media: FeishuMediaService
 attachmentStore.gc().catch((err) => {
   console.warn('[Feishu] AttachmentStore.gc failed:', err instanceof Error ? err.message : err)
 })
@@ -1270,6 +1265,18 @@ async function start(): Promise<void> {
   console.log('[Feishu] Starting bot...')
   console.log(`[Feishu] Server: ${config.serverUrl}`)
   console.log(`[Feishu] App ID: ${config.feishu.appId}`)
+
+  // 动态 import：@larksuiteoapi/node-sdk 是可选依赖（声明在 adapters/package.json），
+  // 只有真正启动飞书适配器时才加载，避免 sidecar 编译时拉入未安装的 SDK
+  const Lark = await import('@larksuiteoapi/node-sdk')
+
+  larkClient = new Lark.Client({
+    appId: config.feishu.appId,
+    appSecret: config.feishu.appSecret,
+    appType: Lark.AppType.SelfBuild,
+    domain: Lark.Domain.Feishu,
+  })
+  media = new FeishuMediaService(larkClient, attachmentStore)
 
   await resolveBotOpenId()
 

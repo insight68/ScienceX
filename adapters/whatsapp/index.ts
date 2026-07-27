@@ -7,10 +7,7 @@
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import {
-  normalizeMessageContent,
-  type proto,
-} from '@whiskeysockets/baileys'
+import type { proto } from '@whiskeysockets/baileys'
 import { WsBridge, type ServerMessage, type AttachmentRef } from '../common/ws-bridge.js'
 import { MessageDedup } from '../common/message-dedup.js'
 import { enqueue } from '../common/chat-queue.js'
@@ -544,7 +541,8 @@ async function collectAttachments(
   return { attachments, rejections }
 }
 
-function extractText(raw: proto.IMessage | undefined): string {
+async function extractText(raw: proto.IMessage | undefined): Promise<string> {
+  const { normalizeMessageContent } = await import('@whiskeysockets/baileys')
   const msg = normalizeMessageContent(raw)
   if (!msg) return ''
   return msg.conversation
@@ -568,7 +566,7 @@ async function handleIncomingMessage(message: proto.IWebMessageInfo): Promise<vo
   if (chatId === 'status@broadcast' || chatId.endsWith('@broadcast') || !isDirectChat(chatId)) return
   if (!dedup.tryRecord(`${chatId}:${messageId}`)) return
 
-  const text = extractText(message.message as proto.IMessage | undefined)
+  const text = await extractText(message.message as proto.IMessage | undefined)
   const { attachments, rejections } = await collectAttachments(message, chatId)
   for (const rejection of rejections) {
     await sendWhatsAppText(chatId, rejection).catch(() => {})

@@ -6,7 +6,7 @@
  *   2. GET https://api.telegram.org/file/bot<token>/<file_path>
  */
 
-import { InputFile, type Bot } from 'grammy'
+import type { Bot } from 'grammy'
 import { AttachmentStore } from '../common/attachment/attachment-store.js'
 import type { LocalAttachment } from '../common/attachment/attachment-types.js'
 
@@ -67,6 +67,7 @@ export class TelegramMediaService {
   }
 
   async sendPhoto(chatId: number, buffer: Buffer, caption?: string): Promise<void> {
+    const { InputFile } = await import('grammy')
     await this.bot.api.sendPhoto(
       chatId,
       new InputFile(buffer),
@@ -80,6 +81,7 @@ export class TelegramMediaService {
     fileName: string,
     caption?: string,
   ): Promise<void> {
+    const { InputFile } = await import('grammy')
     await this.bot.api.sendDocument(
       chatId,
       new InputFile(buffer, fileName),
