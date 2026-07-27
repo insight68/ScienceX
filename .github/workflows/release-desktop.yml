@@ -269,9 +269,10 @@ jobs:
           bun run test:windows-storage-recovery
       - name: Windows installer smoke test
         if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
+        shell: pwsh
         run: |
-          cd desktop
-          powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./scripts/windows-installer-smoke.ps1 -ArtifactsDir build-artifacts/electron
+          Set-Location desktop
+          ./scripts/windows-installer-smoke.ps1 -ArtifactsDir build-artifacts/electron
       - name: Package smoke test
         run: bun run test:package-smoke --platform ${{ matrix.smoke_platform }} --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron
       - name: Namespace update metadata assets
