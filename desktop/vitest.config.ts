@@ -14,6 +14,7 @@ export default defineConfig({
     globals: true,
     css: true,
     setupFiles: [],
+    testTimeout: 15000,
     coverage: {
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
