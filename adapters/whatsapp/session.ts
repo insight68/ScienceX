@@ -1,18 +1,13 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import {
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  makeCacheableSignalKeyStore,
-  makeWASocket,
-  useMultiFileAuthState,
-} from '@whiskeysockets/baileys'
+import type { makeWASocket } from '@whiskeysockets/baileys'
 
 export type WhatsAppSocket = ReturnType<typeof makeWASocket>
 
 const CREDS_FILE = 'creds.json'
 const CREDS_BACKUP_FILE = 'creds.json.bak'
-const LOGGED_OUT_STATUS = DisconnectReason?.loggedOut ?? 401
+// baileys DisconnectReason.loggedOut === 401；硬编码避免模块加载时拉入 SDK
+const LOGGED_OUT_STATUS = 401
 
 const credsSaveQueues = new Map<string, Promise<void>>()
 
@@ -45,6 +40,15 @@ export async function createWhatsAppSocket(options: {
   const authDir = path.resolve(options.authDir)
   fs.mkdirSync(authDir, { recursive: true, mode: 0o700 })
   maybeRestoreCredsFromBackup(authDir)
+
+  // 动态 import：baileys 是可选依赖（声明在 adapters/package.json），
+  // 只有真正发起 WhatsApp 登录时才加载，避免 server 启动时拉入未安装的 SDK
+  const {
+    fetchLatestBaileysVersion,
+    makeCacheableSignalKeyStore,
+    makeWASocket,
+    useMultiFileAuthState,
+  } = await import('@whiskeysockets/baileys')
 
   const logger = makeBaileysLogger(options.verbose ? 'info' : 'silent')
   const { state, saveCreds } = await useMultiFileAuthState(authDir)
