@@ -256,6 +256,14 @@ jobs:
           bun-version: 1.3.12
       - name: Install root dependencies
         run: bun install --frozen-lockfile
+      - name: Install adapter dependencies
+        run: |
+          cd adapters
+          bun install --frozen-lockfile
+      - name: Install desktop dependencies
+        run: |
+          cd desktop
+          bun install --frozen-lockfile
       - name: Run coverage gate
         run: |
           bun run check:coverage

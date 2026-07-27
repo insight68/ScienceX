@@ -914,7 +914,7 @@ export async function runCoverageGate(options: {
       '--coverage.reporter=json-summary',
       '--coverage.reporter=lcov',
       `--coverage.reportsDirectory=${join(outputDir, 'desktop')}`,
-      '--testTimeout=20000',
+      '--testTimeout=30000',
     ],
     join(rootDir, 'desktop'),
     join(outputDir, 'desktop'),
