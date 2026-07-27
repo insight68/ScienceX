@@ -247,6 +247,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Verify packaged app structure
+        shell: bash
         run: |
           cd desktop
           ls -la build-artifacts/electron/ || true
