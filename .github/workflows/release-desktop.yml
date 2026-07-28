@@ -271,8 +271,10 @@ jobs:
         if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
         shell: pwsh
         run: |
-          Set-Location desktop
-          ./scripts/windows-installer-smoke.ps1 -ArtifactsDir build-artifacts/electron
+          $workspace = $env:GITHUB_WORKSPACE
+          $scriptPath = Join-Path $workspace 'desktop\scripts\windows-installer-smoke.ps1'
+          $artifactsDir = Join-Path $workspace 'desktop\build-artifacts\electron'
+          & $scriptPath -ArtifactsDir $artifactsDir
       - name: Package smoke test
         run: bun run test:package-smoke --platform ${{ matrix.smoke_platform }} --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron
       - name: Namespace update metadata assets
