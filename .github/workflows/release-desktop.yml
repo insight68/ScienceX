@@ -111,6 +111,9 @@ jobs:
             builder_args: --win nsis --arm64
             runs_on: windows-latest
     runs-on: ${{ matrix.runs_on }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
