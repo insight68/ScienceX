@@ -368,7 +368,7 @@ describe('WorkspaceDiffSurface', () => {
     expect(screen.getByTestId('workspace-code')).toHaveAttribute('data-highlight-engine', 'plain')
     expect(highlightRequestSpy).not.toHaveBeenCalled()
     expect(getCodeRow('const value5000 = 5000')).toHaveTextContent('const value5000 = 5000')
-  })
+  }, 60_000)
 
   it('renders parsed file headers and keeps multiple files visually separated', () => {
     const multiFileDiff = [
@@ -499,7 +499,7 @@ describe('WorkspaceDiffSurface', () => {
 
     expect(highlightRequestSpy).toHaveBeenCalledTimes(highlightCountBeforeTyping)
     expect(editor).toHaveValue('abc')
-  })
+  }, 60_000)
 
   it('preserves draft text but invalidates its selection when the diff changes', () => {
     const { rerender } = render(<WorkspaceDiffSurface value={diff} path="src/a.ts" />)

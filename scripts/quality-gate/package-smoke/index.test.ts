@@ -178,8 +178,8 @@ describe('packaged artifact inspection', () => {
     writeFile(rootDir, 'desktop/build-artifacts/electron/mac-arm64/ScienceX.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/package.json')
     writeFile(rootDir, 'desktop/build-artifacts/electron/mac-arm64/ScienceX.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/prebuilds/darwin-arm64/pty.node')
     writeFile(rootDir, 'desktop/build-artifacts/electron/mac-arm64/ScienceX.app/Contents/Resources/app.asar.unpacked/node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper')
-    writeFile(rootDir, 'desktop/build-artifacts/electron/ScienceX-0.3.1-arm64-mac.zip')
-    writeFile(rootDir, 'desktop/build-artifacts/electron/latest-mac.yml', 'path: ScienceX-0.3.1-arm64-mac.zip\n')
+    writeFile(rootDir, 'desktop/build-artifacts/electron/ScienceX-0.3.1-arm64.zip')
+    writeFile(rootDir, 'desktop/build-artifacts/electron/latest-mac.yml', 'path: ScienceX-0.3.1-arm64-missing.zip\n')
 
     const report = await inspectPackagedArtifacts(rootDir, { platform: 'macos' })
 
