@@ -91,6 +91,13 @@ describe('evaluateChangePolicy', () => {
     expect(result.checks.desktopNative).toBe(true)
   })
 
+  test('routes PR quality workflow changes through the native lane they configure', () => {
+    const result = evaluateChangePolicy(['.github/workflows/pr-quality.yml'])
+
+    expect(result.checks.policy).toBe(true)
+    expect(result.checks.desktopNative).toBe(true)
+  })
+
   test('routes provider runtime changes to the offline provider contract', () => {
     const result = evaluateChangePolicy([
       'src/server/services/providerRuntimeEnv.ts',

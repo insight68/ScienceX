@@ -59,6 +59,7 @@ const cliCorePrefixes = [
 ]
 
 const desktopNativeExactPaths = new Set([
+  '.github/workflows/pr-quality.yml',
   'bun.lock',
   'package.json',
   'desktop/bun.lock',

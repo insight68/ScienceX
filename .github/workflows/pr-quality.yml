@@ -215,6 +215,12 @@ jobs:
         run: |
           cd desktop
           bun install --frozen-lockfile
+      - name: Prepare bundled ripgrep
+        run: |
+          cd desktop
+          bun run prepare:ripgrep
+        env:
+          SIDECAR_TARGET_TRIPLE: aarch64-apple-darwin
       - name: Run native checks
         run: bun run check:native
 

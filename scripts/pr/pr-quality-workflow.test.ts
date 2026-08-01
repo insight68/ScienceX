@@ -4,7 +4,11 @@ import { parse } from 'yaml'
 
 type WorkflowJob = {
   needs?: string | string[]
-  steps?: Array<{ name?: string; run?: string }>
+  steps?: Array<{
+    name?: string
+    run?: string
+    env?: Record<string, string>
+  }>
 }
 
 function workflowJobs(workflow: string) {
@@ -52,6 +56,19 @@ describe('PR quality workflow', () => {
       expect(jobs[jobId].needs).toBe('scope-plan')
     }
     expect(workflow).toContain('bun-version: 1.3.12')
+  })
+
+  test('prepares the pinned ripgrep asset before native packaging checks', () => {
+    const workflow = readFileSync('.github/workflows/pr-quality.yml', 'utf8')
+    const steps = workflowJobs(workflow)['desktop-native-checks'].steps ?? []
+    const prepareIndex = steps.findIndex(step => step.name === 'Prepare bundled ripgrep')
+    const nativeCheckIndex = steps.findIndex(step => step.name === 'Run native checks')
+    const prepareStep = steps[prepareIndex]
+
+    expect(prepareIndex).toBeGreaterThanOrEqual(0)
+    expect(prepareIndex).toBeLessThan(nativeCheckIndex)
+    expect(prepareStep?.run).toContain('bun run prepare:ripgrep')
+    expect(prepareStep?.env?.SIDECAR_TARGET_TRIPLE).toBe('aarch64-apple-darwin')
   })
 
   test('keeps coverage artifacts observable in CI', () => {
