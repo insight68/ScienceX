@@ -44,7 +44,7 @@ jobs:
             arch: x64
             target_triple: x86_64-apple-darwin
             builder_args: --mac dmg zip --x64
-            runs_on: macos-13
+            runs_on: macos-15-intel
           - label: Linux-x64
             smoke_platform: linux
             arch: x64
@@ -58,7 +58,7 @@ jobs:
             builder_args: --win nsis --x64
             runs_on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -108,12 +108,16 @@ jobs:
           bun run test:windows-storage-recovery
       - name: Windows installer smoke test
         if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
+        shell: pwsh
         run: |
-          cd desktop
-          powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ./scripts/windows-installer-smoke.ps1
+          $workspace = $env:GITHUB_WORKSPACE
+          $scriptPath = Join-Path $workspace 'desktop\scripts\windows-installer-smoke.ps1'
+          $artifactsDir = Join-Path $workspace 'desktop\build-artifacts\electron'
+          & $scriptPath -ArtifactsDir $artifactsDir
       - name: Package smoke test
         run: bun run test:package-smoke --platform ${{ matrix.smoke_platform }} --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron
       - name: Collect artifacts
+        shell: bash
         run: |
           mkdir -p artifacts
           if [ "${{ matrix.smoke_platform }}" = "macos" ]; then
@@ -126,7 +130,7 @@ jobs:
           elif [ "${{ matrix.smoke_platform }}" = "windows" ]; then
             cp desktop/build-artifacts/electron/*.exe artifacts/ || true
           fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: desktop-dev-artifacts-${{ matrix.label }}
           path: artifacts/

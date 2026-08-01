@@ -114,6 +114,13 @@ describe('evaluateChangePolicy', () => {
     expect(result.checks.policy).toBe(true)
   })
 
+  test('routes release validation changes to the release area', () => {
+    const result = evaluateChangePolicy(['scripts/release-validate.ts'])
+
+    expect(result.areas).toEqual(['release'])
+    expect(result.areaLabels).toEqual(['area:release'])
+  })
+
   test('keeps quality ownership and contributor contracts on the policy lane', () => {
     const result = evaluateChangePolicy([
       '.github/CODEOWNERS',

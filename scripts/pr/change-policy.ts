@@ -158,6 +158,7 @@ const releaseExactPaths = new Set([
   'scripts/pr/check-pr.ts',
   'scripts/pr/run-server-tests.ts',
   'scripts/release.ts',
+  'scripts/release-validate.ts',
   'desktop/electron/tsconfig.json',
   'desktop/scripts/build-macos-arm64.sh',
   'desktop/scripts/build-windows-x64.ps1',

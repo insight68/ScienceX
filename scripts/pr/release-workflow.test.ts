@@ -1,5 +1,14 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { validateReleaseSource } from '../release-validate'
 
 describe('release desktop workflow', () => {
   function readReleaseWorkflow() {
@@ -23,8 +32,8 @@ describe('release desktop workflow', () => {
   test('release packaging does not run the PR-quality gate', () => {
     const workflow = readReleaseWorkflow()
 
-    // Quality gates run on PRs, not at release time: tagging should not be
-    // blocked by `bun run verify`. Releasing is gated on the tag only.
+    // Quality gates run on PRs, not at release time. The release-specific
+    // preflight validates source identity without repeating the full PR suite.
     expect(workflow).not.toContain('quality-preflight')
     expect(workflow).not.toContain('bun run verify')
     expect(workflow).toContain('name: Build (${{ matrix.label }})')
@@ -57,6 +66,10 @@ describe('release desktop workflow', () => {
         expect(workflow).toContain(electronBuilderCli)
       }
       expect(workflow).toContain('smoke_platform')
+      expect(workflow).toContain('actions/checkout@v5')
+      expect(workflow).not.toContain('actions/checkout@v4')
+      expect(workflow).toContain('actions/upload-artifact@v6')
+      expect(workflow).not.toContain('actions/upload-artifact@v4')
       expect(workflow).toContain('bun run test:package-smoke --platform ${{ matrix.smoke_platform }} --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron')
       expect(workflow).not.toContain('tauri-apps/tauri-action@v0')
     }
@@ -74,6 +87,7 @@ describe('release desktop workflow', () => {
         'SIDECAR_TARGET_TRIPLE: ${{ matrix.target_triple }}',
       )
       expect(prepareStep, workflowPath).toContain('bun run prepare:ripgrep')
+      expect(prepareStep, workflowPath).not.toContain('shell: bash')
       expect(workflow.indexOf('Prepare bundled ripgrep')).toBeLessThan(
         workflow.indexOf('Build sidecars'),
       )
@@ -87,6 +101,7 @@ describe('release desktop workflow', () => {
     )?.[0]
 
     expect(collectStep).toContain('*.dmg')
+    expect(collectStep).toContain('shell: bash')
     // The macOS auto-update zip and blockmaps are not collected: unsigned builds
     // ship manual downloads only, so the artifact stays the installer + script.
     expect(collectStep).not.toContain('*.zip')
@@ -95,6 +110,130 @@ describe('release desktop workflow', () => {
     expect(collectStep).toContain('install-macos-unsigned.sh')
     expect(collectStep).toContain('[ "${{ matrix.smoke_platform }}" = "macos" ]')
     expect(collectStep).not.toContain('-type d -name "*.app"')
+  })
+
+  test('desktop workflows use the supported Intel runner instead of retired macOS 13', () => {
+    for (const workflowPath of [
+      '.github/workflows/build-desktop-dev.yml',
+      '.github/workflows/release-desktop.yml',
+    ]) {
+      const workflow = readFileSync(workflowPath, 'utf8')
+      expect(workflow).toContain('runs_on: macos-15-intel')
+      expect(workflow).not.toContain('runs_on: macos-13')
+    }
+  })
+
+  test('release workflow scopes Bash to steps that use Bash syntax on Windows', () => {
+    const workflow = readReleaseWorkflow()
+    const buildJob = extractJob(workflow, 'build')
+    const namespaceStep = extractStep(workflow, 'Namespace update metadata assets')
+    const validateAssetsStep = extractStep(workflow, 'Validate matrix release asset set')
+
+    expect(buildJob).not.toContain('defaults:')
+    expect(namespaceStep).toContain('shell: bash')
+    expect(validateAssetsStep).toContain('shell: bash')
+  })
+
+  test('release source validation accepts default-branch dispatch and matching tags', () => {
+    const rootDir = mkdtempSync(path.join(tmpdir(), 'sciencex-release-validate-'))
+    try {
+      mkdirSync(path.join(rootDir, 'desktop'), { recursive: true })
+      mkdirSync(path.join(rootDir, 'release-notes'), { recursive: true })
+      writeFileSync(path.join(rootDir, 'desktop', 'package.json'), '{"version":"1.2.3"}\n')
+      writeFileSync(path.join(rootDir, 'release-notes', 'v1.2.3.md'), '# 1.2.3\n')
+
+      expect(validateReleaseSource({
+        rootDir,
+        eventName: 'workflow_dispatch',
+        refName: 'main',
+        refType: 'branch',
+        defaultBranch: 'main',
+      })).toEqual({
+        version: '1.2.3',
+        tag: 'v1.2.3',
+        notesPath: 'release-notes/v1.2.3.md',
+      })
+      expect(validateReleaseSource({
+        rootDir,
+        eventName: 'push',
+        refName: 'v1.2.3',
+        refType: 'tag',
+        defaultBranch: 'main',
+      }).tag).toBe('v1.2.3')
+    } finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  test('release source validation rejects mismatched tags and non-default branches', () => {
+    const rootDir = mkdtempSync(path.join(tmpdir(), 'sciencex-release-validate-'))
+    try {
+      mkdirSync(path.join(rootDir, 'desktop'), { recursive: true })
+      mkdirSync(path.join(rootDir, 'release-notes'), { recursive: true })
+      writeFileSync(path.join(rootDir, 'desktop', 'package.json'), '{"version":"1.2.3"}\n')
+      writeFileSync(path.join(rootDir, 'release-notes', 'v1.2.3.md'), '# 1.2.3\n')
+
+      expect(() => validateReleaseSource({
+        rootDir,
+        eventName: 'push',
+        refName: 'v1.2.4',
+        refType: 'tag',
+        defaultBranch: 'main',
+      })).toThrow('must match desktop/package.json (v1.2.3)')
+      expect(() => validateReleaseSource({
+        rootDir,
+        eventName: 'workflow_dispatch',
+        refName: 'release-test',
+        refType: 'branch',
+        defaultBranch: 'main',
+      })).toThrow('Manual releases must run from the default branch main')
+    } finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  test('release source validation requires non-empty versioned notes', () => {
+    const rootDir = mkdtempSync(path.join(tmpdir(), 'sciencex-release-validate-'))
+    try {
+      mkdirSync(path.join(rootDir, 'desktop'), { recursive: true })
+      mkdirSync(path.join(rootDir, 'release-notes'), { recursive: true })
+      writeFileSync(path.join(rootDir, 'desktop', 'package.json'), '{"version":"1.2.3"}\n')
+
+      const options = {
+        rootDir,
+        eventName: 'workflow_dispatch',
+        refName: 'main',
+        refType: 'branch',
+        defaultBranch: 'main',
+      }
+      expect(() => validateReleaseSource(options)).toThrow(
+        'Missing release notes: release-notes/v1.2.3.md',
+      )
+      writeFileSync(path.join(rootDir, 'release-notes', 'v1.2.3.md'), '  \n')
+      expect(() => validateReleaseSource(options)).toThrow(
+        'Release notes must not be empty: release-notes/v1.2.3.md',
+      )
+    } finally {
+      rmSync(rootDir, { recursive: true, force: true })
+    }
+  })
+
+  test('release workflow validates source identity before platform builds', () => {
+    const workflow = readReleaseWorkflow()
+    const preflightJob = extractJob(workflow, 'release-preflight')
+    const buildJob = extractJob(workflow, 'build')
+    const publishJob = extractJob(workflow, 'publish-release')
+
+    expect(workflow).toContain('group: release-desktop')
+    expect(workflow).toContain('cancel-in-progress: false')
+    expect(preflightJob).toContain('bun run scripts/release-validate.ts >> "$GITHUB_OUTPUT"')
+    expect(preflightJob).toContain('GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}')
+    expect(buildJob).toContain('- release-preflight')
+    expect(publishJob).toContain('- release-preflight')
+    expect(publishJob).toContain('tag_name: ${{ needs.release-preflight.outputs.tag }}')
+    expect(publishJob).toContain('target_commitish: ${{ github.sha }}')
+    expect(publishJob).toContain('body_path: ${{ needs.release-preflight.outputs.notes_path }}')
+    expect(workflow.indexOf('release-preflight:')).toBeLessThan(workflow.indexOf('build:'))
   })
 
   test('desktop package includes Linux deb metadata required by electron-builder', () => {
@@ -172,6 +311,9 @@ describe('release desktop workflow', () => {
     expect(signedBuildStep).toContain('run_electron_builder_with_retries')
     expect(signedBuildStep).toContain('notarize_app_bundle')
     expect(signedBuildStep).toContain('xcrun notarytool submit "$notary_zip"')
+    expect(signedBuildStep).toContain('--apple-id "$APPLE_ID"')
+    expect(signedBuildStep).toContain('--password "$APPLE_APP_SPECIFIC_PASSWORD"')
+    expect(signedBuildStep).toContain('--team-id "$APPLE_TEAM_ID"')
     expect(signedBuildStep).toContain('--timeout "$notary_timeout"')
     expect(signedBuildStep).toContain('notary_attempts=3')
     expect(signedBuildStep).toContain('xcrun stapler staple "$app_path"')
@@ -254,6 +396,7 @@ describe('release desktop workflow', () => {
     expect(windowsOptionalBlock).toContain('::warning::')
     expect(windowsOptionalBlock).not.toContain('exit 1')
     expect(buildJob).toContain('- signing-preflight')
+    expect(buildJob).toContain('- release-preflight')
     expect(workflow.indexOf('signing-preflight:')).toBeLessThan(workflow.indexOf('build:'))
     expect(workflow.indexOf('signing-preflight:')).toBeLessThan(workflow.indexOf('Upload release artifacts for final publish'))
   })
@@ -281,7 +424,7 @@ describe('release desktop workflow', () => {
     expect(buildJob).toContain('builder_args: --win nsis --arm64')
     expect(buildJob).toContain('ScienceX-${APP_VERSION}-win-arm64.exe')
     expect(buildJob).toContain('Upload release artifacts for final publish')
-    expect(buildJob).toContain('actions/upload-artifact@v4')
+    expect(buildJob).toContain('actions/upload-artifact@v6')
     expect(buildJob).toContain('name: desktop-release-artifacts-${{ matrix.label }}')
     expect(buildJob).not.toContain('softprops/action-gh-release@v2')
     expect(buildJob).not.toContain('Load release notes')
@@ -293,8 +436,9 @@ describe('release desktop workflow', () => {
 
     expect(workflow).toContain('name: desktop-update-metadata-${{ matrix.label }}')
     expect(workflow).toContain('name: desktop-release-artifacts-${{ matrix.label }}')
-    expect(publishJob).toContain('needs: build')
-    expect(publishJob).toContain('actions/download-artifact@v4')
+    expect(publishJob).toContain('- build')
+    expect(publishJob).toContain('- release-preflight')
+    expect(publishJob).toContain('actions/download-artifact@v7')
     expect(publishJob).toContain('pattern: desktop-release-artifacts-*')
     expect(publishJob).toContain('pattern: desktop-update-metadata-*')
     expect(publishJob).toContain('Validate complete release asset set')
@@ -312,12 +456,12 @@ describe('release desktop workflow', () => {
     expect(publishJob).toContain('draft: true')
     expect(publishJob).toContain('Publish GitHub release after complete upload')
     expect(publishJob).toContain("if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.draft == false)")
-    expect(publishJob).toContain('gh release edit "v${{ steps.version.outputs.value }}" --draft=false --repo "${{ github.repository }}"')
+    expect(publishJob).toContain('gh release edit "${{ needs.release-preflight.outputs.tag }}" --draft=false --repo "${{ github.repository }}"')
     expect(publishJob).toContain('Keep workflow-dispatch release as draft')
     expect(publishJob).toContain("if: github.event_name == 'workflow_dispatch' && inputs.draft == true")
     expect(publishJob).toContain('release remains draft')
     expect(publishJob).toContain('fail_on_unmatched_files: true')
-    expect(publishJob).toContain('Load release notes')
+    expect(publishJob).not.toContain('Load release notes')
     expect(publishJob.indexOf('Publish complete GitHub release')).toBeLessThan(publishJob.indexOf('Publish GitHub release after complete upload'))
     expect(workflow.indexOf('publish-release:')).toBeGreaterThan(workflow.indexOf('build:'))
   })
@@ -575,6 +719,8 @@ describe('release desktop workflow', () => {
       expect(workflow).toContain('bun run test:windows-storage-recovery')
       expect(workflow).toContain("matrix.arch == 'x64'")
       expect(workflow).toContain('windows-installer-smoke.ps1')
+      expect(workflow).toContain('shell: pwsh')
+      expect(workflow).toContain('& $scriptPath -ArtifactsDir $artifactsDir')
     }
 
     expect(installerSmoke).toContain('Invoke-CheckedProcess')
