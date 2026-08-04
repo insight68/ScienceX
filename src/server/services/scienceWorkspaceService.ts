@@ -7,6 +7,7 @@ import { dsvFormat } from 'd3-dsv'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getScienceXProjectRegistryDir } from '../../utils/envUtils.js'
 import { ApiError } from '../middleware/errorHandler.js'
+import { scienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
 
 const SCIENCE_PROJECT_SCHEMA_VERSION = 2
 const SCIENCE_REGISTRY_SCHEMA_VERSION = 1
@@ -17,7 +18,7 @@ const REGISTRY_DATABASE_NAME = 'projects-v1.sqlite'
 const MAX_TABLE_SIZE_BYTES = 2 * 1024 * 1024 * 1024
 const DEFAULT_PREVIEW_BYTES = 4 * 1024 * 1024
 const DEFAULT_PREVIEW_ROWS = 50
-const MAX_PREVIEW_ROWS = 100
+const MAX_PREVIEW_ROWS = 10000
 
 export type ScienceProject = {
   id: string
@@ -72,6 +73,7 @@ export type ScienceDatasetPreview = {
   columns: ScienceColumnProfile[]
   rows: string[][]
   sampledRowCount: number
+  totalRowCount?: number
   truncated: boolean
   sizeBytes: number
   contentHash: string
@@ -889,17 +891,16 @@ export class ScienceWorkspaceService {
 
   async previewDataset(
     datasetId: string,
-    options?: { maxRows?: number; maxBytes?: number },
+    options?: { maxRows?: number; offset?: number; search?: string; maxBytes?: number },
   ): Promise<ScienceDatasetPreview> {
     const { dataset } = await findDataset(datasetId)
     const maxRows = Math.max(
       1,
       Math.min(options?.maxRows ?? DEFAULT_PREVIEW_ROWS, MAX_PREVIEW_ROWS),
     )
-    const maxBytes = Math.max(
-      1024,
-      Math.min(options?.maxBytes ?? DEFAULT_PREVIEW_BYTES, DEFAULT_PREVIEW_BYTES),
-    )
+    const offset = Math.max(0, options?.offset ?? 0)
+    const search = options?.search ?? ''
+
     const before = await fs.stat(dataset.canonicalPath).catch(error => {
       if (errnoCode(error) === 'ENOENT') {
         throw ApiError.conflict(`Dataset source file is unavailable: ${dataset.canonicalPath}`)
@@ -915,6 +916,44 @@ export class ScienceWorkspaceService {
       )
     }
 
+    const delimiter = dataset.format === 'csv' ? ',' : '\t'
+
+    // Attempt DuckDB query execution first
+    try {
+      const duckDbResult = await scienceDuckDbService.previewDataset(
+        dataset.canonicalPath,
+        dataset.format,
+        maxRows,
+        offset,
+        search,
+      )
+
+      if (duckDbResult.headers.length > 0) {
+        return {
+          datasetId: dataset.id,
+          datasetName: dataset.name,
+          format: dataset.format,
+          delimiter,
+          headers: duckDbResult.headers,
+          columns: duckDbResult.columns,
+          rows: duckDbResult.rows,
+          sampledRowCount: duckDbResult.sampledRowCount,
+          totalRowCount: duckDbResult.totalRowCount,
+          truncated: duckDbResult.truncated,
+          sizeBytes: before.size,
+          contentHash: current.contentHash,
+          localOnly: true,
+        }
+      }
+    } catch {
+      // Fallback to JS DSV parser if DuckDB parsing is incompatible with edge case
+    }
+
+    const maxBytes = Math.max(
+      1024,
+      Math.min(options?.maxBytes ?? DEFAULT_PREVIEW_BYTES, DEFAULT_PREVIEW_BYTES),
+    )
+
     const buffer = await readFilePrefix(dataset.canonicalPath, before.size, maxBytes)
     const after = await fs.stat(dataset.canonicalPath)
     if (after.size !== before.size || Math.abs(after.mtimeMs - before.mtimeMs) > 0.5) {
@@ -927,7 +966,6 @@ export class ScienceWorkspaceService {
     const sourceWasTruncated = buffer.length < before.size
     let contents = buffer.toString('utf8').replace(/^\uFEFF/, '')
     if (sourceWasTruncated) contents = trimToCompleteRecords(contents)
-    const delimiter = dataset.format === 'csv' ? ',' : '\t'
     let parsedRows: string[][]
     try {
       parsedRows = dsvFormat(delimiter).parseRows(contents)
@@ -944,7 +982,7 @@ export class ScienceWorkspaceService {
     const availableRows = parsedRows.slice(1)
     const columnCount = Math.max(rawHeaders.length, ...availableRows.map(row => row.length), 1)
     const headers = normalizeHeaders(rawHeaders, columnCount)
-    const rows = availableRows.slice(0, maxRows).map(row =>
+    const rows = availableRows.slice(offset, offset + maxRows).map(row =>
       Array.from({ length: columnCount }, (_, columnIndex) => row[columnIndex] ?? ''),
     )
 
@@ -957,11 +995,25 @@ export class ScienceWorkspaceService {
       columns: profileColumns(headers, rows),
       rows,
       sampledRowCount: rows.length,
-      truncated: sourceWasTruncated || availableRows.length > maxRows,
+      totalRowCount: availableRows.length,
+      truncated: sourceWasTruncated || availableRows.length > offset + maxRows,
       sizeBytes: before.size,
       contentHash: current.contentHash,
       localOnly: true,
     }
+  }
+
+  async getDatasetAnalytics(datasetId: string): Promise<ScienceAnalyticsResult> {
+    const { dataset } = await findDataset(datasetId)
+    const before = await fs.stat(dataset.canonicalPath).catch(error => {
+      if (errnoCode(error) === 'ENOENT') {
+        throw ApiError.conflict(`Dataset source file is unavailable: ${dataset.canonicalPath}`)
+      }
+      throw error
+    })
+    if (!before.isFile()) throw ApiError.conflict('Dataset source path is no longer a file')
+
+    return scienceDuckDbService.computeAnalytics(dataset.id, dataset.canonicalPath, dataset.format)
   }
 }
 

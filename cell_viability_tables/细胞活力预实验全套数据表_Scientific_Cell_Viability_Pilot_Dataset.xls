@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Microsoft YaHei" x:CharSet="134" ss:Size="10" ss:Color="#333333"/>
+   <Interior/>
+   <Borders/>
+  </Style>
+  <Style ss:ID="HeaderStyle">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Font ss:FontName="Microsoft YaHei" ss:Size="10" ss:Color="#FFFFFF" ss:Bold="1"/>
+   <Interior ss:Color="#1F497D" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D9D9D9"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="DataStyle">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Microsoft YaHei" ss:Size="10"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="HighlightStyle">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Microsoft YaHei" ss:Size="10" ss:Color="#9C0006" ss:Bold="1"/>
+   <Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E0E0E0"/>
+   </Borders>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="CCK-8剂量反应预实验">
+  <Table>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Row ss:Height="26">
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">分组 ID (Group)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">化合物浓度 (Concentration μM)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Raw OD450 孔1</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Raw OD450 孔2</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Raw OD450 孔3</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Raw OD450 孔4</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Raw OD450 孔5</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Mean OD450 (平均吸光度)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Net OD450 (净吸光度: Mean - Blank)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Cell Viability % (细胞活力%)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Inhibition Rate % (细胞抑制率%)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">SD (标准差)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">CV % (变异系数)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">实验备注 (Notes)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Blank (空白对照组)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.052</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.054</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.051</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.053</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.05</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.052</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0016</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">3.04%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">无细胞无药物，加培养基与CCK-8</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Control (阴性对照组)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.482</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.51</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.465</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.498</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.47</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.485</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.433</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">100.00%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">0.00%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0189</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.27%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">含细胞，加0.1% DMSO溶剂对照</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (0.01μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.01</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.458</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.472</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.44</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.468</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.462</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.46</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.408</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">98.26%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.74%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0124</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">0.85%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">低浓度，极微弱抑制</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (0.10μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.1</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.355</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.378</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.34</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.362</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.38</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.363</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.311</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">91.49%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">8.51%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0166</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.22%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">轻微抑制作用</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (1.00μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.085</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.102</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.07</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.115</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.098</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.094</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.042</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">72.71%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">27.29%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0172</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.57%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">开始出现显著抑制作用</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (5.00μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.742</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.76</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.73</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.755</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.748</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.747</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.695</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">48.50%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">51.50%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0117</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.57%</Data></Cell>
+    <Cell ss:StyleID="HighlightStyle"><Data ss:Type="String">接近预计 IC50 点 (~4.8 μM)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (25.00μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">25.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.352</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.368</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.345</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.36</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.365</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.358</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.306</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">21.35%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">78.65%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0095</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">2.64%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">强抑制作用 (>75% 死亡)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (100.00μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.14</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.148</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.138</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.145</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.144</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.143</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.091</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">6.35%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">93.65%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.004</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">2.80%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">高浓度毒性平台区</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="接种密度与时间优化">
+  <Table>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Row ss:Height="26">
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">接种密度 (Cells/well)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">24h Mean OD450</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">24h SD</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">24h 评价 (Assessment)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">48h Mean OD450</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">48h SD</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">48h 评价 (Assessment)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">72h Mean OD450</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">72h SD</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">72h 评价 (Assessment)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">综合推荐级别 (Recommendation)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.215</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.012</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">吸光度偏低 (OD < 0.5)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.385</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.018</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">仍偏低</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.69</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.025</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">适宜</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">适合长周期 (72h) 实验</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">2000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.342</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.015</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">偏低</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.68</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.028</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">适宜 (进入对数期)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.24</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.042</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">良好 (线性区)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">适合 48-72h 药物敏感性实验</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.58</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.022</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">良好</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.185</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.039</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">最佳窗口期 (OD 1.0-1.5)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.95</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.055</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">接近饱和</Data></Cell>
+    <Cell ss:StyleID="HighlightStyle"><Data ss:Type="String">【首选推荐】48h 经典抗肿瘤预实验</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">8000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.985</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.035</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">最佳 (OD ~ 1.0)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.89</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.062</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">较高 (接近触发接触抑制)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">2.45</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.078</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">过饱合区 (无法反映增殖)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">适合 24h 快速毒性筛查</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">12000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.42</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.048</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">较高</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">2.38</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.085</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">过度融合 (OD > 2.0)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">2.61</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.092</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">平台期/细胞脱落</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">不推荐 (>24h易脱落)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">16000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.85</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.06</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">接近上限</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">2.58</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.09</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">已过饱合</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">2.68</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.095</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">大量细胞死失脱落</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">不推荐</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="Calcein-AM_PI活死双染">
+  <Table>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Row ss:Height="26">
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">实验分组 (Group)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">化合物浓度 (μM)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Calcein-AM RFU (活细胞绿荧光 Rep1)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Calcein-AM RFU (Rep2)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Calcein-AM RFU (Rep3)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Calcein-AM RFU (Rep4)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Mean Calcein RFU (活细胞荧光均值)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">PI RFU (死细胞红荧光 Rep1)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">PI RFU (Rep2)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">PI RFU (Rep3)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">PI RFU (Rep4)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Mean PI RFU (死细胞荧光均值)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Calculated Live Cell % (活细胞比例%)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Calculated Dead Cell % (死细胞比例%)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Live/Dead Signal Ratio</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">表型评估 (Phenotype)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Control (阴性对照)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15380.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15520.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15290.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15490.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15420.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">410.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">395.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">425.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">410.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">410.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">97.41%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">2.59%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">37.61</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">细胞贴壁饱满，呈强绿色荧光</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (1.0 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">11920.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">11780.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">11890.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">11810.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">11850.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1820.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1890.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1810.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1880.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1850.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">86.50%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">13.50%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">6.41</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">少部分细胞变圆，出现散在红色荧光</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (10.0 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">10.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4250.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4310.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4220.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4340.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4280.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">8890.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">9020.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">8910.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">8980.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">8950.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">32.35%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">67.65%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.48</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">多数细胞死失，红色荧光显著增强</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (50.0 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">50.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1150.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1090.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1140.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1120.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">13750.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">13890.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">13710.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">13850.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">13800.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">7.51%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">92.49%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.08</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">绝大部分细胞解体，呈密集红荧光</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Positive Control (1% Triton X-100)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">290.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">270.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">280.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">280.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">280.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15800.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15920.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15790.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15890.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">15850.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.74%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">98.26%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.02</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">膜完全穿孔，100% 死细胞阳性对照</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+ <Worksheet ss:Name="CellTiter-Glo_ATP发光法">
+  <Table>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Column ss:AutoFitWidth="1" ss:Width="130"/>
+   <Row ss:Height="26">
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">实验分组 (Group)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">浓度 (μM)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">RLU 孔1 (Luminescence)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">RLU 孔2</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">RLU 孔3</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">RLU 孔4</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Mean RLU (平均发光值)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Net RLU (净发光值: Mean - Blank)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">Cell Viability % (细胞活力%)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">SD (标准差)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">CV % (变异系数)</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">信噪比 S/B Ratio</Data></Cell>
+    <Cell ss:StyleID="HeaderStyle"><Data ss:Type="String">实验结论与评估</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Blank (培养基+CTG)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">460.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">435.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">455.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">450.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">450.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">10.8</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">2.40%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">背景光噪</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Control (0.1% DMSO)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">-</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">184500.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">186200.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">183900.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">187000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">185400.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">184950.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">100.00%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">1444.5</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">0.78%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">412.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">无受试物对照，定为 100% 活力</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (0.05 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.05</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">177500.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">179100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">177800.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">178400.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">178200.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">177750.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">96.11%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">707.1</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">0.40%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">396.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">轻微影响 (96.1% 活力)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (0.50 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">142000.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">143500.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">141800.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">143100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">142600.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">142150.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">76.86%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">828.7</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">0.58%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">316.9</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">中等抑制 (76.9% 活力)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (5.00 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">88100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">89200.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">87800.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">88500.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">88400.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">87950.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">47.55%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">605.5</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">0.68%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">196.4</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">半数抑制窗口 (47.5% 活力)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (25.00 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">25.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">32500.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">33200.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">32100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">33400.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">32800.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">32350.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">17.49%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">605.5</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">1.85%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">72.9</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">强抑制区 (17.5% 活力)</Data></Cell>
+   </Row>
+   <Row ss:Height="22">
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">Compound X-402 (100.00 μM)</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">100.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5150.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5320.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5080.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5250.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">5200.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">4750.0</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">2.57%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">106.1</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">2.04%</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="Number">11.6</Data></Cell>
+    <Cell ss:StyleID="DataStyle"><Data ss:Type="String">完全抑制作用 (2.6% 活力)</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>

@@ -137,18 +137,30 @@ export async function handleScienceApi(
     if (resource === 'datasets') {
       const datasetId = segments[2]
       const action = segments[3]
-      if (!datasetId || action !== 'preview') {
+      if (!datasetId || (action !== 'preview' && action !== 'analytics')) {
         throw ApiError.notFound(`Unknown dataset endpoint: ${url.pathname}`)
       }
       if (request.method !== 'GET') throw methodNotAllowed(request)
 
+      if (action === 'analytics') {
+        return Response.json({
+          analytics: await scienceWorkspaceService.getDatasetAnalytics(datasetId),
+        })
+      }
+
       const rawMaxRows = url.searchParams.get('maxRows')
       const maxRows = rawMaxRows === null ? undefined : Number.parseInt(rawMaxRows, 10)
-      if (maxRows !== undefined && (!Number.isInteger(maxRows) || maxRows < 1 || maxRows > 100)) {
-        throw ApiError.badRequest('maxRows must be an integer between 1 and 100')
+      if (maxRows !== undefined && (!Number.isInteger(maxRows) || maxRows < 1 || maxRows > 10000)) {
+        throw ApiError.badRequest('maxRows must be an integer between 1 and 10000')
       }
+
+      const rawOffset = url.searchParams.get('offset')
+      const offset = rawOffset === null ? undefined : Math.max(0, Number.parseInt(rawOffset, 10) || 0)
+
+      const search = url.searchParams.get('search') ?? undefined
+
       return Response.json({
-        preview: await scienceWorkspaceService.previewDataset(datasetId, { maxRows }),
+        preview: await scienceWorkspaceService.previewDataset(datasetId, { maxRows, offset, search }),
       })
     }
 

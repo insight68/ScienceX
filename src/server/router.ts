@@ -30,6 +30,8 @@ import { handleMemoryApi } from './api/memory.js'
 import { handleDesktopUiApi } from './api/desktop-ui.js'
 import { handleTracesApi } from './api/traces.js'
 import { handleScienceApi } from './api/science.js'
+import { handleLiteratureApi } from './api/literature.js'
+import { handlePdfParseApi } from './api/pdf-parse.js'
 
 export async function handleApiRequest(req: Request, url: URL): Promise<Response> {
   const path = url.pathname
@@ -137,6 +139,12 @@ export async function handleApiRequest(req: Request, url: URL): Promise<Response
     case 'datasets':
     case 'runs':
       return handleScienceApi(req, url, segments)
+
+    case 'literature':
+      return handleLiteratureApi(req, url, segments)
+
+    case 'pdf-parse':
+      return handlePdfParseApi(req, url, segments)
 
     case 'filesystem':
       return handleFilesystemRoute(url.pathname, url)
