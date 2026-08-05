@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import duckdb from 'duckdb'
+import type duckdb from 'duckdb'
 import type { ScienceColumnProfile } from './scienceWorkspaceService.js'
 
 export type DuckDbPreviewResult = {
@@ -51,18 +51,23 @@ export type ScienceAnalyticsResult = {
 }
 
 export class ScienceDuckDbService {
-  private db: duckdb.Database
+  private db: duckdb.Database | null = null
 
-  constructor() {
-    this.db = new duckdb.Database(':memory:')
+  private async ensureDb(): Promise<duckdb.Database> {
+    if (!this.db) {
+      const duckdbModule = await import('duckdb')
+      this.db = new duckdbModule.default.Database(':memory:')
+    }
+    return this.db
   }
 
   private async runQuery<T extends Record<string, unknown>>(
     sql: string,
     params: unknown[] = [],
   ): Promise<T[]> {
+    const db = await this.ensureDb()
     return new Promise((resolve, reject) => {
-      const conn = this.db.connect()
+      const conn = db.connect()
       conn.all(sql, ...params, (err, rows) => {
         conn.close()
         if (err) {
@@ -405,8 +410,7 @@ export class ScienceDuckDbService {
   }
 
   close(): void {
-    this.db.close()
+    this.db?.close()
+    this.db = null
   }
 }
-
-export const scienceDuckDbService = new ScienceDuckDbService()

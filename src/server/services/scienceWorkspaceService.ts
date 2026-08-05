@@ -7,7 +7,7 @@ import { dsvFormat } from 'd3-dsv'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getScienceXProjectRegistryDir } from '../../utils/envUtils.js'
 import { ApiError } from '../middleware/errorHandler.js'
-import { scienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
+import { ScienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
 
 const SCIENCE_PROJECT_SCHEMA_VERSION = 2
 const SCIENCE_REGISTRY_SCHEMA_VERSION = 1
@@ -676,6 +676,8 @@ function profileColumns(headers: string[], rows: string[][]): ScienceColumnProfi
 }
 
 export class ScienceWorkspaceService {
+  private readonly duckDb = new ScienceDuckDbService()
+
   async createProject(input: {
     name: string
     question?: string
@@ -920,7 +922,7 @@ export class ScienceWorkspaceService {
 
     // Attempt DuckDB query execution first
     try {
-      const duckDbResult = await scienceDuckDbService.previewDataset(
+      const duckDbResult = await this.duckDb.previewDataset(
         dataset.canonicalPath,
         dataset.format,
         maxRows,
@@ -1013,7 +1015,7 @@ export class ScienceWorkspaceService {
     })
     if (!before.isFile()) throw ApiError.conflict('Dataset source path is no longer a file')
 
-    return scienceDuckDbService.computeAnalytics(dataset.id, dataset.canonicalPath, dataset.format)
+    return this.duckDb.computeAnalytics(dataset.id, dataset.canonicalPath, dataset.format)
   }
 }
 
