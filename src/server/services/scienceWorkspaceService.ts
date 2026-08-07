@@ -920,37 +920,6 @@ export class ScienceWorkspaceService {
 
     const delimiter = dataset.format === 'csv' ? ',' : '\t'
 
-    // Attempt DuckDB query execution first
-    try {
-      const duckDbResult = await this.duckDb.previewDataset(
-        dataset.canonicalPath,
-        dataset.format,
-        maxRows,
-        offset,
-        search,
-      )
-
-      if (duckDbResult.headers.length > 0) {
-        return {
-          datasetId: dataset.id,
-          datasetName: dataset.name,
-          format: dataset.format,
-          delimiter,
-          headers: duckDbResult.headers,
-          columns: duckDbResult.columns,
-          rows: duckDbResult.rows,
-          sampledRowCount: duckDbResult.sampledRowCount,
-          totalRowCount: duckDbResult.totalRowCount,
-          truncated: duckDbResult.truncated,
-          sizeBytes: before.size,
-          contentHash: current.contentHash,
-          localOnly: true,
-        }
-      }
-    } catch {
-      // Fallback to JS DSV parser if DuckDB parsing is incompatible with edge case
-    }
-
     const maxBytes = Math.max(
       1024,
       Math.min(options?.maxBytes ?? DEFAULT_PREVIEW_BYTES, DEFAULT_PREVIEW_BYTES),
@@ -984,9 +953,16 @@ export class ScienceWorkspaceService {
     const availableRows = parsedRows.slice(1)
     const columnCount = Math.max(rawHeaders.length, ...availableRows.map(row => row.length), 1)
     const headers = normalizeHeaders(rawHeaders, columnCount)
-    const rows = availableRows.slice(offset, offset + maxRows).map(row =>
+    const normalizedRows = availableRows.map(row =>
       Array.from({ length: columnCount }, (_, columnIndex) => row[columnIndex] ?? ''),
     )
+    const searchTerm = search.trim().toLowerCase()
+    const matchingRows = searchTerm
+      ? normalizedRows.filter(row =>
+          row.some(value => value.toLowerCase().includes(searchTerm)),
+        )
+      : normalizedRows
+    const rows = matchingRows.slice(offset, offset + maxRows)
 
     return {
       datasetId: dataset.id,
@@ -997,8 +973,8 @@ export class ScienceWorkspaceService {
       columns: profileColumns(headers, rows),
       rows,
       sampledRowCount: rows.length,
-      totalRowCount: availableRows.length,
-      truncated: sourceWasTruncated || availableRows.length > offset + maxRows,
+      totalRowCount: matchingRows.length,
+      truncated: sourceWasTruncated || matchingRows.length > offset + maxRows,
       sizeBytes: before.size,
       contentHash: current.contentHash,
       localOnly: true,

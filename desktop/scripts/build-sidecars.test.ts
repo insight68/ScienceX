@@ -2,7 +2,7 @@
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, realpath, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path, { join as joinPath } from 'node:path'
 
@@ -323,6 +323,30 @@ async function fetchBeforeCompiledSidecarDeadline(
   })
 }
 
+async function fetchCompiledSidecarJson<T>(options: {
+  baseUrl: string
+  pathname: string
+  init?: RequestInit
+  deadline: number
+}): Promise<{ status: number; body: T }> {
+  const response = await fetchBeforeCompiledSidecarDeadline(
+    `${options.baseUrl}${options.pathname}`,
+    options.init ?? {},
+    options.deadline,
+  )
+  const responseText = await response.text()
+  try {
+    return {
+      status: response.status,
+      body: JSON.parse(responseText) as T,
+    }
+  } catch {
+    throw new Error(
+      `compiled sidecar returned non-JSON response (${response.status}): ${responseText}`,
+    )
+  }
+}
+
 async function terminateCompiledSidecar(processHandle: SidecarProcess): Promise<void> {
   if (processHandle.child.exitCode !== null || processHandle.child.signalCode !== null) {
     await processHandle.exited
@@ -523,8 +547,8 @@ describe('build-sidecars Windows x64 target mapping', () => {
 const compiledSidecarSmokeEnabled =
   process.env.SCIX_RUN_COMPILED_SIDECAR_SMOKE === '1'
 
-describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smoke', () => {
-  it('uses SQLite by default, serves one indexed session, and reopens the database', async () => {
+describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar runtime smoke', () => {
+  it('reopens its SQLite index and serves research preview and analytics APIs', async () => {
     const repoRoot = path.resolve(import.meta.dirname, '../..')
     const desktopRoot = path.resolve(import.meta.dirname, '..')
     const executable = resolveSidecarExecutable(
@@ -533,10 +557,14 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
     )
     await stat(executable)
 
-    const rootDir = await mkdtemp(joinPath(tmpdir(), 'sciencex-compiled-sidecar-smoke-'))
+    const rootDir = await realpath(
+      await mkdtemp(joinPath(tmpdir(), 'sciencex-compiled-sidecar-smoke-')),
+    )
     const homeDir = joinPath(rootDir, 'home')
     const configDir = joinPath(homeDir, '.claude')
     const projectDir = joinPath(configDir, 'projects', '-tmp-compiled-sidecar-smoke')
+    const researchProjectDir = joinPath(homeDir, 'research-project')
+    const datasetPath = joinPath(researchProjectDir, 'observations.csv')
     const sessionId = 'compiled-sidecar-smoke-session'
     const localAccessToken = 'compiled-sidecar-smoke-local-access-token'
     const authenticationProofs: Array<{
@@ -551,9 +579,12 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
       'index-v1.sqlite',
     )
     let activeProcess: SidecarProcess | undefined
+    let researchProjectId: string | undefined
+    let datasetId: string | undefined
 
     const startAndVerify = async (): Promise<void> => {
       const port = await reserveLocalPort('127.0.0.1')
+      const baseUrl = `http://127.0.0.1:${port}`
       activeProcess = startCompiledSidecar({
         executable,
         repoRoot,
@@ -562,7 +593,7 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
       })
       try {
         await waitForCompiledSidecar({
-          baseUrl: `http://127.0.0.1:${port}`,
+          baseUrl,
           expectedSessionId: sessionId,
           deadlineMs: 30_000,
           exited: activeProcess.exited,
@@ -571,6 +602,112 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
           onAuthProbe: proof => authenticationProofs.push(proof),
         })
         expect((await stat(databasePath)).isFile()).toBe(true)
+
+        const requestDeadline = Date.now() + 45_000
+        const authorizedHeaders = {
+          Authorization: `Bearer ${localAccessToken}`,
+          'Content-Type': 'application/json',
+        }
+        if (!researchProjectId) {
+          const created = await fetchCompiledSidecarJson<{
+            project?: { id?: string }
+            message?: string
+          }>({
+            baseUrl,
+            pathname: '/api/research-projects',
+            init: {
+              method: 'POST',
+              headers: authorizedHeaders,
+              body: JSON.stringify({
+                name: 'Compiled sidecar research smoke',
+                rootDir: researchProjectDir,
+              }),
+            },
+            deadline: requestDeadline,
+          })
+          expect(created.status, JSON.stringify(created.body)).toBe(201)
+          expect(created.body.project?.id).toBeTruthy()
+          researchProjectId = created.body.project?.id
+
+          const registered = await fetchCompiledSidecarJson<{
+            dataset?: { id?: string }
+            versionCreated?: boolean
+            message?: string
+          }>({
+            baseUrl,
+            pathname: `/api/research-projects/${researchProjectId}/datasets`,
+            init: {
+              method: 'POST',
+              headers: authorizedHeaders,
+              body: JSON.stringify({
+                filePath: datasetPath,
+                name: 'Compiled observations',
+              }),
+            },
+            deadline: requestDeadline,
+          })
+          expect(registered.status, JSON.stringify(registered.body)).toBe(201)
+          expect(registered.body.versionCreated).toBe(true)
+          expect(registered.body.dataset?.id).toBeTruthy()
+          datasetId = registered.body.dataset?.id
+        }
+
+        expect(researchProjectId).toBeTruthy()
+        expect(datasetId).toBeTruthy()
+        const previewed = await fetchCompiledSidecarJson<{
+          preview?: {
+            headers?: string[]
+            columns?: Array<{ name?: string; inferredType?: string }>
+            rows?: string[][]
+            sampledRowCount?: number
+            totalRowCount?: number
+            localOnly?: boolean
+          }
+          message?: string
+        }>({
+          baseUrl,
+          pathname: `/api/datasets/${datasetId}/preview?maxRows=1&search=treated`,
+          init: { headers: authorizedHeaders },
+          deadline: requestDeadline,
+        })
+        expect(previewed.status, JSON.stringify(previewed.body)).toBe(200)
+        expect(previewed.body.preview).toMatchObject({
+          headers: ['sample', 'value', 'observed_at', 'note'],
+          rows: [['treated', '2', '2026-01-03', 'follow-up']],
+          sampledRowCount: 1,
+          totalRowCount: 1,
+          localOnly: true,
+        })
+        expect(previewed.body.preview?.columns).toEqual([
+          { name: 'sample', inferredType: 'string', missingCount: 0, uniqueCount: 1 },
+          { name: 'value', inferredType: 'integer', missingCount: 0, uniqueCount: 1 },
+          { name: 'observed_at', inferredType: 'datetime', missingCount: 0, uniqueCount: 1 },
+          { name: 'note', inferredType: 'string', missingCount: 0, uniqueCount: 1 },
+        ])
+
+        const analyzed = await fetchCompiledSidecarJson<{
+          analytics?: {
+            datasetId?: string
+            totalRows?: number
+            totalColumns?: number
+            histograms?: Array<{ columnName?: string }>
+          }
+          message?: string
+        }>({
+          baseUrl,
+          pathname: `/api/datasets/${datasetId}/analytics`,
+          init: { headers: authorizedHeaders },
+          deadline: requestDeadline,
+        })
+        expect(analyzed.status, JSON.stringify(analyzed.body)).toBe(200)
+        expect(analyzed.body.analytics).toMatchObject({
+          datasetId,
+          totalRows: 2,
+          totalColumns: 4,
+        })
+        expect(analyzed.body.analytics?.histograms).toEqual(
+          expect.arrayContaining([expect.objectContaining({ columnName: 'value' })]),
+        )
       } finally {
         await terminateCompiledSidecar(activeProcess)
         activeProcess = undefined
@@ -579,6 +716,7 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
 
     try {
       await mkdir(projectDir, { recursive: true })
+      await mkdir(researchProjectDir, { recursive: true })
       await writeFile(
         joinPath(projectDir, `${sessionId}.jsonl`),
         `${JSON.stringify({
@@ -592,6 +730,15 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
           uuid: 'compiled-sidecar-smoke-user-entry',
           timestamp: '2026-07-15T00:00:00.000Z',
         })}\n`,
+        'utf8',
+      )
+      await writeFile(
+        datasetPath,
+        [
+          'sample,value,observed_at,note',
+          'control,1,2026-01-02,baseline',
+          'treated,2,2026-01-03,follow-up',
+        ].join('\n'),
         'utf8',
       )
 
@@ -618,5 +765,5 @@ describe.skipIf(!compiledSidecarSmokeEnabled)('compiled sidecar local-index smok
     }
 
     expect(await stat(rootDir).then(() => true, () => false)).toBe(false)
-  }, 90_000)
+  }, 120_000)
 })

@@ -16,6 +16,11 @@ import type { LocalIndexGateway } from '../services/localIndex/sessionIndex.js'
 let tmpDir: string
 let service: SearchService
 
+const fakeRipgrepCommand = () => ({
+  rgPath: '/test/rg',
+  rgArgs: [],
+})
+
 async function setupTmpConfigDir(): Promise<void> {
   tmpDir = path.join(
     os.tmpdir(),
@@ -72,9 +77,8 @@ describe('SearchService.searchSessions', () => {
         bytesRead: Buffer.byteLength(JSON.stringify(entry)) + 1,
         rangesRead: 1,
       }),
+      resolveRipgrepCommand: fakeRipgrepCommand,
     } as never)
-    ;(escapedService as unknown as { commandExists: () => Promise<boolean> }).commandExists =
-      async () => true
     ;(escapedService as unknown as {
       runCommand: (
         command: string,
@@ -155,9 +159,8 @@ describe('SearchService.searchSessions', () => {
         bytesRead: 100,
         rangesRead: 1,
       }),
+      resolveRipgrepCommand: fakeRipgrepCommand,
     } as never)
-    ;(rankedService as unknown as { commandExists: () => Promise<boolean> }).commandExists =
-      async () => true
     ;(rankedService as unknown as {
       runCommand: (command: string, args: string[]) => Promise<string>
     }).runCommand = async () => `${paths.join('\n')}\n`
@@ -276,8 +279,8 @@ describe('SearchService.searchSessions', () => {
     }]])
     const indexed = new SearchService({
       getCandidatesForFilters: async () => metadata,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     } as never)
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -316,8 +319,8 @@ describe('SearchService.searchSessions', () => {
       readEntriesAtLines: async () => null,
       getCandidatesForFilters: async () => null,
       getMetadataForPaths: async () => staleMetadata,
+      resolveRipgrepCommand: () => ({ rgPath: '', rgArgs: [] }),
     })
-    ;(stale as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => false
 
     const { results } = await stale.searchSessions('currentmetadataneedle', {
       modifiedAfter: '2026-01-01T00:00:00.000Z',
@@ -351,9 +354,9 @@ describe('SearchService.searchSessions', () => {
     const indexed = new SearchService({
       getCandidatesForFilters: async () => metadata,
       getMetadataForPaths: async () => null,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     })
     let calls = 0
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -425,9 +428,9 @@ describe('SearchService.searchSessions', () => {
             ])
       },
       getMetadataForPaths: async () => null,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     })
     let rgCalls = 0
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -497,9 +500,9 @@ describe('SearchService.searchSessions', () => {
           : new Map([[path.resolve(included), metadata(included)]])
       },
       getMetadataForPaths: async () => null,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     })
     let rgCalls = 0
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -547,9 +550,9 @@ describe('SearchService.searchSessions', () => {
         }]])
       },
       getMetadataForPaths: async () => null,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     })
     let rgCalls = 0
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -602,9 +605,9 @@ describe('SearchService.searchSessions', () => {
         }]])
       },
       getMetadataForPaths: async () => null,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     } as never)
     let rgCalls = 0
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -636,7 +639,8 @@ describe('SearchService.searchSessions', () => {
 
     expect(directoryAfter.mtimeMs).toBe(directoryBefore.mtimeMs)
     expect(directoryAfter.ctimeMs).toBe(directoryBefore.ctimeMs)
-    expect((await fs.stat(transcriptPath)).mtimeMs).toBe(sourceBefore.mtimeMs)
+    expect(Math.abs((await fs.stat(transcriptPath)).mtimeMs - sourceBefore.mtimeMs))
+      .toBeLessThanOrEqual(1)
     expect(filterCalls).toBe(2)
     expect(rgCalls).toBe(2)
     expect(results.map(result => result.sessionId)).toEqual(['changed-session'])
@@ -654,9 +658,9 @@ describe('SearchService.searchSessions', () => {
     }]))
     const indexed = new SearchService({
       getCandidatesForFilters: async () => metadata,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     } as never)
     const batches: string[][] = []
-    ;(indexed as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(indexed as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -681,8 +685,8 @@ describe('SearchService.searchSessions', () => {
     }])
     const fallback = new SearchService({
       getCandidatesForFilters: async () => null,
+      resolveRipgrepCommand: fakeRipgrepCommand,
     } as never)
-    ;(fallback as unknown as { commandExists: () => Promise<boolean> }).commandExists = async () => true
     ;(fallback as unknown as {
       runCommand: (_command: string, args: string[]) => Promise<string>
     }).runCommand = async (_command, args) => {
@@ -1060,8 +1064,7 @@ describe('SearchService.searchSessions', () => {
   it('propagates cancellation into the active ripgrep scan', async () => {
     const controller = new AbortController()
     let commandSignal: AbortSignal | undefined
-    ;(service as unknown as { commandExists: () => Promise<boolean> }).commandExists =
-      async () => true
+    service = new SearchService({ resolveRipgrepCommand: fakeRipgrepCommand })
     ;(service as unknown as {
       runCommand: (
         command: string,

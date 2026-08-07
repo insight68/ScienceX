@@ -71,6 +71,20 @@ describe('PR quality workflow', () => {
     expect(prepareStep?.env?.SIDECAR_TARGET_TRIPLE).toBe('aarch64-apple-darwin')
   })
 
+  test('keeps docs checks isolated from native dependency install scripts', () => {
+    const workflow = readFileSync('.github/workflows/pr-quality.yml', 'utf8')
+    const docsSteps = workflowJobs(workflow)['docs-checks'].steps ?? []
+    const packageJson = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      scripts?: Record<string, string>
+    }
+
+    expect(docsSteps.some(step => step.name === 'Install root dependencies')).toBe(false)
+    expect(docsSteps.find(step => step.name === 'Run docs checks')?.run).toBe(
+      'bun run check:docs',
+    )
+    expect(packageJson.scripts?.['check:docs']).toContain('npm ci --ignore-scripts')
+  })
+
   test('keeps coverage artifacts observable in CI', () => {
     const workflow = readFileSync('.github/workflows/pr-quality.yml', 'utf8')
 

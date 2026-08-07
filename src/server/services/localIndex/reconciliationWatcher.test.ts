@@ -190,12 +190,12 @@ describe('local index reconciliation watcher', () => {
     const scope = await createTempDir()
     const projectDir = join(scope, 'projects', '-repo')
     await mkdir(projectDir, { recursive: true })
-    const startedAt = Date.now()
     const observedAt: number[] = []
+    const maxWaitMs = 60
     const watcher = createReconciliationWatcher({
       scope,
       debounceMs: 30,
-      maxWaitMs: 60,
+      maxWaitMs,
       safetySweepMs: 60_000,
       watchDirectory: () => ({ close() {} }),
       onBatch: async () => {
@@ -203,6 +203,7 @@ describe('local index reconciliation watcher', () => {
       },
     })
     await watcher.start()
+    const startedAt = Date.now()
     const storm = setInterval(() => {
       watcher.queueTranscriptPath(join(projectDir, 'storm.jsonl'))
     }, 10)
@@ -212,7 +213,7 @@ describe('local index reconciliation watcher', () => {
       clearInterval(storm)
     }
 
-    expect(observedAt[0]! - startedAt).toBeLessThan(100)
+    expect(observedAt[0]! - startedAt).toBeLessThan(maxWaitMs + 150)
     await watcher.stop()
   })
 

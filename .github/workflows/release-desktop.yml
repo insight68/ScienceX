@@ -167,6 +167,11 @@ jobs:
         env:
           BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache
           SIDECAR_TARGET_TRIPLE: ${{ matrix.target_triple }}
+      - name: Verify compiled sidecar science APIs
+        if: matrix.label != 'Linux-ARM64' && matrix.label != 'Windows-ARM64'
+        run: |
+          cd desktop
+          bun run test:compiled-sidecar-smoke
       - name: Build renderer and electron host
         run: |
           cd desktop

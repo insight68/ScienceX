@@ -22,7 +22,7 @@
     "check:electron": "cd desktop && bun run check:electron",
     "check:adapters": "cd adapters && bun test",
     "check:native": "cd desktop && bun run build:sidecars && bun run test:compiled-sidecar-smoke && bun run check:electron && CSC_IDENTITY_AUTO_DISCOVERY=false bun run electron:package:dir && cd .. && bun run test:package-smoke:current",
-    "check:docs": "npm ci --loglevel=error && npm run --loglevel=error docs:build",
+    "check:docs": "npm ci --ignore-scripts --loglevel=error && npm run --loglevel=error docs:build",
     "check:persistence-upgrade": "bun run scripts/quality-gate/persistence-upgrade.ts",
     "check:quarantine": "bun run scripts/quality-gate/quarantine.ts --enforce-review-date",
     "check:coverage": "bun run scripts/quality-gate/coverage.ts",

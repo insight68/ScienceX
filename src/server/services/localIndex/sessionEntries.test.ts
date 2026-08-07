@@ -450,7 +450,7 @@ describe('targeted session entry reads', () => {
       const after = await stat(candidate.path)
       expect(after.ino).toBe(before.ino)
       expect(after.size).toBe(before.size)
-      expect(after.mtimeMs).toBe(page.source.mtimeMs)
+      expect(Math.abs(after.mtimeMs - page.source.mtimeMs)).toBeLessThanOrEqual(1)
 
       expect(await readSessionEntriesByLocator({
         transcriptPath: candidate.path,

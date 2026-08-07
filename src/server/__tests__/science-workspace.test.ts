@@ -127,6 +127,17 @@ describe('Science workspace API', () => {
       { name: 'active', inferredType: 'boolean', missingCount: 0, uniqueCount: 2 },
       { name: 'note', inferredType: 'string', missingCount: 0, uniqueCount: 2 },
     ])
+
+    const searched = await callApi(
+      `/api/datasets/${registered.body.dataset.id}/preview?maxRows=1&search=two-line`,
+    )
+    expect(searched.status).toBe(200)
+    expect(searched.body.preview).toMatchObject({
+      rows: [['treated', '', '2', '2026-01-03', 'false', 'two-line\nobservation']],
+      sampledRowCount: 1,
+      totalRowCount: 1,
+      truncated: false,
+    })
   })
 
   it('requires an explicit re-registration after a source changes and records a new version', async () => {

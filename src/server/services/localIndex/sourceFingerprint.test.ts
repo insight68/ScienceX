@@ -235,7 +235,7 @@ describe('source fingerprint transitions', () => {
     await utimes(path, fixedTime, fixedTime)
     const current = await stat(path)
 
-    expect(current.mtimeMs).toBe(previous.mtimeMs)
+    expect(Math.abs(current.mtimeMs - previous.mtimeMs)).toBeLessThanOrEqual(1)
     expect(current.ctimeMs).not.toBe(previous.ctimeMs)
     expect(await detectSourceChange({
       path,

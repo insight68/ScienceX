@@ -2277,7 +2277,7 @@ describe('SessionService', () => {
     expect(launchInfo?.repository).toMatchObject({
       requestedWorkDir: await fs.realpath(workDir),
       worktree: true,
-      worktreePath: expect.stringContaining(path.join('.claude', 'worktrees', 'desktop-feature-rail-')),
+      worktreePath: expect.stringContaining(path.join('.sciencex', 'worktrees', 'desktop-feature-rail-')),
     })
   })
 
@@ -2529,7 +2529,7 @@ describe('SessionService', () => {
       branch: 'feature/rail',
       worktree: true,
       baseRef: 'feature/rail',
-      worktreePath: expect.stringContaining(path.join('.claude', 'worktrees', 'desktop-feature-rail-')),
+      worktreePath: expect.stringContaining(path.join('.sciencex', 'worktrees', 'desktop-feature-rail-')),
       worktreeBranch: expect.stringContaining('worktree-desktop-feature-rail-'),
       worktreeSlug: expect.stringContaining('desktop-feature-rail-'),
     })

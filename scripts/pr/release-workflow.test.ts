@@ -94,6 +94,22 @@ describe('release desktop workflow', () => {
     }
   })
 
+  test('release builds exercise compiled research APIs on host-runnable targets', () => {
+    const workflow = readReleaseWorkflow()
+    const smokeStep = extractStep(workflow, 'Verify compiled sidecar science APIs')
+
+    expect(smokeStep).toContain('bun run test:compiled-sidecar-smoke')
+    expect(smokeStep).toContain(
+      "if: matrix.label != 'Linux-ARM64' && matrix.label != 'Windows-ARM64'",
+    )
+    expect(workflow.indexOf('Build sidecars')).toBeLessThan(
+      workflow.indexOf('Verify compiled sidecar science APIs'),
+    )
+    expect(workflow.indexOf('Verify compiled sidecar science APIs')).toBeLessThan(
+      workflow.indexOf('Build renderer and electron host'),
+    )
+  })
+
   test('development desktop artifacts exclude unpacked macOS app bundles and updater-only files', () => {
     const workflow = readFileSync('.github/workflows/build-desktop-dev.yml', 'utf8')
     const collectStep = workflow.match(

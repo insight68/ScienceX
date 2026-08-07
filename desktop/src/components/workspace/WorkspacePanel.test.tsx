@@ -1637,7 +1637,7 @@ describe('WorkspacePanel', () => {
   })
 
   it('can expand long file previews beyond the default rendered line cap', async () => {
-    const longFile = Array.from({ length: 2300 }, (_, index) => `const line${index + 1} = ${index + 1}`).join('\n')
+    const longFile = Array.from({ length: 2300 }, (_, index) => `line ${index + 1}`).join('\n')
 
     await setWorkspaceState((state) => ({
       ...state,
@@ -1651,32 +1651,32 @@ describe('WorkspacePanel', () => {
       previewTabsBySession: {
         ...state.previewTabsBySession,
         'session-large-file-preview': [{
-          id: 'file:large-file.ts',
-          path: 'large-file.ts',
+          id: 'file:large-file.txt',
+          path: 'large-file.txt',
           kind: 'file',
-          title: 'large-file.ts',
+          title: 'large-file.txt',
           content: longFile,
-          language: 'typescript',
+          language: 'text',
           previewType: 'text',
           state: 'ok',
         }],
       },
       activePreviewTabIdBySession: {
         ...state.activePreviewTabIdBySession,
-        'session-large-file-preview': 'file:large-file.ts',
+        'session-large-file-preview': 'file:large-file.txt',
       },
     }))
 
     const view = await renderPanel('session-large-file-preview')
     const highlightedCode = view.getByTestId('workspace-code').textContent ?? ''
 
-    expect(highlightedCode).toContain('const line1 = 1')
-    expect(highlightedCode).toContain('const line2000 = 2000')
-    expect(highlightedCode).not.toContain('const line2001 = 2001')
+    expect(highlightedCode).toContain('line 1')
+    expect(highlightedCode).toContain('line 2000')
+    expect(highlightedCode).not.toContain('line 2001')
     await clickElement(view.getByRole('button', { name: 'Show all loaded lines' }))
 
     await waitFor(() => {
-      expect(view.getByTestId('workspace-code').textContent).toContain('const line2300 = 2300')
+      expect(view.getByTestId('workspace-code').textContent).toContain('line 2300')
     })
     expect(view.getByRole('button', { name: 'Collapse preview' })).toBeTruthy()
   }, 90_000)
