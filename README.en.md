@@ -4,7 +4,9 @@
 <p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
 </p>
-
+<p align="center">
+  <img src="docs/images/desktop_ui/Sciencex.png" alt="ScienceX" width="800">
+</p>
 
 ScienceX is an open-source AI workbench for scientific research. It aims to be a local-first, self-hostable alternative to [Claude Science](https://www.anthropic.com/news/claude-science-ai-workbench), bringing experiment data, agent sessions, reproducible runs, provenance, and research artifacts into one macOS / Windows / Linux desktop environment. Researchers can choose their model provider, extend the system through Skills and MCP, and retain control over local files and computation.
 
