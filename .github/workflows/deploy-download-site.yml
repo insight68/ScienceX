@@ -1,22 +1,14 @@
 name: Deploy Download Site
 
-# 将 docs/ 下的 Vite 下载站（docs/index.html + docs/src/）构建并部署到
-# GitHub Pages 项目站点 https://insight68.github.io/ScienceX/。
-# 注意：这与 docs/.vitepress/ 的 VitePress 文档站是两个独立的产物，
-# 本工作流只构建并发布 docs/dist（下载站），不触碰 VitePress 输出。
+# 将 download/index.html 静态下载站部署到 GitHub Pages 项目站点
+# https://insight68.github.io/ScienceX/
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'docs/index.html'
-      - 'docs/vite.config.ts'
-      - 'docs/package.json'
-      - 'docs/bun.lock'
-      - 'docs/tsconfig.json'
-      - 'docs/src/**'
-      - 'docs/public/**'
+      - 'download/**'
       - '.github/workflows/deploy-download-site.yml'
 
 permissions:
@@ -30,36 +22,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build & Deploy
+  deploy:
+    name: Deploy
     runs-on: ubuntu-22.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.12
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
-      - name: Install download-site dependencies
-        run: |
-          cd docs
-          bun install --frozen-lockfile
-      - name: Build download site
-        run: |
-          cd docs
-          bun run build
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: download
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
