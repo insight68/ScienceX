@@ -31,7 +31,6 @@ describe('coverage gate helpers', () => {
       '--timeout=20000',
       '--coverage',
       '--coverage-reporter=lcov',
-      '--coverage-reporter=text',
       '--coverage-dir',
       '/tmp/coverage/root-server',
       './src/example.test.ts',
@@ -170,6 +169,14 @@ describe('coverage gate helpers', () => {
       usableLcovRecords: 0,
       lcovBytes: 12,
     })).toContain('discovered all 194 root test files but produced no usable LCOV records')
+    expect(describeRootCoverageFailure({
+      exitCode: 1,
+      expectedTestFiles: 197,
+      discoveredTestFiles: null,
+      usableLcovRecords: 0,
+      lcovBytes: 0,
+      output: 'error: An internal error occurred (WriteFailed)',
+    })).toContain('error: An internal error occurred (WriteFailed)')
   })
 
   test('surfaces concise suite failure details in coverage reports', () => {

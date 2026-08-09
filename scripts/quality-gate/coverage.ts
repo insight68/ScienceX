@@ -356,8 +356,19 @@ export function describeRootCoverageFailure(options: {
   discoveredTestFiles: number | null
   usableLcovRecords: number
   lcovBytes: number
+  output?: string
 }) {
-  const diagnostics = `exit=${options.exitCode}, usable LCOV records=${options.usableLcovRecords}, LCOV bytes=${options.lcovBytes}`
+  const genericFailure = `coverage command exited with ${options.exitCode}`
+  const suiteFailure = describeSuiteCoverageFailure(options.exitCode, options.output ?? '')
+  const outputDetail = suiteFailure.startsWith(`${genericFailure}; `)
+    ? suiteFailure.slice(genericFailure.length + 2)
+    : ''
+  const diagnostics = [
+    `exit=${options.exitCode}`,
+    `usable LCOV records=${options.usableLcovRecords}`,
+    `LCOV bytes=${options.lcovBytes}`,
+    outputDetail,
+  ].filter(Boolean).join(', ')
   if (options.discoveredTestFiles === null) {
     return `coverage command did not emit a complete Bun test summary; expected ${options.expectedTestFiles} root test files (${diagnostics})`
   }
@@ -405,7 +416,6 @@ export function buildRootCoverageCommand(outputDir: string, serverFiles: string[
     '--timeout=20000',
     '--coverage',
     '--coverage-reporter=lcov',
-    '--coverage-reporter=text',
     '--coverage-dir',
     join(outputDir, 'root-server'),
     ...serverFiles.map(rootBunTestFilter),
@@ -913,6 +923,7 @@ export async function runCoverageGate(options: {
     discoveredTestFiles: rootTestFileCount,
     usableLcovRecords: rootRecords.length,
     lcovBytes: Buffer.byteLength(rootLcov),
+    output: rootResult.output,
   })
 
   if (rootResult.exitCode !== 0 && rootCoverageAvailable) {
