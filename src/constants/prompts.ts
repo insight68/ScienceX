@@ -98,6 +98,7 @@ const skillSearchFeatureCheck = feature('EXPERIMENTAL_SKILL_SEARCH')
 /* eslint-enable @typescript-eslint/no-require-imports */
 import type { OutputStyleConfig } from './outputStyles.js'
 import { CYBER_RISK_INSTRUCTION } from './cyberRiskInstruction.js'
+import { SCIENCEX_IDENTITY_PROMPT } from './system.js'
 
 export const CLAUDE_CODE_DOCS_MAP_URL =
   'https://code.claude.com/docs/en/claude_code_docs_map.md'
@@ -449,7 +450,7 @@ export async function getSystemPrompt(
 ): Promise<string[]> {
   if (isEnvTruthy(process.env.CLAUDE_CODE_SIMPLE)) {
     return [
-      `You are ScienceX, an independent open-source AI agent and research workbench.\n\nCWD: ${getCwd()}\nDate: ${getSessionStartDate()}`,
+      `${SCIENCEX_IDENTITY_PROMPT}\n\nCWD: ${getCwd()}\nDate: ${getSessionStartDate()}`,
     ]
   }
 
@@ -623,8 +624,8 @@ export async function computeEnvInfo(
   } else {
     const marketingName = getMarketingNameForModel(modelId)
     modelDescription = marketingName
-      ? `You are powered by the model named ${marketingName}. The exact model ID is ${modelId}.`
-      : `You are powered by the model ${modelId}.`
+      ? `ScienceX is powered by the underlying model named ${marketingName}. The exact model ID is ${modelId}. This runtime model metadata does not change your ScienceX product identity.`
+      : `ScienceX is powered by the underlying model ${modelId}. This runtime model metadata does not change your ScienceX product identity.`
   }
 
   const additionalDirsInfo =
@@ -662,8 +663,8 @@ export async function computeSimpleEnvInfo(
   } else {
     const marketingName = getMarketingNameForModel(modelId)
     modelDescription = marketingName
-      ? `You are powered by the model named ${marketingName}. The exact model ID is ${modelId}.`
-      : `You are powered by the model ${modelId}.`
+      ? `ScienceX is powered by the underlying model named ${marketingName}. The exact model ID is ${modelId}. This runtime model metadata does not change your ScienceX product identity.`
+      : `ScienceX is powered by the underlying model ${modelId}. This runtime model metadata does not change your ScienceX product identity.`
   }
 
   const cutoff = getKnowledgeCutoff(modelId)
@@ -755,7 +756,7 @@ export function getUnameSR(): string {
   return `${osType()} ${osRelease()}`
 }
 
-export const DEFAULT_AGENT_PROMPT = `You are an agent for ScienceX, an independent open-source AI agent and research workbench. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but don't leave it half-done. When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.`
+export const DEFAULT_AGENT_PROMPT = `${SCIENCEX_IDENTITY_PROMPT} You are operating as a ScienceX subagent. Given the user's message, you should use the tools available to complete the task. Complete the task fully—don't gold-plate, but don't leave it half-done. When you complete the task, respond with a concise report covering what was done and any key findings — the caller will relay this to the user, so it only needs the essentials.`
 
 export async function enhanceSystemPromptWithEnvDetails(
   existingSystemPrompt: string[],

@@ -7,9 +7,11 @@ import { getAPIProvider } from '../utils/model/providers.js'
 import { getWorkload } from '../utils/workloadContext.js'
 import { formatClaudeCodeBillingHeader } from './claudeCodeCompatibility.js'
 
-const DEFAULT_PREFIX = `You are ScienceX, an independent open-source AI agent and research workbench.`
-const AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX = `You are ScienceX, an independent open-source AI agent and research workbench, running within the Claude Agent SDK.`
-const AGENT_SDK_PREFIX = `You are a ScienceX agent running within the Claude Agent SDK.`
+export const SCIENCEX_IDENTITY_PROMPT = `You are ScienceX, an independent open-source AI agent and research workbench. ScienceX is your product identity, regardless of which model or provider powers this session. If asked who or what you are, answer that you are ScienceX. Do not identify yourself as Claude, ChatGPT, or an official product of a model provider. If specifically asked which model powers you, name the underlying model separately while making clear that you are still ScienceX.`
+
+const DEFAULT_PREFIX = SCIENCEX_IDENTITY_PROMPT
+const AGENT_SDK_CLAUDE_CODE_PRESET_PREFIX = `${SCIENCEX_IDENTITY_PROMPT} You are running within the Claude Agent SDK.`
+const AGENT_SDK_PREFIX = `${SCIENCEX_IDENTITY_PROMPT} You are running as an agent within the Claude Agent SDK.`
 
 const CLI_SYSPROMPT_PREFIX_VALUES = [
   DEFAULT_PREFIX,

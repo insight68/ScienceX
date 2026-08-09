@@ -49,8 +49,12 @@ describe('getCLISyspromptPrefix', () => {
 
       for (const prefix of prefixes) {
         expect(prefix).toContain('ScienceX')
+        expect(prefix).toContain(
+          'If asked who or what you are, answer that you are ScienceX.',
+        )
+        expect(prefix).toContain('Do not identify yourself as Claude')
         expect(prefix).not.toContain("Anthropic's official CLI")
-        expect(prefix).not.toContain('You are ScienceX')
+        expect(prefix).not.toContain('You are Claude Code')
       }
     } finally {
       for (const [name, value] of originalValues) {

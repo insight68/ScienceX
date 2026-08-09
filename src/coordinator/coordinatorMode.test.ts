@@ -6,6 +6,6 @@ describe('coordinator identity', () => {
     const prompt = getCoordinatorSystemPrompt()
 
     expect(prompt).toStartWith('You are ScienceX')
-    expect(prompt).not.toContain('You are ScienceX')
+    expect(prompt).not.toContain('You are Claude Code')
   })
 })

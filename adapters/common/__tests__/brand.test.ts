@@ -20,12 +20,12 @@ describe('IM outward branding', () => {
     ).join('\n')
 
     const retiredOutwardCopy = [
-      'ScienceX Desktop',
-      "title: 'ScienceX'",
-      'ScienceX 需要权限确认',
-      'ScienceX 桌面端',
-      'ScienceX Bot 已就绪',
-      'ScienceX WhatsApp 已就绪',
+      'Claude Code Desktop',
+      "title: 'Claude Code'",
+      'Claude Code 需要权限确认',
+      'Claude Code 桌面端',
+      'Claude Code Bot 已就绪',
+      'Claude Code WhatsApp 已就绪',
       '发送消息即可与 Claude 对话',
     ]
 
