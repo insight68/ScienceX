@@ -7,8 +7,10 @@ import {
   buildRootCoverageCommand,
   collectServerTestFiles,
   describeRootCoverageFailure,
+  describeSuiteCoverageFailure,
   evaluateChangedLineCoverage,
   evaluateThresholds,
+  formatGitHubCoverageError,
   hasUsableCoverageSummary,
   hasUsableLcov,
   parseBunTestFileCount,
@@ -168,6 +170,26 @@ describe('coverage gate helpers', () => {
       usableLcovRecords: 0,
       lcovBytes: 12,
     })).toContain('discovered all 194 root test files but produced no usable LCOV records')
+  })
+
+  test('surfaces concise suite failure details in coverage reports', () => {
+    expect(describeSuiteCoverageFailure(1, [
+      '\u001b[31m(fail) search session > cancels native search\u001b[0m',
+      'Error: expected cancellation to settle',
+      'Error: expected cancellation to settle',
+      '411 pass',
+    ].join('\n'))).toBe(
+      'coverage command exited with 1; (fail) search session > cancels native search | Error: expected cancellation to settle',
+    )
+    expect(describeSuiteCoverageFailure(137, 'process terminated')).toBe(
+      'coverage command exited with 137',
+    )
+  })
+
+  test('formats coverage failures as escaped GitHub annotations', () => {
+    expect(formatGitHubCoverageError('desktop: lines 80%\r\nexpected 90%')).toBe(
+      '::error title=Coverage gate::desktop: lines 80%25%0D%0Aexpected 90%25',
+    )
   })
 
   test('rejects empty aggregate coverage summaries', () => {

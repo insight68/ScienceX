@@ -367,6 +367,34 @@ export function describeRootCoverageFailure(options: {
   return `coverage command discovered all ${options.expectedTestFiles} root test files but produced no usable LCOV records (${diagnostics})`
 }
 
+export function describeSuiteCoverageFailure(exitCode: number, output: string) {
+  const diagnosticLines = output
+    .replace(/\u001b\[[0-9;]*m/g, '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => (
+      /^\(fail\)/i.test(line) ||
+      /^FAIL\b/.test(line) ||
+      /^(?:AssertionError|Error|error):/.test(line) ||
+      /^Test Files\b/.test(line)
+    ))
+    .filter((line, index, lines) => lines.indexOf(line) === index)
+    .slice(0, 4)
+
+  const detail = diagnosticLines.join(' | ')
+  return detail
+    ? `coverage command exited with ${exitCode}; ${detail}`
+    : `coverage command exited with ${exitCode}`
+}
+
+export function formatGitHubCoverageError(message: string) {
+  const escaped = message
+    .replace(/%/g, '%25')
+    .replace(/\r/g, '%0D')
+    .replace(/\n/g, '%0A')
+  return `::error title=Coverage gate::${escaped}`
+}
+
 export function buildRootCoverageCommand(outputDir: string, serverFiles: string[]) {
   return [
     'bun',
@@ -521,7 +549,7 @@ async function runSuite(
       command,
       durationMs: result.durationMs,
       logPath,
-      error: `coverage command exited with ${result.exitCode}`,
+      error: describeSuiteCoverageFailure(result.exitCode, result.output),
     }
   }
 
@@ -1028,7 +1056,9 @@ if (import.meta.main) {
   console.log(`Summary: passed=${passedSuites} failed=${failedSuites} policyFailures=${report.failures.length}`)
   if (report.failures.length > 0) {
     for (const failure of report.failures) {
-      console.error(`Coverage failure: ${failure}`)
+      console.error(process.env.GITHUB_ACTIONS === 'true'
+        ? formatGitHubCoverageError(failure)
+        : `Coverage failure: ${failure}`)
     }
     process.exit(1)
   }
