@@ -32,6 +32,9 @@ describe('PR quality workflow', () => {
     expect(workflow).toContain("if: needs.scope-plan.outputs.desktop_native_checks == 'true'")
     expect(workflow).toContain("if: needs.scope-plan.outputs.docs_checks == 'true'")
     expect(workflow).toContain("if: needs.scope-plan.outputs.coverage_checks == 'true'")
+    expect(workflow).toContain('SCIENCEX_CI_BEFORE_SHA: ${{ github.event.before }}')
+    expect(workflow).toContain('bun run scripts/pr/changed-files.ts --ci-output changed-files.txt')
+    expect(workflow).not.toContain('git diff --name-only HEAD~1')
   })
 
   test('installs frozen dependencies before policy regressions without blocking product routing', () => {
@@ -129,7 +132,9 @@ describe('PR quality workflow', () => {
     expect(coverageJob.env?.COVERAGE_BASE_REF).toContain("github.event_name == 'pull_request'")
     expect(coverageJob.env?.COVERAGE_BASE_REF).toContain("|| 'HEAD^'")
     expect(gateStep?.run).toContain('bun run check:coverage || coverage_status=$?')
+    expect(gateStep?.run).toContain('cat "$latest_report"')
     expect(gateStep?.run).toContain('cat "$latest_report" >> "$GITHUB_STEP_SUMMARY"')
+    expect(gateStep?.run).toContain('Coverage gate did not produce coverage-report.md')
     expect(gateStep?.run).toContain('exit "$coverage_status"')
     expect(uploadStep?.if).toBe('always()')
     expect(workflow).toContain('uses: actions/upload-artifact@v4')

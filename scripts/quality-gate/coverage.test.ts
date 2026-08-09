@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
+  buildAdaptersCoverageCommand,
   buildRootCoverageCommand,
   collectServerTestFiles,
   describeRootCoverageFailure,
@@ -32,6 +33,20 @@ describe('coverage gate helpers', () => {
       '--coverage-dir',
       '/tmp/coverage/root-server',
       './src/example.test.ts',
+    ])
+  })
+
+  test('allows instrumented adapter hooks to exceed Bun default timeout', () => {
+    expect(buildAdaptersCoverageCommand('/tmp/coverage')).toEqual([
+      'bun',
+      '--no-env-file',
+      'test',
+      '--timeout=20000',
+      '--coverage',
+      '--coverage-reporter=lcov',
+      '--coverage-reporter=text',
+      '--coverage-dir',
+      '/tmp/coverage/adapters',
     ])
   })
 

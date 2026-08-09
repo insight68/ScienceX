@@ -44,13 +44,13 @@ jobs:
       - name: Install root dependencies
         run: bun install --frozen-lockfile
       - name: Compute changed files
+        env:
+          SCIENCEX_CI_BEFORE_SHA: ${{ github.event.before }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
             git fetch origin "${{ github.base_ref }}" --depth=1
-            git diff --name-only "origin/${{ github.base_ref }}...HEAD" > changed-files.txt
-          else
-            git diff --name-only HEAD~1 > changed-files.txt || touch changed-files.txt
           fi
+          bun run scripts/pr/changed-files.ts --ci-output changed-files.txt
       - name: Run scope plan
         id: plan
         run: bun run scripts/pr/change-policy.ts --files changed-files.txt --plan-only
@@ -274,7 +274,12 @@ jobs:
           bun run check:coverage || coverage_status=$?
           latest_report="$(find artifacts/coverage -name 'coverage-report.md' -type f -print | sort | tail -1)"
           if [ -n "$latest_report" ]; then
+            echo "::group::Coverage report"
+            cat "$latest_report"
+            echo "::endgroup::"
             cat "$latest_report" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Coverage gate did not produce coverage-report.md"
           fi
           exit "$coverage_status"
       - name: Upload coverage artifacts

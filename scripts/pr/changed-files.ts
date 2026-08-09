@@ -1,5 +1,8 @@
-async function output(cmd: string[]) {
+import { writeFileSync } from 'node:fs'
+
+async function output(cmd: string[], cwd = process.cwd()) {
   const proc = Bun.spawn(cmd, {
+    cwd,
     stdout: 'pipe',
     stderr: 'pipe',
   })
@@ -14,9 +17,9 @@ async function output(cmd: string[]) {
   return stdout.trim()
 }
 
-async function outputOrEmpty(cmd: string[]) {
+async function outputOrEmpty(cmd: string[], cwd = process.cwd()) {
   try {
-    return await output(cmd)
+    return await output(cmd, cwd)
   } catch {
     return ''
   }
@@ -66,5 +69,59 @@ export async function changedFilesForLocalPrCheck(explicitFiles: string[] = []) 
     } catch {
       return localFiles
     }
+  }
+}
+
+const ZERO_SHA = /^0+$/
+
+async function allTrackedFiles(cwd: string) {
+  return splitFiles(await output(['git', 'ls-tree', '-r', '--name-only', 'HEAD'], cwd))
+}
+
+export async function changedFilesForCi(options: {
+  eventName: string
+  baseRef?: string
+  beforeSha?: string
+  cwd?: string
+}) {
+  const cwd = options.cwd ?? process.cwd()
+  if (options.eventName === 'pull_request') {
+    const baseRef = options.baseRef?.trim()
+    if (!baseRef) {
+      throw new Error('GITHUB_BASE_REF is required for pull_request change detection')
+    }
+    return splitFiles(await output(['git', 'diff', '--name-only', `origin/${baseRef}...HEAD`], cwd))
+  }
+
+  const beforeSha = options.beforeSha?.trim()
+  if (beforeSha && !ZERO_SHA.test(beforeSha)) {
+    const beforeCommit = await outputOrEmpty(['git', 'rev-parse', '--verify', `${beforeSha}^{commit}`], cwd)
+    if (beforeCommit) {
+      return splitFiles(await output(['git', 'diff', '--name-only', beforeSha, 'HEAD'], cwd))
+    }
+    return allTrackedFiles(cwd)
+  }
+
+  const parent = await outputOrEmpty(['git', 'rev-parse', '--verify', 'HEAD^'], cwd)
+  if (parent) {
+    return splitFiles(await output(['git', 'diff', '--name-only', 'HEAD^', 'HEAD'], cwd))
+  }
+
+  return allTrackedFiles(cwd)
+}
+
+if (import.meta.main) {
+  const outputIndex = process.argv.indexOf('--ci-output')
+  if (outputIndex >= 0) {
+    const outputPath = process.argv[outputIndex + 1]
+    if (!outputPath) {
+      throw new Error('--ci-output requires a file path')
+    }
+    const files = await changedFilesForCi({
+      eventName: process.env.GITHUB_EVENT_NAME ?? '',
+      baseRef: process.env.GITHUB_BASE_REF,
+      beforeSha: process.env.SCIENCEX_CI_BEFORE_SHA,
+    })
+    writeFileSync(outputPath, files.length > 0 ? `${files.join('\n')}\n` : '')
   }
 }

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { changedFilesForLocalPrCheck } from './changed-files'
+import { changedFilesForCi, changedFilesForLocalPrCheck } from './changed-files'
 
 let originalCwd: string
 let originalBaseRef: string | undefined
@@ -17,6 +17,18 @@ function runGit(args: string[]) {
   if (result.exitCode !== 0) {
     throw new Error(new TextDecoder().decode(result.stderr) || new TextDecoder().decode(result.stdout))
   }
+}
+
+function outputGit(args: string[]) {
+  const result = Bun.spawnSync(['git', ...args], {
+    cwd: tempDir,
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+  if (result.exitCode !== 0) {
+    throw new Error(new TextDecoder().decode(result.stderr) || new TextDecoder().decode(result.stdout))
+  }
+  return new TextDecoder().decode(result.stdout).trim()
 }
 
 function writeFile(relativePath: string, content: string) {
@@ -72,6 +84,40 @@ describe('changedFilesForLocalPrCheck', () => {
     await expect(changedFilesForLocalPrCheck()).resolves.toEqual([
       'src/server/committed.ts',
       'desktop/src/local.ts',
+    ])
+  })
+
+  test('treats every tracked file in a root commit as changed in CI', async () => {
+    await expect(changedFilesForCi({
+      eventName: 'push',
+      beforeSha: '0000000000000000000000000000000000000000',
+      cwd: tempDir,
+    })).resolves.toEqual(['README.md'])
+  })
+
+  test('uses the push before SHA when it is available', async () => {
+    const beforeSha = await outputGit(['rev-parse', 'HEAD'])
+    writeFile('src/server/current.ts', 'export const current = true\n')
+    commit('server change')
+
+    await expect(changedFilesForCi({
+      eventName: 'push',
+      beforeSha,
+      cwd: tempDir,
+    })).resolves.toEqual(['src/server/current.ts'])
+  })
+
+  test('fails safe to every tracked file when a forced-push base is unavailable', async () => {
+    writeFile('src/server/current.ts', 'export const current = true\n')
+    commit('server change')
+
+    await expect(changedFilesForCi({
+      eventName: 'push',
+      beforeSha: '1111111111111111111111111111111111111111',
+      cwd: tempDir,
+    })).resolves.toEqual([
+      'README.md',
+      'src/server/current.ts',
     ])
   })
 })
