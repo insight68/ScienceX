@@ -199,7 +199,7 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 
 ## Option 3: Other Proxy Tools
 
-The community has built several proxy tools specifically for Claude Code:
+The community has built several proxy tools specifically for ScienceX:
 
 | Tool | Description | Link |
 |------|-------------|------|

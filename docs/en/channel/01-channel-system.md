@@ -1,6 +1,6 @@
 # Channel System Architecture
 
-> A deep dive into how Claude Code enables remote Agent control via IM platforms
+> A deep dive into how ScienceX enables remote Agent control via IM platforms
 
 <p align="center">
 <a href="#1-what-is-a-channel">Concepts</a> ·
@@ -21,11 +21,11 @@
 
 ## 1. What is a Channel
 
-A Channel is Claude Code's **IM integration system** that allows users to remotely control a running Claude Code Agent through instant messaging platforms such as Telegram, Feishu (Lark), Discord, and Slack.
+A Channel is ScienceX's **IM integration system** that allows users to remotely control a running ScienceX Agent through instant messaging platforms such as Telegram, Feishu (Lark), Discord, and Slack.
 
 ### Core Idea
 
-Traditional AI coding assistants can only interact through the terminal. The Channel system breaks this limitation — you can send messages to Claude Code from your phone via Telegram, and it will understand and execute your requests just as it would in the terminal, replying directly to your chat window.
+Traditional AI coding assistants can only interact through the terminal. The Channel system breaks this limitation — you can send messages to ScienceX from your phone via Telegram, and it will understand and execute your requests just as it would in the terminal, replying directly to your chat window.
 
 ### The Essence of a Channel
 
@@ -113,7 +113,7 @@ The Channel system follows a clear bidirectional message path:
 
 ### 3.1 Inbound Notification Schema
 
-The notification format Channel Servers push to Claude Code:
+The notification format Channel Servers push to ScienceX:
 
 ```typescript
 // channelNotification.ts
@@ -311,7 +311,7 @@ type ChannelGateResult =
 
 ### 5.1 Why Permission Relay Exists
 
-When Claude Code needs to execute sensitive operations (like running a Bash command), it shows a permission confirmation dialog. But if the user is controlling the Agent remotely via Telegram, they can't see the local terminal dialog.
+When ScienceX needs to execute sensitive operations (like running a Bash command), it shows a permission confirmation dialog. But if the user is controlling the Agent remotely via Telegram, they can't see the local terminal dialog.
 
 The permission relay system solves this: **forward permission prompts to the IM platform so users can approve or deny operations from their phone**.
 
@@ -649,7 +649,7 @@ From Kenneth's analysis in code comments (PR discussion #2956440848):
 
 ### 8.4 skipSlashCommands
 
-Channel messages are enqueued with `skipSlashCommands: true`, ensuring text like `/help` sent by IM users is not interpreted as Claude Code slash commands.
+Channel messages are enqueued with `skipSlashCommands: true`, ensuring text like `/help` sent by IM users is not interpreted as ScienceX slash commands.
 
 ### 8.5 Dev Bypass Granularity
 
@@ -746,7 +746,7 @@ tengu_mcp_channel_flags: {
 
 ## 11. Summary
 
-The Channel system is Claude Code's **IM integration framework**, and its design embodies several core principles:
+The Channel system is ScienceX's **IM integration framework**, and its design embodies several core principles:
 
 ### 1. Security First
 

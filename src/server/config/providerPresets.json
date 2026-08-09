@@ -139,7 +139,7 @@
     "needsApiKey": true,
     "websiteUrl": "https://help.aliyun.com/zh/model-studio/",
     "apiKeyUrl": "https://bailian.console.aliyun.com/?tab=model#/apiKey",
-    "promoText": "阿里云百炼提供 Anthropic 兼容接口，支持通义千问全系模型，按量计费无需订阅，国内网络直连 Claude Code。",
+    "promoText": "阿里云百炼提供 Anthropic 兼容接口，支持通义千问全系模型，按量计费无需订阅，国内网络直连 ScienceX。",
     "authStrategy": "auth_token",
     "defaultEnv": {
       "CLAUDE_CODE_SUBAGENT_MODEL": "qwen3.7-max"
@@ -270,7 +270,7 @@
     },
     "needsApiKey": false,
     "websiteUrl": "https://lmstudio.ai/docs/integrations/claude-code",
-    "promoText": "LM Studio 使用 Anthropic 兼容协议，Base URL 填 http://localhost:1234，不要追加 /v1。Claude Code 的提示词、工具和 Skill 会占用较多上下文，请在本地模型设置里把 Context Window 调大，建议至少 200K。",
+    "promoText": "LM Studio 使用 Anthropic 兼容协议，Base URL 填 http://localhost:1234，不要追加 /v1。ScienceX 的提示词、工具和 Skill 会占用较多上下文，请在本地模型设置里把 Context Window 调大，建议至少 200K。",
     "authStrategy": "auth_token_empty_api_key",
     "defaultEnv": {
       "ANTHROPIC_AUTH_TOKEN": "lmstudio"
@@ -289,7 +289,7 @@
     },
     "needsApiKey": false,
     "websiteUrl": "https://docs.ollama.com/integrations/claude-code",
-    "promoText": "Ollama 使用 Anthropic 兼容协议，Base URL 填 http://localhost:11434，不要追加 /v1。Claude Code 的提示词、工具和 Skill 会占用较多上下文，请在本地模型设置里把 Context Window 调大，建议至少 200K。",
+    "promoText": "Ollama 使用 Anthropic 兼容协议，Base URL 填 http://localhost:11434，不要追加 /v1。ScienceX 的提示词、工具和 Skill 会占用较多上下文，请在本地模型设置里把 Context Window 调大，建议至少 200K。",
     "authStrategy": "auth_token_empty_api_key",
     "defaultEnv": {
       "ANTHROPIC_AUTH_TOKEN": "ollama"

@@ -33,7 +33,7 @@ flowchart TD
 
     R --> S["adapters/common/ws-bridge.ts"]
     S --> T["Desktop Server"]
-    T --> U["Claude Code session / CLI 子进程"]
+    T --> U["ScienceX session / CLI 子进程"]
 
     U --> V["流式消息 / 权限请求 / 状态事件"]
     V --> S
@@ -46,7 +46,7 @@ flowchart TD
 - 配置层：桌面端 webapp 负责填写平台凭据、默认项目和配对码管理
 - 存储层：本地服务端把配置写入 `~/.sciencex/config/adapters.json`
 - 适配层：微信 / 钉钉 / WhatsApp / Telegram / 飞书 adapter 进程负责接 IM 平台、做授权检查、恢复或创建会话
-- 会话层：adapter 通过 HTTP 创建 session，再通过 WebSocket 把 IM 消息桥接到 Claude Code 会话
+- 会话层：adapter 通过 HTTP 创建 session，再通过 WebSocket 把 IM 消息桥接到 ScienceX 会话
 
 ## 用户怎么用
 
@@ -174,7 +174,7 @@ Adapter 不是直接把消息丢给一个全局 Claude 进程，而是：
 
 ## 和 `docs/channel/` 的关系
 
-`docs/channel/` 主要是 Claude Code 原生 Channel/MCP 体系的源码研究资料，不是这个仓库当前推荐的 IM 接入方式。
+`docs/channel/` 主要是 ScienceX 原生 Channel/MCP 体系的源码研究资料，不是这个仓库当前推荐的 IM 接入方式。
 
 如果你是要“把 bot 真跑起来”，看本目录。  
-如果你是要研究 Claude Code 原始 Channel 设计，再去看 `docs/channel/`。
+如果你是要研究 ScienceX 原始 Channel 设计，再去看 `docs/channel/`。

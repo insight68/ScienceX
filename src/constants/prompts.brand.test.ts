@@ -17,7 +17,7 @@ describe('ScienceX prompt identity', () => {
       for (const brandedPrompt of brandedPrompts) {
         expect(brandedPrompt).toContain('ScienceX')
         expect(brandedPrompt).not.toContain("Anthropic's official CLI")
-        expect(brandedPrompt).not.toContain('You are Claude Code')
+        expect(brandedPrompt).not.toContain('You are ScienceX')
       }
     } finally {
       if (originalSimpleMode === undefined) {
@@ -35,7 +35,7 @@ describe('ScienceX prompt identity', () => {
       'ScienceX is available as a CLI and as a desktop app for macOS, Windows, and Linux.',
     )
     expect(envInfo).toContain('Fast mode for ScienceX')
-    expect(envInfo).not.toContain('Claude Code is available')
-    expect(envInfo).not.toContain('Fast mode for Claude Code')
+    expect(envInfo).not.toContain('ScienceX is available')
+    expect(envInfo).not.toContain('Fast mode for ScienceX')
   })
 })

@@ -302,7 +302,7 @@ Server 内置代理层（`src/server/proxy/`），统一不同 AI 提供商的 A
 
 ## 适配器架构
 
-适配器系统让 Telegram/飞书等 IM 平台接入 Claude Code。
+适配器系统让 Telegram/飞书等 IM 平台接入 ScienceX。
 
 ```
 IM 平台 → Adapter 进程 → HTTP + WebSocket → Server → CLI

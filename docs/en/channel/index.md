@@ -8,7 +8,7 @@
 
 ### [01-channel-system.md](./01-channel-system.md) — Channel System Architecture
 
-A deep dive into the design and implementation of Claude Code's Channel system from a source code perspective, covering:
+A deep dive into the design and implementation of ScienceX's Channel system from a source code perspective, covering:
 
 - **What is a Channel**: Core concepts of IM integration, MCP protocol foundations
 - **Architecture Overview**: End-to-end message flow, component relationships

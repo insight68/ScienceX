@@ -18,7 +18,7 @@
 
 ## 1. Patch Environment Overview
 
-The original Claude Code's Computer Use feature (internal codename **Chicago**) depends on three components that are not publicly available:
+The original ScienceX's Computer Use feature (internal codename **Chicago**) depends on three components that are not publicly available:
 
 | Component | Purpose | Availability |
 |-----------|---------|-------------|
@@ -33,7 +33,7 @@ Our approach: **preserve the original MCP tool definitions and security mechanis
 ### What We Changed
 
 ```
-Original Claude Code                     ScienceX (Patched)
+Original ScienceX                     ScienceX (Patched)
 ────────────────────                     ─────────────────────────
 @ant/computer-use-swift  ──replaced──→   Python Bridge (mac_helper.py)
 @ant/computer-use-input  ──replaced──→   pyautogui + pyobjc
@@ -113,7 +113,7 @@ Computer Use uses a **6-layer architecture** with clear responsibilities and bou
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Layers marked **[PATCH]** are our replaced/new code. **All other layers** are preserved from the original Claude Code.
+Layers marked **[PATCH]** are our replaced/new code. **All other layers** are preserved from the original ScienceX.
 
 ### Why This Layering?
 
@@ -325,7 +325,7 @@ Validation: sample 9x9 pixel grid at [756,342]
 
 ### Architecture Design
 
-Original Claude Code uses compiled Swift native modules (.node NAPI plugins) to directly call macOS APIs. We replaced this layer with **Python subprocess + JSON RPC**:
+Original ScienceX uses compiled Swift native modules (.node NAPI plugins) to directly call macOS APIs. We replaced this layer with **Python subprocess + JSON RPC**:
 
 ```
 TypeScript (Bun Runtime)                    Python (venv)
@@ -587,9 +587,9 @@ bindSessionContext closure
 ### Approaches We Tried But Abandoned
 
 **Approach 1: Extract native .node modules**
-- Successfully extracted `computer-use-swift.node` (ARM64 424KB) from the Claude Code binary
+- Successfully extracted `computer-use-swift.node` (ARM64 424KB) from the ScienceX binary
 - Synchronous methods worked, but **Swift async method continuations never resumed**
-- Root cause: .node files compiled for Claude Code's built-in Bun, incompatible with user's Bun version
+- Root cause: .node files compiled for ScienceX's built-in Bun, incompatible with user's Bun version
 
 **Approach 2: Empty stub packages**
 - Code compiled but all operations threw errors — no actual execution capability

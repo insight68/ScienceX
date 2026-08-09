@@ -1,7 +1,7 @@
 # Computer Use Guide
 
 
-> **Modified Version**: This feature is a **heavily modified version** of the Computer Use (internal codename "Chicago") found in the leaked Claude Code source. The official implementation relies on Anthropic's private native modules (`@ant/computer-use-swift`, `@ant/computer-use-input`) that are not publicly available. We **replaced the entire underlying operation layer** with a Python bridge: macOS uses `pyautogui` + `mss` + `pyobjc`, and Windows uses `pyautogui` + `mss` + `win32gui` + `psutil`.
+> **Modified Version**: This feature is a **heavily modified version** of the Computer Use (internal codename "Chicago") found in the leaked ScienceX source. The official implementation relies on Anthropic's private native modules (`@ant/computer-use-swift`, `@ant/computer-use-input`) that are not publicly available. We **replaced the entire underlying operation layer** with a Python bridge: macOS uses `pyautogui` + `mss` + `pyobjc`, and Windows uses `pyautogui` + `mss` + `win32gui` + `psutil`.
 
 ---
 
@@ -197,7 +197,7 @@ The desktop Settings > Computer Use switch writes the same config. Once disabled
 
 ### Gate Bypass
 
-The official Claude Code gates Computer Use behind three layers:
+The official ScienceX gates Computer Use behind three layers:
 
 | Layer | Original Mechanism | Our Approach |
 |-------|-------------------|--------------|
@@ -218,9 +218,9 @@ On first invocation, the bridge automatically:
 
 ## Approaches We Tried
 
-### Approach 1: Extract native .node modules from Claude Code binary ❌
+### Approach 1: Extract native .node modules from ScienceX binary ❌
 
-Extracted `computer-use-swift.node` and `computer-use-input.node` from the installed Claude Code Mach-O binary. Synchronous methods worked, but async Swift methods (screenshot) hung due to N-API async incompatibility between Bun versions.
+Extracted `computer-use-swift.node` and `computer-use-input.node` from the installed ScienceX Mach-O binary. Synchronous methods worked, but async Swift methods (screenshot) hung due to N-API async incompatibility between Bun versions.
 
 ### Approach 2: Create empty stub packages ❌
 

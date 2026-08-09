@@ -618,7 +618,7 @@ describe('Settings > Plugins tab', () => {
         enabled: false,
         hasErrors: false,
         isBuiltin: false,
-        description: 'Use Codex from Claude Code',
+        description: 'Use Codex from ScienceX',
         componentCounts: {
           commands: 0,
           agents: 1,

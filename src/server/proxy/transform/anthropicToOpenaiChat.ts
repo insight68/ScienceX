@@ -67,10 +67,10 @@ export function anthropicToOpenaiChat(
   }
 
   // max_tokens — omit to let upstream provider use its own default/max.
-  // Claude Code sends very large values (e.g. 128K) that exceed many
+  // ScienceX sends very large values (e.g. 128K) that exceed many
   // providers' limits (DeepSeek: 8192, etc.).
 
-  // Claude Code sends Anthropic sampling params that some compatible
+  // ScienceX sends Anthropic sampling params that some compatible
   // providers reject. Keep them opt-in for providers known to accept them.
   if (options.passSamplingParams) {
     if (body.temperature !== undefined) result.temperature = body.temperature

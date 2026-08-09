@@ -11,7 +11,7 @@ export function isComputerUseSupportedPlatform(
 }
 
 /**
- * Sentinel bundle ID for the frontmost gate. Claude Code is a terminal — it has
+ * Sentinel bundle ID for the frontmost gate. ScienceX is a terminal — it has
  * no window. This never matches a real `NSWorkspace.frontmostApplication`, so
  * the package's "host is frontmost" branch (mouse click-through exemption,
  * keyboard safety-net) is dead code for us. `prepareForAction`'s "exempt our

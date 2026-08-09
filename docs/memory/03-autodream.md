@@ -12,11 +12,11 @@
 
 ## 一、什么是 AutoDream？
 
-AutoDream 是 Claude Code 的 **后台记忆整合机制**，内部代号 **"Dream: Memory Consolidation"**。
+AutoDream 是 ScienceX 的 **后台记忆整合机制**，内部代号 **"Dream: Memory Consolidation"**。
 
 核心隐喻：
 
-| 人类 | Claude Code |
+| 人类 | ScienceX |
 |------|-------------|
 | 白天随手记笔记 | `extractMemories` — 每次对话后提取新记忆 |
 | 晚上睡觉时整理笔记本 | `autoDream` — 定期回顾多个会话，整合全部记忆 |

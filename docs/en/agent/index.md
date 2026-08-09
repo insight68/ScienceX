@@ -17,7 +17,7 @@ A comprehensive user-facing manual covering:
 - **Worktree Isolation**: Independent environments, branch management, secure contexts
 - **Custom Agents**: Definition format, tool pool configuration, system prompts
 
-**Target Audience**: All Claude Code users
+**Target Audience**: All ScienceX users
 
 ---
 
@@ -40,7 +40,7 @@ A deep technical reference for developers covering:
 
 ### [03-agent-framework.md](./03-agent-framework.md) — Agent Framework Deep Dive
 
-Deconstructing the architecture behind Claude Code's agent framework from source code, covering:
+Deconstructing the architecture behind ScienceX's agent framework from source code, covering:
 
 - **Core Agent Loop**: AsyncGenerator state machine, five-phase while(true) loop
 - **System Prompt Engineering**: Layered construction, cache boundary, CLAUDE.md loading
@@ -50,7 +50,7 @@ Deconstructing the architecture behind Claude Code's agent framework from source
 - **Permission & Security Model**: Layered permission model, rule pattern matching
 - **Fault Recovery Mechanisms**: 6 built-in recovery strategies, model fallback
 - **Comparison with LangChain/ReAct**: Architecture paradigm differences, why not ReAct
-- **Why Claude Code Is So Good**: 7 core design principles
+- **Why ScienceX Is So Good**: 7 core design principles
 
 **Target Audience**: Architects studying AI agent design, AI application developers, technical researchers
 
@@ -58,7 +58,7 @@ Deconstructing the architecture behind Claude Code's agent framework from source
 
 ## Illustration Notes
 
-All diagrams use a dark background (#1a1a2e) with ScienceX orange-blue accent (#FF7A00), consistent with Claude Code's official documentation style.
+All diagrams use a dark background (#1a1a2e) with ScienceX orange-blue accent (#FF7A00), consistent with ScienceX's official documentation style.
 
 | Image | Description | Document |
 |-------|-------------|----------|

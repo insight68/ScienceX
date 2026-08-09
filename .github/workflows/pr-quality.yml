@@ -33,7 +33,7 @@ jobs:
       docs_checks: ${{ steps.plan.outputs.docs_checks }}
       coverage_checks: ${{ steps.plan.outputs.coverage_checks }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: scope-plan
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -80,7 +80,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.desktop_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -103,7 +103,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.server_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -122,7 +122,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.provider_contract_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -141,7 +141,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.chat_contract_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -160,7 +160,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.persistence_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -179,7 +179,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.adapter_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -202,7 +202,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.desktop_native_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -231,7 +231,7 @@ jobs:
     needs: scope-plan
     if: needs.scope-plan.outputs.docs_checks == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - name: Setup Bun
@@ -250,7 +250,7 @@ jobs:
     env:
       COVERAGE_BASE_REF: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD^' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -284,7 +284,7 @@ jobs:
           exit "$coverage_status"
       - name: Upload coverage artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-report
           path: artifacts/coverage/

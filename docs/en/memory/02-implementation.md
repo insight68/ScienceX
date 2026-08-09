@@ -270,7 +270,7 @@ Each time the user sends a query, `findRelevantMemories()` is triggered:
 ### Sonnet Selector Prompt
 
 ```
-You are selecting memories useful for Claude Code to handle the user's query.
+You are selecting memories useful for ScienceX to handle the user's query.
 You'll receive the user's query and a list of available memory files (with filenames and descriptions).
 
 Return at most 5 memory filenames that are clearly useful.

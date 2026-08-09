@@ -66,7 +66,7 @@ desktop/src React renderer
 
 ### 当前性能背景
 
-`SCROLL_PERF_INVESTIGATION.md` 的关键判断是：卡顿主要来自 macOS Tauri 使用 WKWebView，而 Electron 固定 Chromium/Blink。已合并的 `content-visibility:auto` 是 WebKit 侧缓解方案，但如果目标是接近 CodeX/官方 Claude Code 的一致滚动性能，Electron 是合理方向。迁移收益是可控渲染栈和跨平台一致性；成本是安装体积、内存、签名更新链路和安全边界全部要重建。
+`SCROLL_PERF_INVESTIGATION.md` 的关键判断是：卡顿主要来自 macOS Tauri 使用 WKWebView，而 Electron 固定 Chromium/Blink。已合并的 `content-visibility:auto` 是 WebKit 侧缓解方案，但如果目标是接近 CodeX/官方 ScienceX 的一致滚动性能，Electron 是合理方向。迁移收益是可控渲染栈和跨平台一致性；成本是安装体积、内存、签名更新链路和安全边界全部要重建。
 
 ## Tauri 2 能力盘点与 Electron 对照
 

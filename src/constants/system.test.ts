@@ -5,7 +5,7 @@ import {
 } from './system.js'
 
 describe('getAttributionHeader', () => {
-  test('uses Claude Code compatibility version and always includes CCH placeholder', () => {
+  test('uses ScienceX compatibility version and always includes CCH placeholder', () => {
     const originalEntrypoint = process.env.CLAUDE_CODE_ENTRYPOINT
     process.env.CLAUDE_CODE_ENTRYPOINT = 'cli'
 
@@ -50,7 +50,7 @@ describe('getCLISyspromptPrefix', () => {
       for (const prefix of prefixes) {
         expect(prefix).toContain('ScienceX')
         expect(prefix).not.toContain("Anthropic's official CLI")
-        expect(prefix).not.toContain('You are Claude Code')
+        expect(prefix).not.toContain('You are ScienceX')
       }
     } finally {
       for (const [name, value] of originalValues) {

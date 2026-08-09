@@ -12,7 +12,7 @@
 
 ## 导读：一个根本性的问题
 
-如果你仔细观察 Claude Code 的行为，会发现一些非常有趣的现象：
+如果你仔细观察 ScienceX 的行为，会发现一些非常有趣的现象：
 
 - 它能在一次对话中修改几十个文件，且极少出错
 - 它能自动恢复各种边界情况（token 溢出、API 超时、工具失败）
@@ -33,7 +33,7 @@
 思考(Thought) → 行动(Action) → 观察(Observation) → 思考 → ...
 ```
 
-Claude Code **没有**采用这个模式。它的核心是一个 **异步生成器（Async Generator）驱动的状态机**，定义在 `src/query.ts`（约 1730 行）：
+ScienceX **没有**采用这个模式。它的核心是一个 **异步生成器（Async Generator）驱动的状态机**，定义在 `src/query.ts`（约 1730 行）：
 
 ```typescript
 // src/query.ts:219
@@ -77,7 +77,7 @@ type State = {
 | **上下文折叠** | 分阶段摘要历史消息 | 上下文接近限制时 |
 | **Auto Compact** | 通过 Claude 生成完整摘要 | 上下文严重不足时 |
 
-这是 Claude Code 能处理**极长对话**而不退化的关键——它不会简单地截断历史，而是**智能地压缩和保留关键信息**。
+这是 ScienceX 能处理**极长对话**而不退化的关键——它不会简单地截断历史，而是**智能地压缩和保留关键信息**。
 
 #### 阶段 2：流式 API 调用（第 652-954 行）
 
@@ -169,7 +169,7 @@ state = next
 - **边界之上**：跨用户、跨组织通用的内容，使用 `scope: 'global'` 缓存
 - **边界之下**：用户/会话特定的内容，使用 `scope: 'ephemeral'` 缓存
 
-这意味着 Claude Code 的系统提示词**不需要每次都重新处理**——静态部分在全球范围内共享缓存，大幅降低延迟和成本。
+这意味着 ScienceX 的系统提示词**不需要每次都重新处理**——静态部分在全球范围内共享缓存，大幅降低延迟和成本。
 
 ### 2.2 两种 Section 类型
 
@@ -222,7 +222,7 @@ CLAUDE.md 是用户自定义指令系统，按**优先级从低到高**加载（
 
 ### 3.1 工具接口：不只是函数调用
 
-Claude Code 的工具不是简单的"名称 + 参数 + 执行"。每个工具是一个**完整的生命周期管理单元**（`src/Tool.ts:362-695`）：
+ScienceX 的工具不是简单的"名称 + 参数 + 执行"。每个工具是一个**完整的生命周期管理单元**（`src/Tool.ts:362-695`）：
 
 ```typescript
 type Tool<Input, Output> = {
@@ -292,7 +292,7 @@ type Tool<Input, Output> = {
 
 ### 3.4 工具延迟加载（Tool Deferred Loading）
 
-Claude Code 有 48+ 个内置工具。如果每次 API 调用都把所有工具定义发给模型，会浪费大量 token。解决方案：
+ScienceX 有 48+ 个内置工具。如果每次 API 调用都把所有工具定义发给模型，会浪费大量 token。解决方案：
 
 ```typescript
 // 工具可以标记为"延迟加载"
@@ -311,7 +311,7 @@ Claude Code 有 48+ 个内置工具。如果每次 API 调用都把所有工具�
 
 ### 4.1 无限对话的秘密
 
-Claude Code 宣称"对话没有上下文限制"，这背后是一套**四级压缩系统**：
+ScienceX 宣称"对话没有上下文限制"，这背后是一套**四级压缩系统**：
 
 ![上下文压缩策略](./images/14-context-compression.png)
 
@@ -372,7 +372,7 @@ getUserContext() → {
 
 ### 5.1 技能系统（Skills）
 
-技能是 Claude Code 最强大的扩展机制之一。它不是简单的"命令别名"，而是**完整的 AI 行为定义**。
+技能是 ScienceX 最强大的扩展机制之一。它不是简单的"命令别名"，而是**完整的 AI 行为定义**。
 
 #### 技能定义结构
 
@@ -451,7 +451,7 @@ SessionStart ─→ UserPromptSubmit ─→ PreToolUse ─→ [工具执行]
 
 ### 5.4 MCP：模型上下文协议
 
-MCP 是 Claude Code 与外部世界交互的标准协议。工具命名规范：
+MCP 是 ScienceX 与外部世界交互的标准协议。工具命名规范：
 
 ```
 mcp__{标准化服务器名}__{工具名}
@@ -522,7 +522,7 @@ type PermissionResult =
 
 ## 七、故障恢复机制
 
-这是 Claude Code 最精妙的设计之一。`src/query.ts` 的核心循环内置了**6 种恢复策略**：
+这是 ScienceX 最精妙的设计之一。`src/query.ts` 的核心循环内置了**6 种恢复策略**：
 
 | 恢复策略 | 触发条件 | 恢复方式 |
 |----------|----------|----------|
@@ -565,7 +565,7 @@ if (error.type === 'prompt_too_long') {
 
 ### 8.1 架构范式对比
 
-| 维度 | LangChain | Claude Code |
+| 维度 | LangChain | ScienceX |
 |------|-----------|-------------|
 | **核心模式** | ReAct（Think→Act→Observe） | Async Generator 状态机 |
 | **执行模型** | 同步阻塞 | 流式非阻塞 |
@@ -586,7 +586,7 @@ ReAct 模式有几个固有限制：
 3. **恢复困难**：没有统一的状态表示，难以实现自动恢复
 4. **缓存不友好**：每次循环的 prompt 结构变化大，难以利用缓存
 
-Claude Code 的 Async Generator 模式解决了所有这些问题：
+ScienceX 的 Async Generator 模式解决了所有这些问题：
 
 - **流式执行**：工具在模型生成过程中就开始运行
 - **状态可控**：`State` 对象包含所有需要的信息，恢复只需修改状态
@@ -602,7 +602,7 @@ LangChain Agent:
   # 内部：LLM → parse → tool → LLM → parse → tool → ... → final answer
   # 每一步都是独立的 LLM 调用
 
-Claude Code Agent:
+ScienceX Agent:
   for await (const msg of query({ messages, tools, systemPrompt })) {
     yield msg  // 实时产出消息
     // 内部：流式 LLM → 流式工具执行 → 状态更新 → 继续
@@ -612,15 +612,15 @@ Claude Code Agent:
 
 关键差异：
 - LangChain 的每一"步"是一次完整的 LLM 调用
-- Claude Code 的每一"轮"可以包含多个工具调用，且工具在流式传输中执行
+- ScienceX 的每一"轮"可以包含多个工具调用，且工具在流式传输中执行
 - LangChain 需要 OutputParser 解析模型输出中的工具调用
-- Claude Code 直接使用 Anthropic API 的原生 `tool_use` 能力，无需解析
+- ScienceX 直接使用 Anthropic API 的原生 `tool_use` 能力，无需解析
 
 ### 8.4 与 LangGraph 的对比
 
 LangGraph 是 LangChain 的升级版，引入了图结构：
 
-| 维度 | LangGraph | Claude Code |
+| 维度 | LangGraph | ScienceX |
 |------|-----------|-------------|
 | **状态流转** | 显式图节点 + 边 | 隐式状态机（while + continue） |
 | **可视化** | 可导出为图 | 状态转换原因可追溯 |
@@ -628,11 +628,11 @@ LangGraph 是 LangChain 的升级版，引入了图结构：
 | **人机交互** | interrupt_before/after | 权限系统 + 钩子 |
 | **多 Agent** | 需要显式编排 | AgentTool 统一接口 |
 
-Claude Code 的优势在于**简单性**——不需要定义图结构，一个 while 循环就能处理所有情况。
+ScienceX 的优势在于**简单性**——不需要定义图结构，一个 while 循环就能处理所有情况。
 
 ---
 
-## 九、为什么 Claude Code 能做到这么好？
+## 九、为什么 ScienceX 能做到这么好？
 
 从源码分析中，我们可以总结出以下核心设计原则：
 
@@ -662,7 +662,7 @@ Section Cache（轮级）     ← systemPromptSection 记忆化
 
 ### 9.3 优雅降级（Graceful Degradation）
 
-6 种恢复策略确保 Claude Code **几乎不会因为技术问题中断用户的工作流**：
+6 种恢复策略确保 ScienceX **几乎不会因为技术问题中断用户的工作流**：
 - Token 超限？自动压缩
 - API 超时？自动重试
 - 模型失败？降级到备用模型
@@ -670,7 +670,7 @@ Section Cache（轮级）     ← systemPromptSection 记忆化
 
 ### 9.4 最小抽象原则（Minimal Abstraction）
 
-与 LangChain 的"万物皆抽象"不同，Claude Code 的核心只有：
+与 LangChain 的"万物皆抽象"不同，ScienceX 的核心只有：
 - **一个循环**（`while (true)` in `query()`）
 - **一个状态**（`State` 对象）
 - **一个接口**（`Tool` 类型）
@@ -679,7 +679,7 @@ Section Cache（轮级）     ← systemPromptSection 记忆化
 
 ### 9.5 原生 API 集成（Native API Integration）
 
-Claude Code 直接使用 Anthropic API 的原生能力：
+ScienceX 直接使用 Anthropic API 的原生能力：
 - **原生工具调用**：无需 OutputParser，直接使用 `tool_use` 块
 - **原生流式传输**：无需包装层，直接消费 SSE 流
 - **原生缓存**：利用 API 的 prompt caching 特性
@@ -689,7 +689,7 @@ Claude Code 直接使用 Anthropic API 的原生能力：
 
 ### 9.6 工具驱动的 Agent（Tool-Driven Agent）
 
-Claude Code 的哲学是：**Agent 的能力等于其工具的能力**。
+ScienceX 的哲学是：**Agent 的能力等于其工具的能力**。
 
 - 子代理生成？是一个工具（`AgentTool`）
 - 团队管理？是一个工具（`TeamCreate`/`SendMessage`）
@@ -700,7 +700,7 @@ Claude Code 的哲学是：**Agent 的能力等于其工具的能力**。
 
 ### 9.7 深度集成的开发体验
 
-Claude Code 不是"通用 Agent + 代码插件"，而是**从底层为编码场景深度优化**：
+ScienceX 不是"通用 Agent + 代码插件"，而是**从底层为编码场景深度优化**：
 
 - **Git 感知**：自动注入 git 状态，理解分支、提交、diff
 - **文件系统感知**：理解项目结构，智能搜索文件
@@ -744,7 +744,7 @@ query() 异步生成器循环（src/query.ts）
 
 ### 一句话总结
 
-> **Claude Code 的 Agent 框架是一个以 AsyncGenerator 为核心的流式状态机，通过统一的工具接口暴露所有能力，配合四级上下文压缩、三级提示词缓存、六种故障恢复策略，实现了一个无需显式编排即可自主完成复杂编程任务的 AI 系统。**
+> **ScienceX 的 Agent 框架是一个以 AsyncGenerator 为核心的流式状态机，通过统一的工具接口暴露所有能力，配合四级上下文压缩、三级提示词缓存、六种故障恢复策略，实现了一个无需显式编排即可自主完成复杂编程任务的 AI 系统。**
 
 ---
 

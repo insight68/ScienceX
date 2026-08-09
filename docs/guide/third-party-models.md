@@ -199,7 +199,7 @@ CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 
 ## 方式三：其他代理工具
 
-社区还有一些专门为 Claude Code 做的代理工具：
+社区还有一些专门为 ScienceX 做的代理工具：
 
 | 工具 | 说明 | 链接 |
 |------|------|------|

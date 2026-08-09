@@ -1,6 +1,6 @@
 # IM Gateway 方案设计 `[历史设计稿]`
 
-> 像 OpenClaw 一样，让 Claude Code Desktop 快速接入任意 IM 平台
+> 像 OpenClaw 一样，让 ScienceX Desktop 快速接入任意 IM 平台
 >
 > 状态更新：当前实际可用的接入方式请看 [`docs/im/`](../im/)。
 > 本文保留为方案演进记录，不再作为接入说明。
@@ -24,7 +24,7 @@
 
 ### 现状
 
-Claude Code 源码中已有完整的 **Channel 系统**（详见 [01-channel-system.md](./01-channel-system.md)），支持通过 MCP 协议接入 IM 平台。但该系统被六层访问控制锁死：
+ScienceX 源码中已有完整的 **Channel 系统**（详见 [01-channel-system.md](./01-channel-system.md)），支持通过 MCP 协议接入 IM 平台。但该系统被六层访问控制锁死：
 
 1. **编译时门控** — `feature('KAIROS')` / `feature('KAIROS_CHANNELS')` 编译标志
 2. **运行时门控** — GrowthBook `tengu_harbor`（默认 false）
@@ -442,13 +442,13 @@ wscat -c ws://localhost:3456/im/test-adapter
 | 权限审批 | 无（直接执行） | 5 字母 ID 审批（复用已有系统） |
 | 多用户 | 全局单 Agent | 每 chatId 独立 session |
 | AI 模型 | OpenAI / Claude / Gemini 等 | Claude（通过现有 API key） |
-| 工具能力 | 浏览器控制、语音等 | 完整 Claude Code 工具集（文件读写、终端、搜索等） |
+| 工具能力 | 浏览器控制、语音等 | 完整 ScienceX 工具集（文件读写、终端、搜索等） |
 | 部署方式 | 单体 + 插件 | 服务端 + 独立 Adapter 进程 |
 | 改动量 | 全新项目 | 现有服务端 ~35 行改动 + 3 个新模块 |
 
 ### 我们的优势
 
-- **Claude Code 原生工具链**：Adapter 连接的不是普通聊天机器人，而是完整的 Claude Code Agent，具备文件读写、代码搜索、Git 操作、终端执行等全部能力
+- **ScienceX 原生工具链**：Adapter 连接的不是普通聊天机器人，而是完整的 ScienceX Agent，具备文件读写、代码搜索、Git 操作、终端执行等全部能力
 - **权限安全**：内置权限审批机制，从 IM 端可以审批敏感操作
 - **改动量极小**：核心只改 2 个文件 ~35 行，新增 3 个模块
 

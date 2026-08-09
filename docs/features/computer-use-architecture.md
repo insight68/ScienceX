@@ -18,7 +18,7 @@
 
 ## 一、补丁环境总览
 
-Claude Code 原版的 Computer Use 功能（内部代号 **Chicago**）依赖三个不可公开获取的组件：
+ScienceX 原版的 Computer Use 功能（内部代号 **Chicago**）依赖三个不可公开获取的组件：
 
 | 组件 | 作用 | 获取方式 |
 |------|------|----------|
@@ -33,7 +33,7 @@ Claude Code 原版的 Computer Use 功能（内部代号 **Chicago**）依赖三
 ### 我们做了什么
 
 ```
-原始 Claude Code                         ScienceX (补丁版)
+原始 ScienceX                         ScienceX (补丁版)
 ─────────────────                        ─────────────────────────
 @ant/computer-use-swift  ──替换为──→     Python Bridge (mac_helper.py)
 @ant/computer-use-input  ──替换为──→     pyautogui + pyobjc
@@ -113,7 +113,7 @@ Computer Use 采用 **6 层架构**，每层职责清晰、边界明确：
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**标 `[补丁]` 的层**是我们替换/新增的代码，**其余层完全保留**原始 Claude Code 的逻辑。
+**标 `[补丁]` 的层**是我们替换/新增的代码，**其余层完全保留**原始 ScienceX 的逻辑。
 
 ### 为什么这样分层？
 
@@ -325,7 +325,7 @@ function tierSatisfies(tier: CuAppPermTier, required: ActionKind): boolean {
 
 ### 架构设计
 
-原始 Claude Code 使用编译好的 Swift 原生模块（.node NAPI 插件）直接调用 macOS API。我们用 **Python 子进程 + JSON RPC** 替代了这一层：
+原始 ScienceX 使用编译好的 Swift 原生模块（.node NAPI 插件）直接调用 macOS API。我们用 **Python 子进程 + JSON RPC** 替代了这一层：
 
 ```
 TypeScript (Bun 运行时)                    Python (venv)
@@ -592,9 +592,9 @@ bindSessionContext 闭包
 ### 我们尝试过但放弃的方案
 
 **方案一：提取原生 .node 模块**
-- 从 Claude Code 二进制中成功提取了 `computer-use-swift.node`（ARM64 424KB）
+- 从 ScienceX 二进制中成功提取了 `computer-use-swift.node`（ARM64 424KB）
 - 同步方法正常工作，但 **Swift 异步方法的 continuation 永远不会 resume**
-- 根因：.node 文件针对 Claude Code 内置 Bun 编译，与用户 Bun 版本不兼容
+- 根因：.node 文件针对 ScienceX 内置 Bun 编译，与用户 Bun 版本不兼容
 
 **方案二：空 Stub 包**
 - 代码能编译但所有操作报错——没有实际执行能力

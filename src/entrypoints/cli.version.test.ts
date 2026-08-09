@@ -16,6 +16,6 @@ describe('sciencex --version', () => {
 
     expect(result.exitCode).toBe(0)
     expect(stdout).toMatch(/^\S+ \(ScienceX\)$/)
-    expect(stdout).not.toContain('Claude Code')
+    expect(stdout).not.toContain('ScienceX')
   })
 })

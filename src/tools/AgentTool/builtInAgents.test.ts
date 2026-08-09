@@ -64,7 +64,7 @@ describe('built-in agents', () => {
       })
       expect(prompt).toContain('ScienceX')
       expect(prompt).not.toContain("Anthropic's official CLI")
-      expect(prompt).not.toContain('You are Claude Code')
+      expect(prompt).not.toContain('You are ScienceX')
     }
   })
 

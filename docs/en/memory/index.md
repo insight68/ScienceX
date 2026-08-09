@@ -16,7 +16,7 @@ A comprehensive user-facing manual covering:
 - **Management operations**: Forgetting, ignoring, manual editing, disabling, custom directories
 - **Lifecycle**: From learning to injection, freshness management
 
-**Target audience**: All Claude Code users
+**Target audience**: All ScienceX users
 
 ---
 
@@ -55,7 +55,7 @@ Claude's "dreaming" mechanism -- a deep dive into background silent memory conso
 
 ## Illustrations
 
-All illustrations use a dark background (#1a1a2e) + ScienceX orange-blue accent (#FF7A00) style, consistent with the official Claude Code documentation.
+All illustrations use a dark background (#1a1a2e) + ScienceX orange-blue accent (#FF7A00) style, consistent with the official ScienceX documentation.
 
 | Image | Description | Size |
 |-------|-------------|------|

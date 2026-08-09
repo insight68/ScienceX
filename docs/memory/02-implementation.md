@@ -270,7 +270,7 @@ function hasMemoryWritesSince(messages, sinceUuid): boolean {
 ### Sonnet 选择器的提示词
 
 ```
-你正在选择对 Claude Code 处理用户查询有用的记忆。
+你正在选择对 ScienceX 处理用户查询有用的记忆。
 你将收到用户查询和可用记忆文件列表（含文件名和描述）。
 
 返回最多 5 个明确有用的记忆文件名。

@@ -219,7 +219,7 @@ export function OpenAILoginFlow({
       <Box flexDirection="column" gap={1}>
         <Text bold>
           {startingMessage ??
-            'Claude Code can also run through your ChatGPT subscription via OpenAI auth.'}
+            'ScienceX can also run through your ChatGPT subscription via OpenAI auth.'}
         </Text>
 
         {status.state === 'waiting_for_login' && !showPastePrompt && (

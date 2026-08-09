@@ -12,11 +12,11 @@
 
 ## 1. What Is AutoDream?
 
-AutoDream is Claude Code's **background memory consolidation mechanism**, internally codenamed **"Dream: Memory Consolidation"**.
+AutoDream is ScienceX's **background memory consolidation mechanism**, internally codenamed **"Dream: Memory Consolidation"**.
 
 Core metaphor:
 
-| Human | Claude Code |
+| Human | ScienceX |
 |-------|-------------|
 | Jotting down notes throughout the day | `extractMemories` -- extracts new memories after each conversation |
 | Organizing the notebook while sleeping | `autoDream` -- periodically reviews multiple sessions to consolidate all memories |

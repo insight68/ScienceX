@@ -1,6 +1,6 @@
 # Channel 源码研究
 
-> 这里讲的是 Claude Code 原生的 Channel / MCP 体系。  
+> 这里讲的是 ScienceX 原生的 Channel / MCP 体系。  
 > 如果你要配置当前桌面版的 Telegram / 飞书接入，请先看 [IM 接入文档](../im/)。
 
 ## 这组文档是干什么的
@@ -9,7 +9,7 @@
 
 `docs/channel/` 保留的价值主要是：
 
-- 解释上游 Claude Code 的原生 Channel 机制
+- 解释上游 ScienceX 的原生 Channel 机制
 - 记录历史上为什么没有直接沿用那套机制做当前 IM 接入
 - 作为后续架构演进时的参考资料
 
@@ -17,7 +17,7 @@
 
 ### [01-channel-system.md](./01-channel-system.md)
 
-从源码视角分析 Claude Code 原始 Channel 系统，包括：
+从源码视角分析 ScienceX 原始 Channel 系统，包括：
 
 - Channel 的概念模型
 - MCP 通知和工具出入站协议
@@ -42,6 +42,6 @@
 
 ## 适合谁看
 
-- 想研究 Claude Code 原生 IM / Channel 思路的开发者
+- 想研究 ScienceX 原生 IM / Channel 思路的开发者
 - 想理解当前仓库 IM 实现为什么没有直接复用 Channel 的贡献者
 - 想做架构对比和二次设计的人

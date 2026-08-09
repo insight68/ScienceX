@@ -212,7 +212,7 @@ export function applySafeConfigEnvironmentVariables(): void {
 
   // sciencex provider isolation: apply env from ~/.claude/sciencex/settings.json
   // AFTER userSettings so scix-specific provider config takes priority over
-  // the original Claude Code's settings. This prevents scix from polluting
+  // the original ScienceX's settings. This prevents scix from polluting
   // ~/.claude/settings.json while still allowing it to override provider vars.
   Object.assign(process.env, filterSettingsEnv(getCcscixSettingsEnv()))
 

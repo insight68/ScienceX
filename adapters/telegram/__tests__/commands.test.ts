@@ -158,7 +158,7 @@ describe('Telegram command controller helpers', () => {
     const help = buildTelegramHelpText()
 
     expect(help).toContain('ScienceX Bot 已就绪')
-    expect(help).not.toContain('Claude Code')
+    expect(help).not.toContain('ScienceX')
   })
 
   it('builds provider, model, skill, session, and selection view data', () => {

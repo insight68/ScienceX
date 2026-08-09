@@ -18,6 +18,8 @@ describe('PR triage workflow comment', () => {
     expect(workflow).not.toContain('pull_request.head.sha')
     expect(workflow).not.toContain('--allow-live')
     expect(workflow).not.toContain('secrets.')
+    expect(workflow).toContain('uses: actions/github-script@v8')
+    expect(workflow).not.toContain('uses: actions/github-script@v7')
   })
 
   test('surfaces missing-test and coverage-baseline policy branches', () => {

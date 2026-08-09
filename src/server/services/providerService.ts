@@ -3,7 +3,7 @@
  *
  * Storage: ~/.sciencex/config/providers.json (lightweight index)
  * Active provider env vars written to ~/.sciencex/config/settings.json
- * (isolated from the original Claude Code's ~/.claude/settings.json)
+ * (isolated from the original ScienceX's ~/.claude/settings.json)
  */
 
 import * as fs from 'fs/promises'

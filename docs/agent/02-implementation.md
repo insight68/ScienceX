@@ -12,7 +12,7 @@
 
 ## 一、架构总览
 
-Claude Code 的多 Agent 系统由以下核心模块组成：
+ScienceX 的多 Agent 系统由以下核心模块组成：
 
 ### 5 大核心模块
 
@@ -323,7 +323,7 @@ Agent System Prompt        ← agentDefinition.getSystemPrompt()
   ↓                          - 其他：替换默认
 Custom System Prompt       ← --system-prompt 参数
   ↓
-Default System Prompt      ← Claude Code 标准提示词
+Default System Prompt      ← ScienceX 标准提示词
   ↓
 Append System Prompt       ← 追加到末尾
 ```

@@ -13,7 +13,7 @@ const SESSION_MARKER = '_session_'
  *
  * OpenAI prompt caching routes on this key, so all requests of one
  * conversation must share it. Sources in order: the `_session_` suffix of
- * `metadata.user_id` (what Claude Code sends), `metadata.session_id`, then
+ * `metadata.user_id` (what ScienceX sends), `metadata.session_id`, then
  * the CLI's `x-claude-code-session-id` header. Returns undefined when no
  * client session identity exists — never a generated UUID, and never
  * `previous_response_id`, which is a per-turn response cursor and would

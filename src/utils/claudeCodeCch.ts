@@ -1,5 +1,5 @@
 /**
- * Claude Code CCH signing logic based on sub2api.
+ * ScienceX CCH signing logic based on sub2api.
  * Reference: https://github.com/Wei-Shaw/sub2api
  * License: LGPL-3.0-or-later, Copyright (c) 2026 Wesley Liddick.
  */

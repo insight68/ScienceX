@@ -1,5 +1,5 @@
 /**
- * Claude Code 桌面端合并 sidecar 入口。
+ * ScienceX 桌面端合并 sidecar 入口。
  *
  * 历史上 server / cli / IM adapters 是各自独立的进程。每个 bun-compile
  * 二进制都要带一份 ~55MB 的 bun runtime，光这一项就重复占了 100MB+。

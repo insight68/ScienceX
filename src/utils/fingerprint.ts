@@ -1,5 +1,5 @@
 /**
- * Claude Code billing fingerprint algorithm based on sub2api.
+ * ScienceX billing fingerprint algorithm based on sub2api.
  * Reference: https://github.com/Wei-Shaw/sub2api
  * License: LGPL-3.0-or-later, Copyright (c) 2026 Wesley Liddick.
  */
@@ -44,7 +44,7 @@ export function extractFirstMessageText(
 }
 
 /**
- * Computes 3-character fingerprint for Claude Code attribution.
+ * Computes 3-character fingerprint for ScienceX attribution.
  * Algorithm: SHA256(SALT + msg[4] + msg[7] + msg[20] + version)[:3]
  * IMPORTANT: Do not change this method without careful coordination with
  * 1P and 3P (Bedrock, Vertex, Azure) APIs.

@@ -7,7 +7,7 @@
 import { CLAUDE_CODE_BILLING_HEADER_PREFIX } from '../../../constants/claudeCodeCompatibility.js'
 
 /**
- * Strip a leading Claude Code billing attribution line from system text.
+ * Strip a leading ScienceX billing attribution line from system text.
  *
  * The CLI can prepend dynamic `x-anthropic-billing-header:` metadata to
  * `system`. Forwarding it into OpenAI Chat system messages or Responses

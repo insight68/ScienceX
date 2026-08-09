@@ -63,14 +63,14 @@ describe('useTranslation', () => {
       for (const key of brandedKeys) {
         const copy = translate(locale, key)
         expect(copy).toContain('ScienceX')
-        expect(copy).not.toContain('Claude Code')
+        expect(copy).not.toContain('ScienceX')
       }
     }
 
     for (const locale of ['en', 'jp', 'kr'] as const) {
       const copy = translate(locale, 'settings.mcp.description')
       expect(copy).toContain('ScienceX')
-      expect(copy).not.toContain('Claude Code')
+      expect(copy).not.toContain('ScienceX')
     }
 
     const productActorKeys = [

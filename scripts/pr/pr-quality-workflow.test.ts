@@ -119,6 +119,10 @@ describe('PR quality workflow', () => {
     expect(deployWorkflow).toContain("- 'package.json'")
     expect(deployWorkflow).toContain('bun-version: 1.3.12')
     expect(deployWorkflow).toContain('run: bun run check:docs')
+    expect(deployWorkflow).toContain('uses: actions/upload-pages-artifact@v5')
+    expect(deployWorkflow).toContain('uses: actions/deploy-pages@v5')
+    expect(deployWorkflow).not.toContain('uses: actions/upload-pages-artifact@v3')
+    expect(deployWorkflow).not.toContain('uses: actions/deploy-pages@v4')
     expect(deployWorkflow).not.toContain('run: bun install --frozen-lockfile')
   })
 
@@ -137,7 +141,8 @@ describe('PR quality workflow', () => {
     expect(gateStep?.run).toContain('Coverage gate did not produce coverage-report.md')
     expect(gateStep?.run).toContain('exit "$coverage_status"')
     expect(uploadStep?.if).toBe('always()')
-    expect(workflow).toContain('uses: actions/upload-artifact@v4')
+    expect(workflow).toContain('uses: actions/upload-artifact@v6')
+    expect(workflow).not.toContain('uses: actions/upload-artifact@v4')
     expect(workflow).toContain('path: artifacts/coverage/')
     expect(workflow).toContain('retention-days: 14')
   })
@@ -149,9 +154,10 @@ describe('PR quality workflow', () => {
     expect(workflow).not.toContain('QUALITY_GATE_PROVIDER_API_KEY')
     expect(workflow).not.toContain('secrets.')
     expect(workflow).not.toContain('pull_request_target')
-    expect(workflow.match(/uses: actions\/checkout@v4/g)?.length).toBeGreaterThan(0)
+    expect(workflow.match(/uses: actions\/checkout@v5/g)?.length).toBeGreaterThan(0)
+    expect(workflow).not.toContain('uses: actions/checkout@v4')
     expect(workflow.match(/persist-credentials: false/g)?.length).toBe(
-      workflow.match(/uses: actions\/checkout@v4/g)?.length,
+      workflow.match(/uses: actions\/checkout@v5/g)?.length,
     )
   })
 

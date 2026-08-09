@@ -18,7 +18,7 @@ describe('model context windows', () => {
     expect(getConfiguredOrBuiltInModelContextWindow('qwen3-coder-next')).toBe(262_144)
   })
 
-  test('matches configured base model windows for Claude Code 1m aliases', () => {
+  test('matches configured base model windows for ScienceX 1m aliases', () => {
     expect(getModelContextWindowFromEnvValue(
       'MiniMax-M3[1m]',
       JSON.stringify({ 'MiniMax-M3': 1_000_000 }),

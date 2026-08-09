@@ -39,7 +39,7 @@ await stageHostRipgrepForOfflineBuild()
 await compileExecutable({
   entrypoint: path.join(desktopRoot, 'sidecars/claude-sidecar.ts'),
   outfileBase: path.join(binariesDir, `claude-sidecar-${targetTriple}`),
-  productName: 'Claude Code Sidecar',
+  productName: 'ScienceX Sidecar',
   bunTarget,
 })
 
@@ -218,7 +218,7 @@ async function compileExecutable({
       autoloadPackageJson: true,
       windows: {
         title: productName,
-        publisher: 'Claude Code',
+        publisher: 'ScienceX',
         description: productName,
         hideConsole: true,
       },

@@ -1,6 +1,6 @@
 # ScienceX Skills System -- Usage Guide
 
-> Skills are the extensible capability engine of Claude Code, allowing you to define custom automated workflows using Markdown files.
+> Skills are the extensible capability engine of ScienceX, allowing you to define custom automated workflows using Markdown files.
 
 <p align="center">
 <a href="#1-what-are-skills">What Are Skills</a> · <a href="#2-six-skill-sources">Six Sources</a> · <a href="#3-skill-definition-format">Definition Format</a> · <a href="#4-invocation-methods">Invocation</a> · <a href="#5-execution-context">Execution Context</a> · <a href="#6-conditional-activation">Conditional Activation</a> · <a href="#7-permission-control">Permissions</a> · <a href="#8-quick-reference">Quick Reference</a>
@@ -12,7 +12,7 @@
 
 ## 1. What Are Skills?
 
-Skills are Claude Code's **extensible capability plugin system**. Each Skill is a Markdown file (with YAML frontmatter) that defines a specialized prompt and behavioral configuration, enabling Claude to execute professional workflows in specific scenarios.
+Skills are ScienceX's **extensible capability plugin system**. Each Skill is a Markdown file (with YAML frontmatter) that defines a specialized prompt and behavioral configuration, enabling Claude to execute professional workflows in specific scenarios.
 
 Core capabilities:
 
@@ -31,7 +31,7 @@ Core capabilities:
 
 ![Skill Source Types](./images/02-skill-sources.png)
 
-Claude Code loads Skills from 6 different sources, ordered by priority from highest to lowest:
+ScienceX loads Skills from 6 different sources, ordered by priority from highest to lowest:
 
 ### 1. Bundled (Built-in Skills)
 

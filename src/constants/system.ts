@@ -64,7 +64,7 @@ function isAttributionHeaderEnabled(): boolean {
  * Includes a `cch=00000` placeholder. Before the request is sent,
  * signClaudeCodeCCHBody overwrites the zeros with a computed hash.
  * The server verifies this token to confirm the request came from a real
- * Claude Code client.
+ * ScienceX client.
  */
 export function getAttributionHeader(fingerprint: string): string {
   if (!isAttributionHeaderEnabled()) {

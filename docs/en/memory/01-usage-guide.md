@@ -1,6 +1,6 @@
 # ScienceX Memory System — Usage Guide
 
-> Let Claude Code remember who you are, what you prefer, and what's happening in your project across sessions.
+> Let ScienceX remember who you are, what you prefer, and what's happening in your project across sessions.
 
 <p align="center">
 <a href="#1-what-is-the-memory-system">Memory System</a> · <a href="#2-four-memory-types">Four Memory Types</a> · <a href="#3-how-to-trigger-memory-saving">Trigger Saving</a> · <a href="#4-where-are-memories-stored">Storage Location</a> · <a href="#5-how-to-manage-memories">Manage Memories</a> · <a href="#6-memory-lifecycle">Lifecycle</a> · <a href="#7-quick-reference">Quick Reference</a>
@@ -12,7 +12,7 @@
 
 ## 1. What Is the Memory System?
 
-Claude Code's memory system is a **file-based persistent knowledge store** that allows Claude to continuously build understanding of you and your project across multiple conversations.
+ScienceX's memory system is a **file-based persistent knowledge store** that allows Claude to continuously build understanding of you and your project across multiple conversations.
 
 Core principle: **Only remember things that cannot be inferred from the code itself.**
 
@@ -29,7 +29,7 @@ Core principle: **Only remember things that cannot be inferred from the code its
 
 ![Four Memory Types](./images/02-memory-types.png)
 
-Claude Code strictly categorizes memories into four types:
+ScienceX strictly categorizes memories into four types:
 
 ### 2.1 User (User Profile)
 
@@ -245,7 +245,7 @@ New information learned during conversation
 
 ### AutoDream -- "Dreaming" to Organize Memories
 
-Claude Code has a hidden **AutoDream** feature, analogous to how the human brain organizes memories during sleep. When the following conditions are met, Claude silently launches a "dreaming" sub-agent in the background:
+ScienceX has a hidden **AutoDream** feature, analogous to how the human brain organizes memories during sleep. When the following conditions are met, Claude silently launches a "dreaming" sub-agent in the background:
 
 - At least **>= 24 hours** since the last consolidation
 - At least **>= 5 sessions** accumulated in the interim

@@ -1,7 +1,7 @@
 # Computer Use 功能指南
 
 
-> **魔改说明**：本功能是基于 Claude Code 泄露源码中的 Computer Use（内部代号 "Chicago"）进行的**深度改造版本**。官方实现依赖 Anthropic 内部私有原生模块（`@ant/computer-use-swift`、`@ant/computer-use-input`），无法公开获取。我们**替换了整个底层操作层**，使用 Python bridge 实现所有系统交互——macOS 使用 `pyautogui` + `mss` + `pyobjc`，Windows 使用 `pyautogui` + `mss` + `win32gui` + `psutil`，使得任何人都可以在 macOS 和 Windows 上运行 Computer Use 功能。
+> **魔改说明**：本功能是基于 ScienceX 泄露源码中的 Computer Use（内部代号 "Chicago"）进行的**深度改造版本**。官方实现依赖 Anthropic 内部私有原生模块（`@ant/computer-use-swift`、`@ant/computer-use-input`），无法公开获取。我们**替换了整个底层操作层**，使用 Python bridge 实现所有系统交互——macOS 使用 `pyautogui` + `mss` + `pyobjc`，Windows 使用 `pyautogui` + `mss` + `win32gui` + `psutil`，使得任何人都可以在 macOS 和 Windows 上运行 Computer Use 功能。
 
 ---
 
@@ -237,7 +237,7 @@ src/
 
 ### 灰度控制绕过
 
-官方 Claude Code 中 Computer Use 通过三层门控限制访问：
+官方 ScienceX 中 Computer Use 通过三层门控限制访问：
 
 | 层级 | 原始机制 | 我们的处理 |
 |------|----------|-----------|
@@ -272,9 +272,9 @@ async function callPythonHelper<T>(command: string, payload: object): Promise<T>
 
 ## 我们尝试过的方案
 
-### 方案一：从 Claude Code 二进制提取原生 .node 模块 ❌
+### 方案一：从 ScienceX 二进制提取原生 .node 模块 ❌
 
-**思路**：从已安装的 Claude Code 二进制 (`~/.local/share/claude/versions/2.1.91`，189MB Mach-O) 中定位并提取嵌入的原生 NAPI 模块。
+**思路**：从已安装的 ScienceX 二进制 (`~/.local/share/claude/versions/2.1.91`，189MB Mach-O) 中定位并提取嵌入的原生 NAPI 模块。
 
 **实施**：
 - 成功从 Bun `$bunfs` 虚拟文件系统中提取了 `computer-use-swift.node` (ARM64 424KB + x64 430KB) 和 `computer-use-input.node` (ARM64 836KB + x64 821KB)
@@ -283,7 +283,7 @@ async function callPythonHelper<T>(command: string, payload: object): Promise<T>
 
 **失败原因**：
 - Swift 异步方法（`screenshot.captureExcluding`）的 continuation 永远不会 resume
-- 根因：提取的 .node 文件是针对 Claude Code 内置的 Bun 运行时编译的，与用户系统的 Bun 版本的 N-API 异步实现不兼容
+- 根因：提取的 .node 文件是针对 ScienceX 内置的 Bun 运行时编译的，与用户系统的 Bun 版本的 N-API 异步实现不兼容
 - 错误信息：`SWIFT TASK CONTINUATION MISUSE: captureScreenWithExclusion leaked its continuation without resuming it`
 
 ### 方案二：创建空 Stub 包 ❌
@@ -322,7 +322,7 @@ async function callPythonHelper<T>(command: string, payload: object): Promise<T>
 
 | 项目 | 许可证 | 贡献 |
 |------|--------|------|
-| [wimi321/macos-computer-use-skill](https://github.com/wimi321/macos-computer-use-skill) | MIT | Python bridge 架构、`mac_helper.py` 运行时、`executor.ts` 适配方案。该项目从 Claude Code 工作流中提取了可复用的 TypeScript 逻辑，并用完全公开的 Python 库替代了私有原生模块 |
+| [wimi321/macos-computer-use-skill](https://github.com/wimi321/macos-computer-use-skill) | MIT | Python bridge 架构、`mac_helper.py` 运行时、`executor.ts` 适配方案。该项目从 ScienceX 工作流中提取了可复用的 TypeScript 逻辑，并用完全公开的 Python 库替代了私有原生模块 |
 | [domdomegg/computer-use-mcp](https://github.com/domdomegg/computer-use-mcp) | MIT | 独立的 Computer Use MCP 服务器实现（基于 nut.js），跨平台可用。在方案调研阶段提供了参考 |
 | [paoloanzn/free-code](https://github.com/paoloanzn/free-code) | - | Feature flag 系统分析和构建系统参考 |
 | [oboard/claude-code-rev](https://github.com/oboard/claude-code-rev) | - | 泄露源码的早期恢复工作，提供了 stub 包的参考实现 |

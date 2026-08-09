@@ -1,6 +1,6 @@
 # ScienceX Multi-Agent System — Usage Guide
 
-> Let Claude Code orchestrate multiple specialized agents to handle complex tasks in parallel.
+> Let ScienceX orchestrate multiple specialized agents to handle complex tasks in parallel.
 
 <p align="center">
 <a href="#1-what-is-the-multi-agent-system">Multi-Agent System</a> · <a href="#2-six-built-in-agents">Six Built-in Agents</a> · <a href="#3-how-to-spawn-agents">Spawning Agents</a> · <a href="#4-background-task-management">Background Tasks</a> · <a href="#5-agent-teams--multi-agent-collaboration">Agent Teams</a> · <a href="#6-custom-agents">Custom Agents</a> · <a href="#7-permission-modes">Permission Modes</a> · <a href="#8-quick-reference">Quick Reference</a>
@@ -12,7 +12,7 @@
 
 ## 1. What Is the Multi-Agent System?
 
-Claude Code's multi-agent system is an **intelligent task orchestration framework** that enables the primary agent to spawn multiple specialized subagents, each executing different tasks independently, then aggregating results for the user.
+ScienceX's multi-agent system is an **intelligent task orchestration framework** that enables the primary agent to spawn multiple specialized subagents, each executing different tasks independently, then aggregating results for the user.
 
 Core philosophy: **Break large tasks into specialized subtasks, execute them in parallel, and boost efficiency.**
 
@@ -29,7 +29,7 @@ Core philosophy: **Break large tasks into specialized subtasks, execute them in 
 
 ![Six Built-in Agents](./images/02-agent-types.png)
 
-Claude Code ships with 6 specialized agent types, each with a specific tool pool and intended use case:
+ScienceX ships with 6 specialized agent types, each with a specific tool pool and intended use case:
 
 ### 2.1 general-purpose (General Agent)
 
@@ -97,7 +97,7 @@ Agent({
 
 ### 2.5 claude-code-guide (Guide Agent)
 
-**Use case**: Answer questions about Claude Code, Agent SDK, or the Claude API.
+**Use case**: Answer questions about ScienceX, Agent SDK, or the Claude API.
 
 ```
 Agent({
@@ -113,7 +113,7 @@ Agent({
 
 ### 2.6 statusline-setup (Status Bar Configuration Agent)
 
-**Use case**: Configure the Claude Code status bar display.
+**Use case**: Configure the ScienceX status bar display.
 
 - **Tool pool**: Read + Edit only
 - **Model**: Sonnet

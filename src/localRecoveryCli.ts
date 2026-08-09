@@ -33,7 +33,7 @@ function printHelp(): void {
 }
 
 function printVersion(): void {
-  process.stdout.write('999.0.0-local (Claude Code local recovery)\n')
+  process.stdout.write('999.0.0-local (ScienceX local recovery)\n')
 }
 
 function parseArgs(argv: string[]) {
