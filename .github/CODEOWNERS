@@ -1,0 +1,14 @@
+# CI, policy, and cross-process boundaries are maintainer-owned.
+/.github/workflows/ @insight68
+/AGENTS.md @insight68
+**/AGENTS.md @insight68
+/CONTRIBUTING.md @insight68
+/scripts/pr/ @insight68
+/scripts/quality-gate/ @insight68
+/desktop/src/api/websocket* @insight68
+/desktop/src/lib/persistenceMigrations* @insight68
+/src/server/services/conversationService* @insight68
+/src/server/proxy/ @insight68
+/src/server/ws/ @insight68
+/src/services/openaiAuth/ @insight68
+/src/utils/model/ @insight68

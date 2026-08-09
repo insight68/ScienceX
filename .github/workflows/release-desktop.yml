@@ -1,0 +1,466 @@
+name: Release Desktop
+
+# Triggered by `v*` tags (created by `bun run scripts/release.ts <version>`)
+# or by manual workflow_dispatch for draft/maintainer releases.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: 'Create as draft release'
+        type: boolean
+        default: true
+      notarize_macos:
+        description: 'Notarize macOS artifacts'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-desktop
+  cancel-in-progress: false
+
+jobs:
+  # Fail before allocating six platform runners when the release source is invalid.
+  release-preflight:
+    name: Validate release version, ref, and notes
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      tag: ${{ steps.validate.outputs.tag }}
+      notes_path: ${{ steps.validate.outputs.notes_path }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Validate release source
+        id: validate
+        run: bun run scripts/release-validate.ts >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+
+  # ── Signing preflight: validate secrets before any build runs ──
+  signing-preflight:
+    name: Validate release signing and notarization secrets
+    runs-on: ubuntu-22.04
+    outputs:
+      macos_signed: ${{ steps.validate.outputs.macos_signed }}
+    env:
+      RELEASE_DRAFT: ${{ github.event_name == 'workflow_dispatch' && inputs.draft == true }}
+    steps:
+      - name: Validate release signing and notarization secrets
+        id: validate
+        run: |
+          set -eu
+          # Check macOS signing/notarization secrets
+          missing=()
+          [ -z "${{ secrets.MACOS_CERTIFICATE }}" ] && missing+=("MACOS_CERTIFICATE")
+          [ -z "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" ] && missing+=("MACOS_CERTIFICATE_PASSWORD")
+          [ -z "${{ secrets.APPLE_ID }}" ] && missing+=("APPLE_ID")
+          [ -z "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" ] && missing+=("APPLE_APP_SPECIFIC_PASSWORD")
+          [ -z "${{ secrets.APPLE_TEAM_ID }}" ] && missing+=("APPLE_TEAM_ID")
+
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "macos_signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "macos_signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Missing macOS signing/notarization secrets: ${missing[*]}"
+            echo "macOS artifacts will be unsigned"
+            echo "Users will need to run desktop/scripts/install-macos-unsigned.sh"
+            if [ "$RELEASE_DRAFT" != "true" ]; then
+              echo "::warning::Publishing unsigned desktop release. Set secrets to enable signing/notarization."
+            fi
+          fi
+
+          # Windows signing is optional:
+          win_missing=()
+          [ -z "${{ secrets.WINDOWS_CERTIFICATE }}" ] && win_missing+=("WINDOWS_CERTIFICATE")
+          [ -z "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}" ] && win_missing+=("WINDOWS_CERTIFICATE_PASSWORD")
+          if [ ${#win_missing[@]} -gt 0 ]; then
+            echo "::warning::Windows signing secrets missing: ${win_missing[*]}"
+          fi
+
+  # ── Build matrix: 6 platform targets ──
+  build:
+    name: Build (${{ matrix.label }})
+    needs:
+      - release-preflight
+      - signing-preflight
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: macOS-ARM64
+            smoke_platform: macos
+            arch: arm64
+            target_triple: aarch64-apple-darwin
+            builder_args: --mac dmg zip --arm64
+            app_bundle_dir: mac-arm64
+            runs_on: macos-14
+          - label: macOS-x64
+            smoke_platform: macos
+            arch: x64
+            target_triple: x86_64-apple-darwin
+            builder_args: --mac dmg zip --x64
+            app_bundle_dir: mac
+            runs_on: macos-15-intel
+          - label: Linux-x64
+            smoke_platform: linux
+            arch: x64
+            target_triple: x86_64-unknown-linux-gnu
+            builder_args: --linux AppImage deb --x64
+            runs_on: ubuntu-22.04
+          - label: Linux-ARM64
+            smoke_platform: linux
+            arch: arm64
+            target_triple: aarch64-unknown-linux-gnu
+            builder_args: --linux AppImage deb --arm64
+            runs_on: ubuntu-22.04
+          - label: Windows-x64
+            smoke_platform: windows
+            arch: x64
+            target_triple: x86_64-pc-windows-msvc
+            builder_args: --win nsis --x64
+            runs_on: windows-latest
+          - label: Windows-ARM64
+            smoke_platform: windows
+            arch: arm64
+            target_triple: aarch64-pc-windows-msvc
+            builder_args: --win nsis --arm64
+            runs_on: windows-latest
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Install desktop dependencies
+        run: |
+          cd desktop
+          bun install --frozen-lockfile
+      - name: Prepare bundled ripgrep
+        run: |
+          cd desktop
+          bun run prepare:ripgrep
+        env:
+          SIDECAR_TARGET_TRIPLE: ${{ matrix.target_triple }}
+      - name: Build sidecars
+        run: |
+          cd desktop
+          bun run build:sidecars
+        env:
+          BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/bun-install-cache
+          SIDECAR_TARGET_TRIPLE: ${{ matrix.target_triple }}
+      - name: Verify compiled sidecar science APIs
+        if: matrix.label != 'Linux-ARM64' && matrix.label != 'Windows-ARM64'
+        run: |
+          cd desktop
+          bun run test:compiled-sidecar-smoke
+      - name: Build renderer and electron host
+        run: |
+          cd desktop
+          bun run build
+          bun run build:electron
+      - name: Build signed macOS Electron release artifacts
+        timeout-minutes: 80
+        if: matrix.smoke_platform == 'macos' && needs.signing-preflight.outputs.macos_signed == 'true'
+        run: |
+          cd desktop
+          APP_VERSION=$(node -e "console.log(require('./package.json').version)")
+
+          echo "macOS signing diagnostics:"
+          xcrun --find notarytool
+          security find-identity -v -p codesigning
+          echo "macOS notarization requested: ${MACOS_NOTARIZE}"
+
+          builder_args=( ${{ matrix.builder_args }} --publish never -c.mac.notarize=false )
+
+          run_electron_builder_with_retries() {
+            local max_attempts=$1
+            local build_timeout_seconds=$2
+            local timeout_seconds=$build_timeout_seconds
+            local attempt=1
+            while [ "$attempt" -le "$max_attempts" ]; do
+              echo "Starting signed electron-builder attempt $attempt/$max_attempts"
+              set +e
+              node ./node_modules/electron-builder/out/cli/cli.js "${builder_args[@]}" &
+              local build_pid=$!
+              local elapsed=0
+              while kill -0 "$build_pid" 2>/dev/null; do
+                if [ "$elapsed" -ge "$build_timeout_seconds" ]; then
+                  echo "Signed electron-builder timed out with ${timeout_seconds}s watchdog"
+                  pkill -TERM -P "$build_pid"
+                  kill -TERM "$build_pid" 2>/dev/null || true
+                  break
+                fi
+                sleep 5
+                elapsed=$((elapsed + 5))
+              done
+              wait "$build_pid"
+              status=$?
+              if [ "$status" -eq 0 ]; then
+                echo "Finished signed electron-builder attempt $attempt/$max_attempts"
+                return 0
+              fi
+              if [ "$attempt" -lt "$max_attempts" ]; then
+                echo "retrying after 120 seconds"
+                sleep 120
+              fi
+              attempt=$((attempt + 1))
+            done
+            return 1
+          }
+
+          run_signed_electron_builder() {
+            local max_attempts=1
+            local build_timeout_seconds=900
+            run_electron_builder_with_retries "$max_attempts" "$build_timeout_seconds"
+          }
+
+          notarize_app_bundle() {
+            local app_path="$1"
+            local notary_attempts=3
+            local notary_timeout=600
+            local notary_zip="${app_path%.app}.zip"
+            ditto -c -k --keepParent "$app_path" "$notary_zip"
+            for attempt in $(seq 1 "$notary_attempts"); do
+              echo "Notarization attempt $attempt/$notary_attempts"
+              if xcrun notarytool submit "$notary_zip" \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID" \
+                --timeout "$notary_timeout" \
+                --wait; then
+                break
+              fi
+              [ "$attempt" -lt "$notary_attempts" ] && sleep 30
+            done
+            xcrun stapler staple "$app_path"
+            xcrun stapler validate "$app_path"
+            spctl -a -vv -t execute "$app_path"
+          }
+
+          rm -rf build-artifacts/electron
+          run_signed_electron_builder
+
+          app_path="build-artifacts/electron/${{ matrix.app_bundle_dir }}/ScienceX.app"
+
+          if [ "$MACOS_NOTARIZE" = "true" ]; then
+            notarize_app_bundle "$app_path"
+          else
+            echo "macOS notarization is disabled for this draft run"
+          fi
+
+          package_args=( ${{ matrix.builder_args }} --prepackaged "$app_path" --publish never -c.mac.notarize=false )
+          find build-artifacts/electron -maxdepth 1 -type f -delete
+          node ./node_modules/electron-builder/out/cli/cli.js "${package_args[@]}"
+        env:
+          CSC_LINK: ${{ secrets.MACOS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MACOS_NOTARIZE: ${{ github.event_name != 'workflow_dispatch' || inputs.notarize_macos }}
+          DEBUG: 'electron-builder,electron-osx-sign,electron-notarize*'
+      - name: Build unsigned Electron release artifacts
+        if: matrix.smoke_platform != 'macos' || needs.signing-preflight.outputs.macos_signed != 'true'
+        run: |
+          cd desktop
+          node ./node_modules/electron-builder/out/cli/cli.js ${{ matrix.builder_args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged app structure
+        shell: bash
+        run: |
+          cd desktop
+          ls -la build-artifacts/electron/ || true
+      - name: Verify macOS launch policy
+        if: matrix.smoke_platform == 'macos' && needs.signing-preflight.outputs.macos_signed == 'true' && (github.event_name != 'workflow_dispatch' || inputs.notarize_macos == true)
+        run: bun run test:package-smoke --platform macos --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron --require-macos-gatekeeper
+      - name: Warn macOS notarization skipped
+        if: matrix.smoke_platform == 'macos' && needs.signing-preflight.outputs.macos_signed == 'true' && github.event_name == 'workflow_dispatch' && inputs.notarize_macos == false
+        run: |
+          echo "::warning::Developer ID signed but not notarized — Gatekeeper will require user approval on first launch."
+      - name: Warn unsigned macOS launch policy skipped
+        if: matrix.smoke_platform == 'macos' && needs.signing-preflight.outputs.macos_signed != 'true'
+        run: |
+          echo "::warning::macOS artifacts are unsigned. Users must run desktop/scripts/install-macos-unsigned.sh"
+      - name: Windows storage recovery test
+        if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
+        run: |
+          cd desktop
+          bun run test:windows-storage-recovery
+      - name: Windows installer smoke test
+        if: matrix.smoke_platform == 'windows' && matrix.arch == 'x64'
+        shell: pwsh
+        run: |
+          $workspace = $env:GITHUB_WORKSPACE
+          $scriptPath = Join-Path $workspace 'desktop\scripts\windows-installer-smoke.ps1'
+          $artifactsDir = Join-Path $workspace 'desktop\build-artifacts\electron'
+          & $scriptPath -ArtifactsDir $artifactsDir
+      - name: Package smoke test
+        run: bun run test:package-smoke --platform ${{ matrix.smoke_platform }} --arch ${{ matrix.arch }} --package-kind release --artifacts-dir desktop/build-artifacts/electron
+      - name: Namespace update metadata assets
+        shell: bash
+        run: |
+          cd desktop/build-artifacts/electron
+          for file in latest*.yml; do
+            [ -f "$file" ] || continue
+            mv "$file" "${file%.yml}-${{ matrix.label }}.yml"
+          done
+      - name: Validate matrix release asset set
+        shell: bash
+        run: |
+          APP_VERSION="${{ needs.release-preflight.outputs.version }}"
+          cd desktop/build-artifacts/electron
+          case "${{ matrix.label }}" in
+            macOS-ARM64)
+              expected="ScienceX-${APP_VERSION}-mac-arm64.dmg ScienceX-${APP_VERSION}-mac-arm64.zip"
+              ;;
+            macOS-x64)
+              expected="ScienceX-${APP_VERSION}-mac-x64.dmg ScienceX-${APP_VERSION}-mac-x64.zip"
+              ;;
+            Linux-x64)
+              expected="ScienceX-${APP_VERSION}-linux-x86_64.AppImage ScienceX-${APP_VERSION}-linux-amd64.deb"
+              ;;
+            Linux-ARM64)
+              expected="ScienceX-${APP_VERSION}-linux-arm64.AppImage ScienceX-${APP_VERSION}-linux-arm64.deb"
+              ;;
+            Windows-x64)
+              expected="ScienceX-${APP_VERSION}-win-x64.exe ScienceX-${APP_VERSION}-win-x64.exe.blockmap"
+              ;;
+            Windows-ARM64)
+              expected="ScienceX-${APP_VERSION}-win-arm64.exe ScienceX-${APP_VERSION}-win-arm64.exe.blockmap"
+              ;;
+          esac
+          for file in $expected; do
+            if [ ! -f "$file" ]; then
+              printf "Missing release assets for %s\n" "$file"
+              exit 1
+            fi
+          done
+          # Verify namespaced update metadata exists
+          for file in latest*-${{ matrix.label }}.yml; do
+            [ -f "$file" ] || { echo "Missing namespaced metadata: $file"; exit 1; }
+          done
+          # Linux arm64 uses latest-linux-arm64.yml in standard metadata
+          echo "Matrix asset validation passed for ${{ matrix.label }}"
+      - name: Upload release artifacts for final publish
+        uses: actions/upload-artifact@v6
+        with:
+          name: desktop-release-artifacts-${{ matrix.label }}
+          path: desktop/build-artifacts/electron/ScienceX-*
+      - name: Upload update metadata
+        uses: actions/upload-artifact@v6
+        with:
+          name: desktop-update-metadata-${{ matrix.label }}
+          path: desktop/build-artifacts/electron/latest*-${{ matrix.label }}.yml
+
+  # ── Publish: aggregate all matrix artifacts and publish to GitHub Releases ──
+  publish-release:
+    name: Publish release
+    needs:
+      - release-preflight
+      - build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.12
+      - name: Install root dependencies
+        run: bun install --frozen-lockfile
+      - name: Download release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: desktop-release-artifacts-*
+          merge-multiple: true
+          path: artifacts/release-assets
+      - name: Download update metadata
+        uses: actions/download-artifact@v7
+        with:
+          pattern: desktop-update-metadata-*
+          merge-multiple: true
+          path: artifacts/update-metadata
+      - name: Validate complete release asset set
+        run: |
+          APP_VERSION="${{ needs.release-preflight.outputs.version }}"
+          expected_files=(
+            "ScienceX-${APP_VERSION}-mac-arm64.dmg"
+            "ScienceX-${APP_VERSION}-mac-arm64.zip"
+            "ScienceX-${APP_VERSION}-mac-x64.dmg"
+            "ScienceX-${APP_VERSION}-mac-x64.zip"
+            "ScienceX-${APP_VERSION}-linux-x86_64.AppImage"
+            "ScienceX-${APP_VERSION}-linux-amd64.deb"
+            "ScienceX-${APP_VERSION}-linux-arm64.AppImage"
+            "ScienceX-${APP_VERSION}-linux-arm64.deb"
+            "ScienceX-${APP_VERSION}-win-x64.exe"
+            "ScienceX-${APP_VERSION}-win-x64.exe.blockmap"
+            "ScienceX-${APP_VERSION}-win-arm64.exe"
+            "ScienceX-${APP_VERSION}-win-arm64.exe.blockmap"
+          )
+          for file in "${expected_files[@]}"; do
+            if ! find artifacts/release-assets -name "$file" -type f | grep -q .; then
+              echo "::error::Missing complete release assets: $file"
+              exit 1
+            fi
+          done
+          echo "All release assets present."
+      - name: Generate standard update metadata
+        run: bun run scripts/release-update-metadata.ts --metadata-dir artifacts/update-metadata --out-dir artifacts/update-metadata-standard
+      - name: Validate standard update metadata set
+        run: |
+          for file in latest-mac.yml latest-linux.yml latest-linux-arm64.yml latest.yml; do
+            if [ ! -f "artifacts/update-metadata-standard/$file" ]; then
+              echo "::error::Missing standard update metadata: $file"
+              exit 1
+            fi
+          done
+          echo "All standard update metadata present."
+      - name: Publish complete GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          tag_name: ${{ needs.release-preflight.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          body_path: ${{ needs.release-preflight.outputs.notes_path }}
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/release-assets/**/*.dmg
+            artifacts/release-assets/**/*.zip
+            artifacts/release-assets/**/*.exe
+            artifacts/release-assets/**/*.AppImage
+            artifacts/release-assets/**/*.deb
+            artifacts/release-assets/**/*.blockmap
+            artifacts/update-metadata-standard/*.yml
+            desktop/scripts/install-macos-unsigned.sh
+      - name: Publish GitHub release after complete upload
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.draft == false)
+        run: |
+          gh release edit "${{ needs.release-preflight.outputs.tag }}" --draft=false --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Keep workflow-dispatch release as draft
+        if: github.event_name == 'workflow_dispatch' && inputs.draft == true
+        run: |
+          echo "release remains draft per workflow_dispatch input"

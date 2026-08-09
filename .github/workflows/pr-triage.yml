@@ -1,0 +1,101 @@
+name: PR Triage
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+# Security: this workflow uses pull_request_target and must NEVER check out PR
+# code, install dependencies, or execute untrusted content. It only reads PR
+# metadata via the GitHub API and posts a triage comment.
+
+concurrency:
+  group: pr-triage-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    name: Triage comment
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Post triage comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const labels = pr.labels.map(l => l.name)
+            const colorMap = {
+              'allow-missing-tests': 'c2e0c6',
+              'allow-coverage-baseline-change': 'c2e0c6',
+            }
+
+            // Coverage baseline policy: list coverage policy files that authors
+            // and reviewers should be aware of.
+            const coveragePolicyFiles = [
+              'scripts/quality-gate/coverage.ts',
+              'scripts/quality-gate/baseline.json',
+            ]
+
+            // Missing-test detection: root runtime product files changed without
+            // a matching root runtime test file in the PR.
+            // Root runtime product files changed without a matching root runtime test file in the PR.
+            // BLOCKING unless `allow-missing-tests` is applied
+
+            const body = [
+              '## PR Triage',
+              '',
+              'Hard merge gates come from the deterministic GitHub Actions contract lanes above.',
+              '',
+              'See `PR Quality / scope-plan`; it is the single source of truth for selected jobs.',
+              '',
+              '### Labels',
+              '',
+              labels.length > 0
+                ? labels.map(l => `- \`${l}\``).join('\n')
+                : '_No labels applied._',
+              '',
+              '### Coverage baseline policy',
+              '',
+              `Coverage policy files: ${coveragePolicyFiles.map(f => `\`${f}\``).join(', ')}`,
+              '',
+              'If this PR changes root runtime product code without a matching test, the scope-plan job will flag it.',
+              'Root runtime product files changed without a matching root runtime test file in the PR.',
+              'BLOCKING unless \`allow-missing-tests\` is applied.',
+              '',
+              '### Color legend',
+              '',
+              Object.entries(colorMap)
+                .map(([label, color]) => `- \`${label}\` (#${color})`)
+                .join('\n'),
+            ].join('\n')
+
+            // Find existing triage comment to update, or create a new one.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            })
+
+            const marker = '<!-- pr-triage-comment -->'
+            const existing = comments.find(c => c.body && c.body.includes(marker))
+            const finalBody = marker + '\n' + body
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: finalBody,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: finalBody,
+              })
+            }
