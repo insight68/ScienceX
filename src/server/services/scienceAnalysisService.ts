@@ -4,6 +4,15 @@ import * as path from 'node:path'
 import { Database } from 'bun:sqlite'
 import { ApiError } from '../middleware/errorHandler.js'
 import {
+  analyzeCellViabilityDoseResponse,
+  ScienceDoseResponseAnalysisError,
+  type ScienceDoseResponseSummary,
+} from './scienceDoseResponseAnalysis.js'
+import {
+  scienceExperimentService,
+  type ScienceExperiment,
+} from './scienceExperimentService.js'
+import {
   scienceWorkspaceService,
   type ScienceColumnProfile,
   type ScienceDataset,
@@ -13,11 +22,18 @@ import {
 
 const QUALITY_RECIPE = 'table-quality-v1' as const
 const QUALITY_RECIPE_SOURCE = 'sciencex:table-quality-v1:preview-profile:2026-07-19'
+const DOSE_RESPONSE_RECIPE = 'cell-viability-dose-response-v1' as const
+const DOSE_RESPONSE_RECIPE_SOURCE = 'sciencex:cell-viability-dose-response-v1:4pl-nelder-mead:2026-08-30'
 const MAX_EVENT_LOG_BYTES = 2 * 1024 * 1024
 
 export type ScienceRunStatus = 'queued' | 'running' | 'completed' | 'failed' | 'interrupted'
 export type ScienceReproducibilityStatus = 'unchecked' | 'reproducible' | 'failed' | 'stale'
+export type ScienceInputCurrentness = 'current' | 'superseded'
 export type ScienceArtifactKind = 'table' | 'report' | 'other'
+export type ScienceAnalysisRecipe = typeof QUALITY_RECIPE | typeof DOSE_RESPONSE_RECIPE
+export type ScienceAnalysisParameters =
+  | { maxRows: number }
+  | { experimentId: string; wellColumn: string; signalColumn: string }
 
 export type ScienceQualityWarning = {
   code: 'sampled-profile' | 'missing-values' | 'empty-column' | 'identifier-candidate'
@@ -44,11 +60,14 @@ export type ScienceAnalysisRun = {
   projectId: string
   datasetId: string
   datasetVersionId: string
+  datasetVersionOrdinal: number
+  inputCurrentness: ScienceInputCurrentness
+  experimentId: string | null
   parentRunId: string | null
-  recipe: typeof QUALITY_RECIPE
+  recipe: ScienceAnalysisRecipe
   status: ScienceRunStatus
   reproducibilityStatus: ScienceReproducibilityStatus
-  parameters: { maxRows: number }
+  parameters: ScienceAnalysisParameters
   environment: {
     runtime: 'bun'
     runtimeVersion: string
@@ -60,7 +79,7 @@ export type ScienceAnalysisRun = {
   recipeHash: string
   eventLogPath: string
   manifestPath: string
-  summary: ScienceQualitySummary | null
+  summary: ScienceQualitySummary | ScienceDoseResponseSummary | null
   errorMessage: string | null
   exitCode: number | null
   createdAt: string
@@ -94,8 +113,11 @@ type RunRow = {
   project_id: string
   dataset_id: string
   dataset_version_id: string
+  dataset_version_ordinal?: number
+  input_currentness?: ScienceInputCurrentness
+  experiment_id?: string | null
   parent_run_id: string | null
-  recipe: typeof QUALITY_RECIPE
+  recipe: ScienceAnalysisRecipe
   status: ScienceRunStatus
   reproducibility_status: ScienceReproducibilityStatus
   parameters_json: string
@@ -130,6 +152,34 @@ type RunLocation = {
   run: ScienceAnalysisRun
 }
 
+type AnalysisArtifactInput = {
+  kind: ScienceArtifactKind
+  name: string
+  relativePath: string
+  mimeType: string
+  contents: string
+}
+
+type AnalysisOutput = {
+  summary: ScienceQualitySummary | ScienceDoseResponseSummary
+  artifacts: AnalysisArtifactInput[]
+}
+
+const RUN_SELECT = `
+  SELECT
+    analysis_runs.*,
+    input_version.ordinal AS dataset_version_ordinal,
+    CASE WHEN analysis_runs.dataset_version_id = (
+      SELECT latest.id
+      FROM dataset_versions latest
+      WHERE latest.dataset_id = analysis_runs.dataset_id
+      ORDER BY latest.ordinal DESC
+      LIMIT 1
+    ) THEN 'current' ELSE 'superseded' END AS input_currentness
+  FROM analysis_runs
+  JOIN dataset_versions input_version ON input_version.id = analysis_runs.dataset_version_id
+`
+
 function projectDatabasePath(project: ScienceProject): string {
   return path.join(project.rootDir, '.sciencex', 'research.sqlite')
 }
@@ -157,6 +207,9 @@ function mapRun(row: RunRow): ScienceAnalysisRun {
     projectId: row.project_id,
     datasetId: row.dataset_id,
     datasetVersionId: row.dataset_version_id,
+    datasetVersionOrdinal: row.dataset_version_ordinal ?? 0,
+    inputCurrentness: row.input_currentness ?? 'current',
+    experimentId: row.experiment_id ?? null,
     parentRunId: row.parent_run_id,
     recipe: row.recipe,
     status: row.status,
@@ -327,6 +380,97 @@ function qualityReport(input: {
     `This report describes structure and data quality only. It does not establish scientific validity, treatment effects, or statistical significance. No table contents were sent to a model.\n`
 }
 
+function csvCell(value: string | number): string {
+  const rendered = String(value)
+  return /[",\n]/.test(rendered) ? `"${rendered.replaceAll('"', '""')}"` : rendered
+}
+
+function normalizedDoseResponseCsv(summary: ScienceDoseResponseSummary): string {
+  const header = [
+    'well',
+    'role',
+    'label',
+    'concentration',
+    'replicate',
+    'raw_signal',
+    'blank_corrected_signal',
+    'normalized_viability_percent',
+  ]
+  const rows = summary.normalizedWells.map(well => [
+    well.well,
+    well.role,
+    well.label,
+    well.concentration ?? '',
+    well.replicate,
+    well.rawSignal,
+    well.blankCorrectedSignal,
+    well.normalizedViabilityPercent,
+  ].map(csvCell).join(','))
+  return `${header.join(',')}\n${rows.join('\n')}\n`
+}
+
+function doseResponseReport(input: {
+  project: ScienceProject
+  dataset: ScienceDataset
+  experiment: ScienceExperiment
+  runId: string
+  summary: ScienceDoseResponseSummary
+  createdAt: string
+}): string {
+  const { project, dataset, experiment, runId, summary, createdAt } = input
+  const unit = experiment.protocolVersion.protocol.concentrationUnit ?? ''
+  const warningLines = summary.warnings.length === 0
+    ? '- No deterministic review flags were raised.'
+    : summary.warnings.map(warning => {
+      const concentrations = warning.concentrations.length > 0
+        ? ` Concentrations: ${warning.concentrations.join(', ')} ${unit}.`
+        : ''
+      return `- **${warning.severity.toUpperCase()} — ${warning.code}:** ${warning.message}${concentrations}`
+    }).join('\n')
+  const pointRows = summary.points.map(point => (
+    `| ${point.concentration} | ${point.replicateCount} | ${point.meanViabilityPercent.toFixed(4)} | ` +
+    `${point.standardDeviation.toFixed(4)} | ${point.coefficientOfVariationPercent?.toFixed(2) ?? '—'} |`
+  )).join('\n')
+
+  return `# Cell viability dose-response analysis\n\n` +
+    `- Project: ${project.name}\n` +
+    `- Experiment: ${experiment.name}\n` +
+    `- Dataset: ${dataset.name}\n` +
+    `- Dataset version: ${dataset.currentVersion.ordinal}\n` +
+    `- Protocol version: ${experiment.protocolVersion.ordinal}\n` +
+    `- Design version: ${experiment.designVersion.ordinal}\n` +
+    `- Input SHA-256: \`${dataset.currentVersion.contentHash}\`\n` +
+    `- Run: \`${runId}\`\n` +
+    `- Recipe: \`${DOSE_RESPONSE_RECIPE}\`\n` +
+    `- Generated locally: ${createdAt}\n\n` +
+    `## Mapping and normalization\n\n` +
+    `- Well column: \`${summary.wellColumn}\`\n` +
+    `- Signal column: \`${summary.signalColumn}\`\n` +
+    `- Assigned wells: ${summary.assignedWellCount}\n` +
+    `- Ignored unassigned rows: ${summary.ignoredRowCount}\n` +
+    `- Blank mean signal: ${summary.blankMeanSignal.toFixed(6)}\n` +
+    `- Vehicle mean after blank correction: ${summary.vehicleMeanBlankCorrectedSignal.toFixed(6)}\n\n` +
+    `Normalized viability is calculated as 100 × (raw signal − blank mean) / ` +
+    `(vehicle mean − blank mean). Control wells are used for normalization and are not included in the 4PL treatment fit.\n\n` +
+    `## Replicate summary\n\n` +
+    `| Concentration (${unit}) | n | Mean viability % | SD | CV % |\n` +
+    `| ---: | ---: | ---: | ---: | ---: |\n${pointRows}\n\n` +
+    `## Four-parameter logistic fit\n\n` +
+    `- Relative IC50: ${summary.fit.relativeIc50.toPrecision(6)} ${unit}\n` +
+    `- Tested-range position: ${summary.fit.testedRangePosition}\n` +
+    `- Top: ${summary.fit.top.toFixed(4)}%\n` +
+    `- Bottom: ${summary.fit.bottom.toFixed(4)}%\n` +
+    `- Hill slope: ${summary.fit.hillSlope.toFixed(4)}\n` +
+    `- R²: ${summary.fit.rSquared.toFixed(6)}\n` +
+    `- RMSE: ${summary.fit.rmse.toFixed(6)}\n` +
+    `- Review status: ${summary.fit.reviewStatus}\n\n` +
+    `## Deterministic review flags\n\n${warningLines}\n\n` +
+    `## Limitations\n\n` +
+    `The relative IC50 is the fitted midpoint between the 4PL top and bottom. A value outside the tested ` +
+    `concentration range is an extrapolation. This deterministic output does not provide confidence intervals, ` +
+    `statistical sign-off, biological replication, or a scientific conclusion. No table contents were sent to a model.\n`
+}
+
 export class ScienceAnalysisService {
   private activeRuns = new Set<string>()
 
@@ -335,25 +479,8 @@ export class ScienceAnalysisService {
     await this.recoverInterruptedRuns(project)
     const database = openProjectDatabase(project)
     try {
-      database.query(`
-        UPDATE analysis_runs
-        SET reproducibility_status = 'stale'
-        WHERE project_id = ?
-          AND status = 'completed'
-          AND reproducibility_status = 'reproducible'
-          AND dataset_version_id NOT IN (
-            SELECT latest.id
-            FROM dataset_versions latest
-            WHERE latest.dataset_id = analysis_runs.dataset_id
-              AND latest.ordinal = (
-                SELECT MAX(candidate.ordinal)
-                FROM dataset_versions candidate
-                WHERE candidate.dataset_id = latest.dataset_id
-              )
-          )
-      `).run(project.id)
       return (database
-        .query('SELECT * FROM analysis_runs WHERE project_id = ? ORDER BY created_at DESC')
+        .query(`${RUN_SELECT} WHERE analysis_runs.project_id = ? ORDER BY analysis_runs.created_at DESC`)
         .all(project.id) as RunRow[]).map(mapRun)
     } finally {
       database.close()
@@ -375,15 +502,218 @@ export class ScienceAnalysisService {
   async createQualityRun(input: {
     projectId: string
     datasetId: string
+    datasetVersionId?: string
     maxRows?: number
     parentRunId?: string
   }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
     const project = await scienceWorkspaceService.getProject(input.projectId)
-    const dataset = (await scienceWorkspaceService.listDatasets(project.id))
-      .find(candidate => candidate.id === input.datasetId)
-    if (!dataset) throw ApiError.notFound(`Dataset not found in research project: ${input.datasetId}`)
-
+    const dataset = await scienceWorkspaceService.getDatasetVersion({
+      projectId: project.id,
+      datasetId: input.datasetId,
+      versionId: input.datasetVersionId,
+    })
     const maxRows = Math.max(10, Math.min(input.maxRows ?? 100, 100))
+    return this.executeAnalysisRun({
+      project,
+      dataset,
+      experimentId: null,
+      recipe: QUALITY_RECIPE,
+      recipeSource: QUALITY_RECIPE_SOURCE,
+      parameters: { maxRows },
+      inputHash: dataset.currentVersion.contentHash,
+      parentRunId: input.parentRunId,
+      buildOutput: async ({ runId, createdAt, recipeHash, environment }) => {
+        const preview = await scienceWorkspaceService.previewDatasetVersion(
+          project.id,
+          dataset.id,
+          dataset.currentVersion.id,
+          { maxRows },
+        )
+        const summary = qualitySummary(preview)
+        const artifactDirectory = path.join('artifacts', 'sciencex', runId)
+        const reportContents = qualityReport({ project, dataset, runId, summary, createdAt })
+        const profileContents = `${JSON.stringify({
+          schemaVersion: 1,
+          runId,
+          projectId: project.id,
+          datasetId: dataset.id,
+          datasetVersionId: dataset.currentVersion.id,
+          inputHash: dataset.currentVersion.contentHash,
+          recipe: QUALITY_RECIPE,
+          recipeHash,
+          environment,
+          summary,
+        }, null, 2)}\n`
+        return {
+          summary,
+          artifacts: [
+            {
+              kind: 'report',
+              name: 'Data quality profile',
+              relativePath: path.join(artifactDirectory, 'quality-report.md'),
+              mimeType: 'text/markdown',
+              contents: reportContents,
+            },
+            {
+              kind: 'table',
+              name: 'Column profile data',
+              relativePath: path.join(artifactDirectory, 'profile.json'),
+              mimeType: 'application/json',
+              contents: profileContents,
+            },
+          ],
+        }
+      },
+    })
+  }
+
+  async createDoseResponseRun(input: {
+    projectId: string
+    experimentId: string
+    wellColumn: string
+    signalColumn: string
+    parentRunId?: string
+  }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
+    const project = await scienceWorkspaceService.getProject(input.projectId)
+    const experiment = await scienceExperimentService.getExperiment(project.id, input.experimentId)
+    if (experiment.status !== 'ready') {
+      throw ApiError.conflict('Only an execution-ready experiment can start dose-response analysis')
+    }
+    if (!experiment.linkedDatasetId || !experiment.linkedDatasetVersionId) {
+      throw ApiError.conflict('Link a registered dataset version before starting dose-response analysis')
+    }
+    const dataset = await scienceWorkspaceService.getDatasetVersion({
+      projectId: project.id,
+      datasetId: experiment.linkedDatasetId,
+      versionId: experiment.linkedDatasetVersionId,
+    })
+    const wellColumn = input.wellColumn.trim()
+    const signalColumn = input.signalColumn.trim()
+    if (!wellColumn || !signalColumn) {
+      throw ApiError.badRequest('Well and signal column names are required')
+    }
+    const parameters: ScienceAnalysisParameters = {
+      experimentId: experiment.id,
+      wellColumn,
+      signalColumn,
+    }
+    const inputHash = sha256(JSON.stringify({
+      datasetHash: dataset.currentVersion.contentHash,
+      datasetVersionId: dataset.currentVersion.id,
+      protocolVersionId: experiment.protocolVersion.id,
+      designVersionId: experiment.designVersion.id,
+      parameters,
+    }))
+    return this.executeAnalysisRun({
+      project,
+      dataset,
+      experimentId: experiment.id,
+      recipe: DOSE_RESPONSE_RECIPE,
+      recipeSource: DOSE_RESPONSE_RECIPE_SOURCE,
+      parameters,
+      inputHash,
+      parentRunId: input.parentRunId,
+      buildOutput: async ({ runId, createdAt, recipeHash, environment }) => {
+        const preview = await scienceWorkspaceService.previewDatasetVersion(
+          project.id,
+          dataset.id,
+          dataset.currentVersion.id,
+          { maxRows: 100 },
+        )
+        if (preview.truncated) {
+          throw new ScienceDoseResponseAnalysisError(
+            'The linked plate table exceeds the 100-row deterministic analysis boundary',
+          )
+        }
+        const summary = analyzeCellViabilityDoseResponse({
+          protocol: experiment.protocolVersion.protocol,
+          design: experiment.designVersion.design,
+          headers: preview.headers,
+          rows: preview.rows,
+          wellColumn,
+          signalColumn,
+        })
+        const artifactDirectory = path.join('artifacts', 'sciencex', runId)
+        const reportContents = doseResponseReport({
+          project,
+          dataset,
+          experiment,
+          runId,
+          summary,
+          createdAt,
+        })
+        const resultContents = `${JSON.stringify({
+          schemaVersion: 1,
+          runId,
+          projectId: project.id,
+          experimentId: experiment.id,
+          protocolVersionId: experiment.protocolVersion.id,
+          designVersionId: experiment.designVersion.id,
+          datasetId: dataset.id,
+          datasetVersionId: dataset.currentVersion.id,
+          inputHash,
+          recipe: DOSE_RESPONSE_RECIPE,
+          recipeHash,
+          environment,
+          summary,
+        }, null, 2)}\n`
+        return {
+          summary,
+          artifacts: [
+            {
+              kind: 'report',
+              name: 'Dose-response analysis report',
+              relativePath: path.join(artifactDirectory, 'dose-response-report.md'),
+              mimeType: 'text/markdown',
+              contents: reportContents,
+            },
+            {
+              kind: 'table',
+              name: 'Normalized well responses',
+              relativePath: path.join(artifactDirectory, 'normalized-wells.csv'),
+              mimeType: 'text/csv',
+              contents: normalizedDoseResponseCsv(summary),
+            },
+            {
+              kind: 'table',
+              name: 'Dose-response result data',
+              relativePath: path.join(artifactDirectory, 'dose-response.json'),
+              mimeType: 'application/json',
+              contents: resultContents,
+            },
+          ],
+        }
+      },
+    })
+  }
+
+  private async executeAnalysisRun(input: {
+    project: ScienceProject
+    dataset: ScienceDataset
+    experimentId: string | null
+    recipe: ScienceAnalysisRecipe
+    recipeSource: string
+    parameters: ScienceAnalysisParameters
+    inputHash: string
+    parentRunId?: string
+    buildOutput: (context: {
+      runId: string
+      createdAt: string
+      recipeHash: string
+      environment: ScienceAnalysisRun['environment']
+    }) => Promise<AnalysisOutput>
+  }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
+    const {
+      project,
+      dataset,
+      experimentId,
+      recipe,
+      recipeSource,
+      parameters,
+      inputHash,
+      parentRunId,
+      buildOutput,
+    } = input
     const runId = randomUUID()
     const createdAt = new Date().toISOString()
     const eventLogPath = path.join('.sciencex', 'runs', runId, 'events.jsonl')
@@ -395,27 +725,27 @@ export class ScienceAnalysisService {
       architecture: process.arch,
       localOnly: true,
     }
-    const parameters = { maxRows }
-    const recipeHash = sha256(QUALITY_RECIPE_SOURCE)
+    const recipeHash = sha256(recipeSource)
     const database = openProjectDatabase(project)
     database
       .query(`
         INSERT INTO analysis_runs (
-          id, project_id, dataset_id, dataset_version_id, parent_run_id, recipe, status,
+          id, project_id, dataset_id, dataset_version_id, experiment_id, parent_run_id, recipe, status,
           reproducibility_status, parameters_json, environment_json, input_hash, recipe_hash,
           event_log_path, manifest_path, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(
         runId,
         project.id,
         dataset.id,
         dataset.currentVersion.id,
-        input.parentRunId ?? null,
-        QUALITY_RECIPE,
+        experimentId,
+        parentRunId ?? null,
+        recipe,
         JSON.stringify(parameters),
         JSON.stringify(environment),
-        dataset.currentVersion.contentHash,
+        inputHash,
         recipeHash,
         eventLogPath,
         manifestPath,
@@ -423,10 +753,11 @@ export class ScienceAnalysisService {
       )
 
     await appendEvent(project, eventLogPath, runId, 'run.created', {
-      recipe: QUALITY_RECIPE,
+      recipe,
+      experimentId,
       datasetId: dataset.id,
       datasetVersionId: dataset.currentVersion.id,
-      inputHash: dataset.currentVersion.contentHash,
+      inputHash,
       parameters,
     })
     this.activeRuns.add(runId)
@@ -435,39 +766,9 @@ export class ScienceAnalysisService {
       const startedAt = new Date().toISOString()
       this.transition(database, runId, 'queued', 'running', startedAt)
       await appendEvent(project, eventLogPath, runId, 'run.started', { environment, recipeHash })
-
-      const preview = await scienceWorkspaceService.previewDataset(dataset.id, { maxRows })
-      const summary = qualitySummary(preview)
-      const artifactDirectory = path.join('artifacts', 'sciencex', runId)
-      const reportContents = qualityReport({ project, dataset, runId, summary, createdAt })
-      const profileContents = `${JSON.stringify({
-        schemaVersion: 1,
-        runId,
-        projectId: project.id,
-        datasetId: dataset.id,
-        datasetVersionId: dataset.currentVersion.id,
-        inputHash: dataset.currentVersion.contentHash,
-        recipe: QUALITY_RECIPE,
-        recipeHash,
-        environment,
-        summary,
-      }, null, 2)}\n`
-      const artifactInputs = [
-        {
-          kind: 'report' as const,
-          name: 'Data quality profile',
-          relativePath: path.join(artifactDirectory, 'quality-report.md'),
-          mimeType: 'text/markdown',
-          contents: reportContents,
-        },
-        {
-          kind: 'table' as const,
-          name: 'Column profile data',
-          relativePath: path.join(artifactDirectory, 'profile.json'),
-          mimeType: 'application/json',
-          contents: profileContents,
-        },
-      ]
+      const output = await buildOutput({ runId, createdAt, recipeHash, environment })
+      const summary = output.summary
+      const artifactInputs = output.artifacts
       for (const artifact of artifactInputs) {
         await writeFileAtomically(path.join(project.rootDir, artifact.relativePath), artifact.contents)
       }
@@ -516,23 +817,52 @@ export class ScienceAnalysisService {
         })
       }
 
+      let reproducibilityStatus: ScienceReproducibilityStatus = 'unchecked'
+      if (parentRunId) {
+        const parent = database
+          .query(`${RUN_SELECT} WHERE analysis_runs.id = ?`)
+          .get(parentRunId) as RunRow | null
+        const comparable = parent?.status === 'completed' &&
+          parent.recipe === recipe &&
+          (parent.experiment_id ?? null) === experimentId &&
+          parent.dataset_version_id === dataset.currentVersion.id &&
+          parent.input_hash === inputHash &&
+          parent.recipe_hash === recipeHash &&
+          parent.parameters_json === JSON.stringify(parameters) &&
+          parent.summary_json !== null &&
+          sha256(parent.summary_json) === sha256(JSON.stringify(summary))
+        reproducibilityStatus = comparable ? 'reproducible' : 'failed'
+      }
+
       const completedAt = new Date().toISOString()
-      const result = database
-        .query(`
-          UPDATE analysis_runs
-          SET status = 'completed', reproducibility_status = 'reproducible',
-              summary_json = ?, exit_code = 0, completed_at = ?
-          WHERE id = ? AND status = 'running'
-        `)
-        .run(JSON.stringify(summary), completedAt, runId)
-      if (result.changes !== 1) throw ApiError.conflict('Analysis run left the running state unexpectedly')
+      const completeRun = database.transaction(() => {
+        if (parentRunId) {
+          database
+            .query('UPDATE analysis_runs SET reproducibility_status = ? WHERE id = ?')
+            .run(reproducibilityStatus, parentRunId)
+        }
+        const result = database
+          .query(`
+            UPDATE analysis_runs
+            SET status = 'completed', reproducibility_status = ?,
+                summary_json = ?, exit_code = 0, completed_at = ?
+            WHERE id = ? AND status = 'running'
+          `)
+          .run(reproducibilityStatus, JSON.stringify(summary), completedAt, runId)
+        if (result.changes !== 1) {
+          throw ApiError.conflict('Analysis run left the running state unexpectedly')
+        }
+      })
+      completeRun()
       await appendEvent(project, eventLogPath, runId, 'run.completed', {
         exitCode: 0,
-        reproducibilityStatus: 'reproducible',
+        reproducibilityStatus,
         artifactIds: artifacts.map(artifact => artifact.id),
       })
 
-      const row = database.query('SELECT * FROM analysis_runs WHERE id = ?').get(runId) as RunRow
+      const row = database
+        .query(`${RUN_SELECT} WHERE analysis_runs.id = ?`)
+        .get(runId) as RunRow
       const run = mapRun(row)
       await this.writeManifest(project, run, artifacts)
       return { run, artifacts }
@@ -549,8 +879,13 @@ export class ScienceAnalysisService {
         .run(message, completedAt, runId)
       await appendEvent(project, eventLogPath, runId, 'run.failed', { exitCode: 1, message })
         .catch(() => undefined)
-      const row = database.query('SELECT * FROM analysis_runs WHERE id = ?').get(runId) as RunRow | null
+      const row = database
+        .query(`${RUN_SELECT} WHERE analysis_runs.id = ?`)
+        .get(runId) as RunRow | null
       if (row) await this.writeManifest(project, mapRun(row), []).catch(() => undefined)
+      if (error instanceof ScienceDoseResponseAnalysisError) {
+        throw ApiError.conflict(error.message)
+      }
       throw error
     } finally {
       this.activeRuns.delete(runId)
@@ -560,10 +895,29 @@ export class ScienceAnalysisService {
 
   async replayRun(runId: string): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
     const location = await this.findRun(runId)
-    return this.createQualityRun({
+    if (location.run.status !== 'completed' || !location.run.summary) {
+      throw ApiError.conflict('Only completed analysis runs can be replayed')
+    }
+    if (location.run.recipe === QUALITY_RECIPE) {
+      const parameters = location.run.parameters as { maxRows: number }
+      return this.createQualityRun({
+        projectId: location.project.id,
+        datasetId: location.run.datasetId,
+        datasetVersionId: location.run.datasetVersionId,
+        maxRows: parameters.maxRows,
+        parentRunId: location.run.id,
+      })
+    }
+    const parameters = location.run.parameters as {
+      experimentId: string
+      wellColumn: string
+      signalColumn: string
+    }
+    return this.createDoseResponseRun({
       projectId: location.project.id,
-      datasetId: location.run.datasetId,
-      maxRows: location.run.parameters.maxRows,
+      experimentId: parameters.experimentId,
+      wellColumn: parameters.wellColumn,
+      signalColumn: parameters.signalColumn,
       parentRunId: location.run.id,
     })
   }
@@ -608,7 +962,9 @@ export class ScienceAnalysisService {
       await scienceWorkspaceService.getProject(project.id)
       const database = openProjectDatabase(project)
       try {
-        const row = database.query('SELECT * FROM analysis_runs WHERE id = ?').get(runId) as RunRow | null
+        const row = database
+          .query(`${RUN_SELECT} WHERE analysis_runs.id = ?`)
+          .get(runId) as RunRow | null
         if (row) return { project, run: mapRun(row) }
       } finally {
         database.close()

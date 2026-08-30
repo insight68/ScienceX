@@ -43,18 +43,20 @@ ScienceX is not a single-purpose chat box. It combines a research layer for proj
 | Status            | Capability                | Current behavior                                                                                            |
 | ----------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | ✅ Available      | Research projects         | Creates a`.sciencex` manifest and SQLite research database in a local directory                           |
+| ✅ Available      | Cell-viability blueprints | Creates versioned CCK-8 / CellTiter-Glo protocols and checks doses, controls, replicates, and 96-well layouts |
 | ✅ Available      | Experiment-table registry | Supports UTF-8 CSV/TSV and records canonical path, size, modification time, and SHA-256 versions            |
 | ✅ Available      | Local data profiling      | Infers column types and measures sampled missing values, uniqueness, complete rows, and numeric columns     |
+| ✅ Available      | Viability dose response   | Explicit well/signal mapping, blank correction, vehicle normalization, replicate summaries, and deterministic 4PL / relative IC50 fitting |
 | ✅ Available      | Traceable Runs            | Records explicit`queued / running / completed / failed / interrupted` states, parameters, and environment |
 | ✅ Available      | Provenance                | Persists append-only`events.jsonl`, Run manifests, input hashes, and recipe hashes                        |
-| ✅ Available      | Artifacts                 | Produces registered`quality-report.md` and `profile.json` files with size and content hashes            |
-| ✅ Available      | Replay and staleness      | Replays history as child Runs and marks old Runs`stale` after a new dataset version                       |
+| ✅ Available      | Artifacts                 | Registers quality reports, normalized well-level data, and structured 4PL results with size and content hashes |
+| ✅ Available      | Exact replay and input state | Replays the original managed dataset version and marks Runs as current or historical input                |
 | ✅ Available      | Agent infrastructure      | Multi-model, multi-session, Skills, MCP, SubAgents, terminal, Computer Use, and permission review           |
 | 🚧 In development | General compute           | Controlled Python / Jupyter / R, dependency locking, and Restart & Run All                                  |
 | 🚧 In development | Scientific connectors     | Literature, scientific databases, internal lab data, and HPC/scheduler connectors                           |
 | 🚧 In development | Rich scientific artifacts | Code-linked figures, manuscripts, domain renderers, and reviewer agents                                     |
 
-The current `table-quality-v1` recipe profiles at most 100 safely parsed sample rows. It checks structure and data quality; it is **not full-dataset statistics, significance testing, or a scientific conclusion**.
+“Ready” on an assay blueprint means only that required design fields and physical well assignments passed deterministic checks; it does not mean wet-lab execution or scientific validation is complete. `table-quality-v1` profiles at most 100 safely parsed rows. `cell-viability-dose-response-v1` reads the full pinned single-plate version and requires exactly one numeric signal for every assigned well. It reports a single-plate relative IC50 without a confidence interval; it is **not biological-replicate inference, significance testing, statistical sign-off, or a scientific conclusion**.
 <p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607193.png" alt="ScienceX" width="800">
 </p>
@@ -62,10 +64,11 @@ The current `table-quality-v1` recipe profiles at most 100 safely parsed sample 
 ## Core workflow
 
 1. **Create a research project** in an existing local directory and record the research question.
-2. **Register an experiment table** and create a dataset version from its full-file SHA-256.
-3. **Inspect the data structure** on the Data page, including column profiles, missing values, and sampled rows.
-4. **Run the quality recipe** while recording inputs, environment, parameters, and state transitions.
-5. **Review and replay** provenance in Runs and reports in Artifacts without overwriting history.
+2. **Design a cell-viability assay** with cell line, compound, readout, doses, controls, and replicates; generate a checked 96-well blueprint.
+3. **Execute and register the readout table** after human protocol review and wet-lab work, creating a dataset version from its full-file SHA-256.
+4. **Inspect the data structure** on Data, including column profiles, missing values, and sampled rows.
+5. **Run an analysis**: use the generic quality profile, or select explicit well/signal columns from the assay blueprint and run blank correction, normalization, replicate summaries, and 4PL fitting.
+6. **Review and replay** provenance in Runs and reports in Artifacts without overwriting history.
 
 ```text
 research-directory/
@@ -74,10 +77,10 @@ research-directory/
 │   ├── project.yaml
 │   ├── research.sqlite
 │   └── runs/<run-id>/{run.json,events.jsonl}
-└── artifacts/sciencex/<run-id>/{quality-report.md,profile.json}
+└── artifacts/sciencex/<run-id>/{quality-report.md,profile.json,dose-response-report.md,normalized-wells.csv,dose-response.json}
 ```
 
-Registration stores the source table's absolute path; it does not copy the original data. Keep data under the project's `data/` directory when possible, and back up the data, `.sciencex/`, and `artifacts/` together.
+Registration stores the source table's absolute path and creates a content-addressed managed snapshot under `.sciencex/objects/sha256/` for exact replay. Keep source data under the project's `data/` directory when possible, and back up the data, `.sciencex/`, and `artifacts/` together.
 
 ## Quick start
 
@@ -138,10 +141,13 @@ These capabilities come from the project's existing general agent runtime and ar
 ## Roadmap
 
 - [X] Local research projects, dataset versions, and general experiment tables.
+- [X] Plate-based cell-viability blueprints, protocol/design versions, preflight checks, and 96-well layouts.
 - [X] Deterministic quality profiling, Run state machine, provenance, and artifacts.
 - [X] Run replay, dataset-change detection, and old-schema migration.
 - [ ] Controlled Python / Jupyter / R runtimes with locked environments.
 - [ ] Standard `.ipynb` generation, Restart & Run All, and cell-level execution evidence.
+- [X] Instrument-table well mapping, blank correction, normalization, 4PL / relative IC50 analysis, and a human warning-review entry point.
+- [ ] Biological-replicate aggregation, confidence intervals, model comparison, statistical sign-off, and domain review.
 - [ ] Two-way links between figures, statistical tables, manuscripts, and generating code.
 - [ ] Literature search, citation evidence stores, and scientific database connectors.
 - [ ] Installable capability packs for bioinformatics, chemistry, clinical research, and other domains.

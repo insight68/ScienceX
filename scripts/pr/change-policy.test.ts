@@ -121,6 +121,18 @@ describe('evaluateChangePolicy', () => {
     expect(result.checks.policy).toBe(true)
   })
 
+  test('routes Science workspace schema changes through persistence validation', () => {
+    const result = evaluateChangePolicy([
+      'src/server/services/scienceExperimentService.ts',
+      'src/server/services/scienceWorkspaceService.ts',
+      'src/server/__tests__/science-experiments.test.ts',
+      'src/server/__tests__/science-workspace.test.ts',
+    ])
+
+    expect(result.checks.server).toBe(true)
+    expect(result.checks.persistence).toBe(true)
+  })
+
   test('routes release validation changes to the release area', () => {
     const result = evaluateChangePolicy(['scripts/release-validate.ts'])
 

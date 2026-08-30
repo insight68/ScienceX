@@ -100,6 +100,15 @@ describe('desktop theme tokens', () => {
     expect(activitySummaryCss).not.toContain('grid-column: span 2;')
   })
 
+  it('sizes the experiment detail split from its canvas width instead of the viewport', () => {
+    const experimentDetailCss = getCssBetween('.science-experiment-detail-panel {', '.activity-heat-cell {')
+
+    expect(experimentDetailCss).toContain('container-type: inline-size;')
+    expect(experimentDetailCss).toContain('@container (min-width: 960px)')
+    expect(experimentDetailCss).toContain('grid-template-columns: minmax(0, 1fr) 280px;')
+    expect(experimentDetailCss).toContain('border-left-width: 1px;')
+  })
+
   it('avoids color-mix in the startup-critical UI zoom shell chrome for Safari 15 WebView support', () => {
     const zoomShellCss = getCssBetween('.settings-zoom-kbd {', '/* ─── Tailwind Theme Override')
 

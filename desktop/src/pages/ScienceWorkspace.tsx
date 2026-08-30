@@ -23,6 +23,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { Button } from '../components/shared/Button'
+import { CellViabilityExperimentPanel } from '../components/science/CellViabilityExperimentPanel'
 import { DirectoryPicker } from '../components/shared/DirectoryPicker'
 import { Input } from '../components/shared/Input'
 import { Modal } from '../components/shared/Modal'
@@ -41,11 +42,12 @@ import type {
   ScienceColumnProfile,
   ScienceDataset,
   ScienceDatasetPreview,
+  ScienceExperiment,
   ScienceProject,
   ScienceRunEvent,
 } from '../types/science'
 
-type ScienceCanvasTab = 'data' | 'runs' | 'artifacts'
+type ScienceCanvasTab = 'experiments' | 'data' | 'runs' | 'artifacts'
 
 export function ScienceWorkspace() {
   const t = useTranslation()
@@ -54,6 +56,8 @@ export function ScienceWorkspace() {
   const datasets = useScienceStore(state => state.datasets)
   const selectedDatasetId = useScienceStore(state => state.selectedDatasetId)
   const preview = useScienceStore(state => state.preview)
+  const experiments = useScienceStore(state => state.experiments)
+  const selectedExperimentId = useScienceStore(state => state.selectedExperimentId)
   const runs = useScienceStore(state => state.runs)
   const selectedRunId = useScienceStore(state => state.selectedRunId)
   const runEvents = useScienceStore(state => state.runEvents)
@@ -61,6 +65,8 @@ export function ScienceWorkspace() {
   const projectsState = useScienceStore(state => state.projectsState)
   const datasetsState = useScienceStore(state => state.datasetsState)
   const previewState = useScienceStore(state => state.previewState)
+  const experimentsState = useScienceStore(state => state.experimentsState)
+  const experimentActionState = useScienceStore(state => state.experimentActionState)
   const runsState = useScienceStore(state => state.runsState)
   const eventsState = useScienceStore(state => state.eventsState)
   const artifactsState = useScienceStore(state => state.artifactsState)
@@ -70,8 +76,12 @@ export function ScienceWorkspace() {
   const selectProject = useScienceStore(state => state.selectProject)
   const registerDataset = useScienceStore(state => state.registerDataset)
   const selectDataset = useScienceStore(state => state.selectDataset)
+  const selectExperiment = useScienceStore(state => state.selectExperiment)
+  const createExperiment = useScienceStore(state => state.createExperiment)
+  const linkExperimentDataset = useScienceStore(state => state.linkExperimentDataset)
   const selectRun = useScienceStore(state => state.selectRun)
   const runQualityProfile = useScienceStore(state => state.runQualityProfile)
+  const runDoseResponse = useScienceStore(state => state.runDoseResponse)
   const replayRun = useScienceStore(state => state.replayRun)
   const createSession = useSessionStore(state => state.createSession)
   const selectProjectContext = useProjectContextStore(state => state.selectProject)
@@ -102,6 +112,12 @@ export function ScienceWorkspace() {
       source: 'research',
     })
   }, [selectProjectContext, selectedProject])
+
+  useEffect(() => {
+    if (selectedProject && datasetsState === 'ready' && datasets.length === 0) {
+      setCanvasTab('experiments')
+    }
+  }, [datasets.length, datasetsState, selectedProject])
 
   const addTable = async () => {
     if (!selectedProject) return
@@ -207,6 +223,7 @@ export function ScienceWorkspace() {
           <ResearchProjectOverview
             project={selectedProject}
             datasetCount={datasets.length}
+            experimentCount={experiments.length}
             runCount={runs.length}
             artifactCount={artifacts.length}
             openingResearchThread={openingResearchThread}
@@ -246,9 +263,14 @@ export function ScienceWorkspace() {
             />
             <ScienceCanvas
               project={selectedProject}
+              datasets={datasets}
               dataset={selectedDataset}
               preview={preview}
               previewState={previewState}
+              experiments={experiments}
+              selectedExperimentId={selectedExperimentId}
+              experimentsState={experimentsState}
+              experimentActionState={experimentActionState}
               runs={runs}
               selectedRunId={selectedRunId}
               runEvents={runEvents}
@@ -263,6 +285,14 @@ export function ScienceWorkspace() {
                 if (selectedDatasetId) void selectDataset(selectedDatasetId)
               }}
               onSelectRun={runId => void selectRun(runId)}
+              onSelectExperiment={selectExperiment}
+              onCreateExperiment={createExperiment}
+              onLinkExperimentDataset={linkExperimentDataset}
+              onSelectDataset={selectDataset}
+              onRunDoseResponse={async (experimentId, wellColumn, signalColumn) => {
+                await runDoseResponse(experimentId, wellColumn, signalColumn)
+                setCanvasTab('runs')
+              }}
               onRun={async () => {
                 await runQualityProfile()
                 setCanvasTab('runs')
@@ -284,6 +314,7 @@ export function ScienceWorkspace() {
 function ResearchProjectOverview({
   project,
   datasetCount,
+  experimentCount,
   runCount,
   artifactCount,
   openingResearchThread,
@@ -293,6 +324,7 @@ function ResearchProjectOverview({
 }: {
   project: ScienceProject
   datasetCount: number
+  experimentCount: number
   runCount: number
   artifactCount: number
   openingResearchThread: boolean
@@ -314,29 +346,35 @@ function ResearchProjectOverview({
           {project.question || t('science.noResearchQuestion')}
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <ProjectMetric label={t('science.datasets')} value={datasetCount} />
-        <ProjectMetric label={t('science.tabRuns')} value={runCount} />
-        <ProjectMetric label={t('science.tabArtifacts')} value={artifactCount} />
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={onAddTable}
-          disabled={!canAddTable}
-          loading={registeringTable}
-          icon={<Upload className="h-3.5 w-3.5" strokeWidth={2} />}
-          title={!canAddTable ? t('science.dialogUnavailable') : undefined}
-        >
-          {t('science.addTable')}
-        </Button>
-        <Button
-          size="sm"
-          onClick={onOpenResearchThread}
-          loading={openingResearchThread}
-          icon={<MessageSquareText className="h-3.5 w-3.5" strokeWidth={2} />}
-        >
-          {t('science.openResearchThread')}
-        </Button>
+      <div className="flex flex-col items-end gap-1.5">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <ProjectMetric label={t('science.datasets')} value={datasetCount} />
+          <ProjectMetric label={t('science.experiments')} value={experimentCount} />
+          <ProjectMetric label={t('science.tabRuns')} value={runCount} />
+          <ProjectMetric label={t('science.tabArtifacts')} value={artifactCount} />
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onAddTable}
+            disabled={!canAddTable}
+            loading={registeringTable}
+            icon={<Upload className="h-3.5 w-3.5" strokeWidth={2} />}
+            title={!canAddTable ? t('science.dialogUnavailable') : undefined}
+          >
+            {t('science.addTable')}
+          </Button>
+          <Button
+            size="sm"
+            onClick={onOpenResearchThread}
+            loading={openingResearchThread}
+            icon={<MessageSquareText className="h-3.5 w-3.5" strokeWidth={2} />}
+          >
+            {t('science.openResearchThread')}
+          </Button>
+        </div>
+        <p className="max-w-md text-right text-[9px] leading-relaxed text-[var(--color-text-tertiary)]">
+          {t('science.researchThreadPrivacy')}
+        </p>
       </div>
     </section>
   )
@@ -509,9 +547,14 @@ function DatasetButton({
 
 function ScienceCanvas({
   project,
+  datasets,
   dataset,
   preview,
   previewState,
+  experiments,
+  selectedExperimentId,
+  experimentsState,
+  experimentActionState,
   runs,
   selectedRunId,
   runEvents,
@@ -524,13 +567,23 @@ function ScienceCanvas({
   onTabChange,
   onRetry,
   onSelectRun,
+  onSelectExperiment,
+  onCreateExperiment,
+  onLinkExperimentDataset,
+  onSelectDataset,
+  onRunDoseResponse,
   onRun,
   onReplay,
 }: {
   project: ScienceProject | null
+  datasets: ScienceDataset[]
   dataset: ScienceDataset | null
   preview: ScienceDatasetPreview | null
   previewState: 'idle' | 'loading' | 'ready' | 'error'
+  experiments: ScienceExperiment[]
+  selectedExperimentId: string | null
+  experimentsState: 'idle' | 'loading' | 'ready' | 'error'
+  experimentActionState: 'idle' | 'loading' | 'ready' | 'error'
   runs: ScienceAnalysisRun[]
   selectedRunId: string | null
   runEvents: ScienceRunEvent[]
@@ -543,11 +596,16 @@ function ScienceCanvas({
   onTabChange: (tab: ScienceCanvasTab) => void
   onRetry: () => void
   onSelectRun: (runId: string) => void
+  onSelectExperiment: (experimentId: string) => void
+  onCreateExperiment: Parameters<typeof CellViabilityExperimentPanel>[0]['onCreate']
+  onLinkExperimentDataset: Parameters<typeof CellViabilityExperimentPanel>[0]['onLinkDataset']
+  onSelectDataset: Parameters<typeof CellViabilityExperimentPanel>[0]['onSelectDataset']
+  onRunDoseResponse: Parameters<typeof CellViabilityExperimentPanel>[0]['onRunDoseResponse']
   onRun: () => Promise<void>
   onReplay: (runId: string) => Promise<void>
 }) {
   const t = useTranslation()
-  if (!project || !dataset) {
+  if (!project) {
     return (
       <PreviewPanel
         project={project}
@@ -559,10 +617,17 @@ function ScienceCanvas({
     )
   }
 
+  const datasetRuns = dataset ? runs.filter(run => run.datasetId === dataset.id) : []
+  const datasetRunIds = new Set(datasetRuns.map(run => run.id))
+  const datasetArtifacts = artifacts.filter(artifact => datasetRunIds.has(artifact.producingRunId))
+
   const tabs: Array<{ id: ScienceCanvasTab; label: string; count?: number }> = [
-    { id: 'data', label: t('science.tabData') },
-    { id: 'runs', label: t('science.tabRuns'), count: runs.length },
-    { id: 'artifacts', label: t('science.tabArtifacts'), count: artifacts.length },
+    { id: 'experiments', label: t('science.tabExperiments'), count: experiments.length },
+    ...(dataset ? [
+      { id: 'data' as const, label: t('science.tabData') },
+      { id: 'runs' as const, label: t('science.tabRuns'), count: datasetRuns.length },
+      { id: 'artifacts' as const, label: t('science.tabArtifacts'), count: datasetArtifacts.length },
+    ] : []),
   ]
   return (
     <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--color-surface-container-lowest)]">
@@ -590,16 +655,35 @@ function ScienceCanvas({
             </button>
           ))}
         </div>
-        <Button
-          size="sm"
-          onClick={() => void onRun().catch(() => undefined)}
-          loading={runActionState === 'loading'}
-          icon={<Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={1.5} />}
-        >
-          {t('science.runQualityProfile')}
-        </Button>
+        {dataset && activeTab !== 'experiments' && (
+          <Button
+            size="sm"
+            onClick={() => void onRun().catch(() => undefined)}
+            loading={runActionState === 'loading'}
+            icon={<Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={1.5} />}
+          >
+            {t('science.runQualityProfile')}
+          </Button>
+        )}
       </div>
       <div className="min-h-0 flex-1">
+        {activeTab === 'experiments' && (
+          <CellViabilityExperimentPanel
+            experiments={experiments}
+            datasets={datasets}
+            selectedDataset={dataset}
+            preview={preview}
+            selectedExperimentId={selectedExperimentId}
+            state={experimentsState}
+            actionState={experimentActionState}
+            runActionState={runActionState}
+            onSelect={onSelectExperiment}
+            onCreate={onCreateExperiment}
+            onLinkDataset={onLinkExperimentDataset}
+            onSelectDataset={onSelectDataset}
+            onRunDoseResponse={onRunDoseResponse}
+          />
+        )}
         {activeTab === 'data' && (
           <PreviewPanel
             project={project}
@@ -611,8 +695,8 @@ function ScienceCanvas({
         )}
         {activeTab === 'runs' && (
           <RunsPanel
-            dataset={dataset}
-            runs={runs}
+            runs={datasetRuns}
+            experiments={experiments}
             selectedRunId={selectedRunId}
             events={runEvents}
             state={runsState}
@@ -624,7 +708,7 @@ function ScienceCanvas({
           />
         )}
         {activeTab === 'artifacts' && (
-          <ArtifactsPanel artifacts={artifacts} state={artifactsState} />
+          <ArtifactsPanel artifacts={datasetArtifacts} state={artifactsState} />
         )}
       </div>
     </main>
@@ -632,8 +716,8 @@ function ScienceCanvas({
 }
 
 function RunsPanel({
-  dataset,
   runs,
+  experiments,
   selectedRunId,
   events,
   state,
@@ -643,8 +727,8 @@ function RunsPanel({
   onRun,
   onReplay,
 }: {
-  dataset: ScienceDataset
   runs: ScienceAnalysisRun[]
+  experiments: ScienceExperiment[]
   selectedRunId: string | null
   events: ScienceRunEvent[]
   state: 'idle' | 'loading' | 'ready' | 'error'
@@ -704,7 +788,7 @@ function RunsPanel({
             </span>
             <span className="mt-1.5 flex items-center justify-between text-[9px] text-[var(--color-text-tertiary)]">
               <span>{formatTimestamp(run.createdAt)}</span>
-              <span>v{run.datasetVersionId === dataset.currentVersion.id ? dataset.currentVersion.ordinal : '—'}</span>
+              <span>v{run.datasetVersionOrdinal || '—'}</span>
             </span>
           </button>
         ))}
@@ -719,6 +803,7 @@ function RunsPanel({
                   <h2 className="font-mono text-sm font-semibold text-[var(--color-text-primary)]">{selectedRun.id.slice(0, 12)}</h2>
                   <RunStatusBadge status={selectedRun.status} />
                   <ReproducibilityBadge status={selectedRun.reproducibilityStatus} />
+                  <InputCurrentnessBadge status={selectedRun.inputCurrentness} />
                 </div>
                 <p className="mt-1.5 text-[10px] text-[var(--color-text-tertiary)]">
                   {t('science.recipe')}: <span className="font-mono text-[var(--color-text-secondary)]">{selectedRun.recipe}</span>
@@ -741,7 +826,13 @@ function RunsPanel({
               <RunMetric label={t('science.duration')} value={formatDuration(selectedRun.startedAt, selectedRun.completedAt)} />
             </div>
           </div>
-          {selectedRun.summary && <QualitySummary run={selectedRun} />}
+          {selectedRun.summary?.scope === 'preview-sample' && <QualitySummary run={selectedRun} />}
+          {selectedRun.summary?.scope === 'full-linked-plate' && (
+            <DoseResponseSummary
+              run={selectedRun}
+              experiment={experiments.find(experiment => experiment.id === selectedRun.experimentId) ?? null}
+            />
+          )}
           {selectedRun.errorMessage && (
             <div className="mx-5 mt-4 rounded-[10px] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-3 py-2.5 text-xs text-[var(--color-error)]">
               {selectedRun.errorMessage}
@@ -757,7 +848,7 @@ function RunsPanel({
 function QualitySummary({ run }: { run: ScienceAnalysisRun }) {
   const t = useTranslation()
   const summary = run.summary
-  if (!summary) return null
+  if (!summary || summary.scope !== 'preview-sample') return null
   return (
     <div className="border-b border-[var(--color-border)] px-5 py-4">
       <div className="mb-3 flex items-center justify-between">
@@ -799,6 +890,196 @@ function QualitySummary({ run }: { run: ScienceAnalysisRun }) {
       <p className="mt-3 text-[9px] leading-relaxed text-[var(--color-text-tertiary)]">{t('science.qualityDisclaimer')}</p>
     </div>
   )
+}
+
+function DoseResponseSummary({
+  run,
+  experiment,
+}: {
+  run: ScienceAnalysisRun
+  experiment: ScienceExperiment | null
+}) {
+  const t = useTranslation()
+  const summary = run.summary
+  if (!summary || summary.scope !== 'full-linked-plate') return null
+
+  const { fit } = summary
+  const unit = experiment?.protocolVersion.protocol.concentrationUnit ?? ''
+  const range = summary.points.length > 0
+    ? `${formatScientific(summary.points.at(0)!.concentration)}–${formatScientific(summary.points.at(-1)!.concentration)} ${unit}`
+    : '—'
+  const reviewRequired = fit.reviewStatus === 'review-required'
+
+  return (
+    <div className="border-b border-[var(--color-border)] px-5 py-4">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h3 className="text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--color-text-tertiary)]">
+            {t('science.doseResponseResult')}
+          </h3>
+          <p className="mt-1 font-mono text-[9px] text-[var(--color-text-tertiary)]">
+            {summary.wellColumn} → {summary.signalColumn} · {summary.assignedWellCount} wells
+          </p>
+        </div>
+        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-semibold ${
+          reviewRequired
+            ? 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+            : 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+        }`}>
+          {reviewRequired ? t('science.reviewRequired') : t('science.fitAcceptable')}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 2xl:grid-cols-4">
+        <SummaryCard
+          label={t('science.relativeIc50')}
+          value={`${formatScientific(fit.relativeIc50)} ${unit}`}
+          tone={fit.testedRangePosition === 'within-range' ? 'success' : 'warning'}
+        />
+        <SummaryCard label={t('science.hillSlope')} value={formatScientific(fit.hillSlope)} />
+        <SummaryCard label={t('science.fitQuality')} value={`R² ${fit.rSquared.toFixed(3)} · RMSE ${fit.rmse.toFixed(2)}`} />
+        <SummaryCard label={t('science.testedRange')} value={range} />
+      </div>
+
+      <DoseResponseChart summary={summary} unit={unit} />
+
+      <div className="mt-3 space-y-2">
+        {summary.warnings.length === 0 ? (
+          <div className="flex items-center gap-2 rounded-[9px] border border-[var(--color-success)]/20 bg-[var(--color-success)]/5 px-3 py-2 text-[10px] text-[var(--color-success)]">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            {t('science.noDoseResponseWarnings')}
+          </div>
+        ) : summary.warnings.map((warning, index) => (
+          <div key={`${warning.code}-${index}`} className="flex items-start gap-2 rounded-[9px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-warning)]" />
+            <div className="min-w-0 text-[10px] leading-relaxed text-[var(--color-text-secondary)]">
+              <span className="font-semibold text-[var(--color-text-primary)]">{doseResponseWarningLabel(warning.code, t)}</span>
+              {warning.concentrations.length > 0 && (
+                <span className="ml-1 font-mono text-[var(--color-text-tertiary)]">
+                  [{warning.concentrations.map(formatScientific).join(', ')} {unit}]
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[9px] leading-relaxed text-[var(--color-text-tertiary)]">
+        {t('science.analysisDisclaimer')}
+      </p>
+    </div>
+  )
+}
+
+function DoseResponseChart({
+  summary,
+  unit,
+}: {
+  summary: Extract<NonNullable<ScienceAnalysisRun['summary']>, { scope: 'full-linked-plate' }>
+  unit: string
+}) {
+  const t = useTranslation()
+  const width = 720
+  const height = 276
+  const margin = { top: 18, right: 18, bottom: 42, left: 54 }
+  const plotWidth = width - margin.left - margin.right
+  const plotHeight = height - margin.top - margin.bottom
+  const concentrations = summary.points.map(point => point.concentration)
+  const minConcentration = Math.min(...concentrations)
+  const maxConcentration = Math.max(...concentrations)
+  const minLog = Math.log10(minConcentration)
+  const maxLog = Math.log10(maxConcentration)
+  const logSpan = Math.max(maxLog - minLog, 1e-9)
+  const observedValues = summary.points.flatMap(point => [
+    point.meanViabilityPercent - point.standardDeviation,
+    point.meanViabilityPercent + point.standardDeviation,
+  ])
+  const curveValues = summary.fit.curve.map(point => point.viabilityPercent)
+  const yMin = Math.min(0, Math.floor(Math.min(...observedValues, ...curveValues) / 20) * 20)
+  const yMax = Math.max(120, Math.ceil(Math.max(...observedValues, ...curveValues) / 20) * 20)
+  const ySpan = Math.max(yMax - yMin, 1)
+  const x = (concentration: number) => margin.left + ((Math.log10(concentration) - minLog) / logSpan) * plotWidth
+  const y = (viability: number) => margin.top + ((yMax - viability) / ySpan) * plotHeight
+  const curvePath = summary.fit.curve
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(point.concentration).toFixed(2)} ${y(point.viabilityPercent).toFixed(2)}`)
+    .join(' ')
+  const yTicks = [0, 50, 100].filter(value => value >= yMin && value <= yMax)
+  const ic50InRange = summary.fit.relativeIc50 >= minConcentration && summary.fit.relativeIc50 <= maxConcentration
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] p-2">
+      <svg
+        role="img"
+        aria-label={t('science.doseResponseChart')}
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-auto w-full"
+      >
+        {yTicks.map(tick => (
+          <g key={tick}>
+            <line x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} stroke="var(--color-border)" strokeDasharray="3 5" />
+            <text x={margin.left - 9} y={y(tick) + 3} textAnchor="end" fill="var(--color-text-tertiary)" fontSize="9">{tick}</text>
+          </g>
+        ))}
+        <line x1={margin.left} x2={margin.left} y1={margin.top} y2={height - margin.bottom} stroke="var(--color-border)" />
+        <line x1={margin.left} x2={width - margin.right} y1={height - margin.bottom} y2={height - margin.bottom} stroke="var(--color-border)" />
+        {concentrations.map(concentration => (
+          <g key={concentration}>
+            <line x1={x(concentration)} x2={x(concentration)} y1={height - margin.bottom} y2={height - margin.bottom + 4} stroke="var(--color-border)" />
+            <text x={x(concentration)} y={height - margin.bottom + 16} textAnchor="middle" fill="var(--color-text-tertiary)" fontSize="8">
+              {formatScientific(concentration)}
+            </text>
+          </g>
+        ))}
+        <path d={curvePath} fill="none" stroke="var(--color-brand)" strokeWidth="2.5" />
+        {ic50InRange && (
+          <line
+            x1={x(summary.fit.relativeIc50)}
+            x2={x(summary.fit.relativeIc50)}
+            y1={margin.top}
+            y2={height - margin.bottom}
+            stroke="var(--color-warning)"
+            strokeDasharray="5 4"
+          />
+        )}
+        {summary.points.map(point => (
+          <g key={point.concentration}>
+            <line
+              x1={x(point.concentration)}
+              x2={x(point.concentration)}
+              y1={y(point.meanViabilityPercent - point.standardDeviation)}
+              y2={y(point.meanViabilityPercent + point.standardDeviation)}
+              stroke="var(--color-text-secondary)"
+            />
+            <line x1={x(point.concentration) - 4} x2={x(point.concentration) + 4} y1={y(point.meanViabilityPercent - point.standardDeviation)} y2={y(point.meanViabilityPercent - point.standardDeviation)} stroke="var(--color-text-secondary)" />
+            <line x1={x(point.concentration) - 4} x2={x(point.concentration) + 4} y1={y(point.meanViabilityPercent + point.standardDeviation)} y2={y(point.meanViabilityPercent + point.standardDeviation)} stroke="var(--color-text-secondary)" />
+            <circle cx={x(point.concentration)} cy={y(point.meanViabilityPercent)} r="3.5" fill="var(--color-surface-container-lowest)" stroke="var(--color-brand)" strokeWidth="2" />
+          </g>
+        ))}
+        <text x={width / 2} y={height - 7} textAnchor="middle" fill="var(--color-text-secondary)" fontSize="9">
+          {t('science.concentration')} ({unit}) · log10
+        </text>
+        <text transform={`translate(13 ${height / 2}) rotate(-90)`} textAnchor="middle" fill="var(--color-text-secondary)" fontSize="9">
+          {t('science.normalizedViability')}
+        </text>
+      </svg>
+    </div>
+  )
+}
+
+function doseResponseWarningLabel(
+  code: 'high-replicate-variation' | 'limited-response-range' | 'weak-model-fit' | 'relative-ic50-outside-tested-range' | 'implausible-asymptote',
+  t: ReturnType<typeof useTranslation>,
+): string {
+  if (code === 'high-replicate-variation') return t('science.warning.highReplicateVariation')
+  if (code === 'limited-response-range') return t('science.warning.limitedResponseRange')
+  if (code === 'weak-model-fit') return t('science.warning.weakModelFit')
+  if (code === 'relative-ic50-outside-tested-range') return t('science.warning.ic50OutsideRange')
+  return t('science.warning.implausibleAsymptote')
+}
+
+function formatScientific(value: number): string {
+  if (value === 0) return '0'
+  if (Math.abs(value) >= 1000 || Math.abs(value) < 0.01) return value.toExponential(2)
+  return Number(value.toPrecision(4)).toString()
 }
 
 function ArtifactsPanel({
@@ -903,6 +1184,14 @@ function ReproducibilityBadge({ status }: { status: ScienceAnalysisRun['reproduc
       ? 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
       : 'border-[var(--color-border)] text-[var(--color-text-tertiary)]'
   return <span className={`rounded-full border px-1.5 py-0.5 text-[8px] font-semibold ${tone}`}>{t(`science.repro.${status}`)}</span>
+}
+
+function InputCurrentnessBadge({ status }: { status: ScienceAnalysisRun['inputCurrentness'] }) {
+  const t = useTranslation()
+  const tone = status === 'current'
+    ? 'border-[var(--color-border)] text-[var(--color-text-tertiary)]'
+    : 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+  return <span className={`rounded-full border px-1.5 py-0.5 text-[8px] font-semibold ${tone}`}>{t(`science.input.${status}`)}</span>
 }
 
 function RunMetric({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {

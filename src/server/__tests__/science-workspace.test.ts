@@ -63,12 +63,12 @@ describe('Science workspace API', () => {
       question: 'Does treatment A alter viability after 24 hours?',
       rootDir: await fs.realpath(projectRoot),
       rootAvailable: true,
-      schemaVersion: 2,
+      schemaVersion: 5,
     })
 
     const scienceDirectory = path.join(projectRoot, '.sciencex')
     const manifest = await fs.readFile(path.join(scienceDirectory, 'project.yaml'), 'utf8')
-    expect(manifest).toContain('schemaVersion: 2')
+    expect(manifest).toContain('schemaVersion: 5')
     expect(manifest).toContain('name: Cell viability pilot')
     expect((await fs.stat(path.join(scienceDirectory, 'research.sqlite'))).isFile()).toBe(true)
 
@@ -181,7 +181,7 @@ describe('Science workspace API', () => {
     expect(currentPreview.body.preview.rows).toEqual([['A', '1'], ['B', '2']])
   })
 
-  it('creates a reproducible local quality run with append-only events and traced artifacts', async () => {
+  it('snapshots registered bytes and only marks an exact replay as reproducible', async () => {
     const created = await callApi('/api/research-projects', {
       method: 'POST',
       body: { name: 'Quality run project', rootDir: projectRoot },
@@ -213,7 +213,7 @@ describe('Science workspace API', () => {
       datasetVersionId: registered.body.dataset.currentVersion.id,
       recipe: 'table-quality-v1',
       status: 'completed',
-      reproducibilityStatus: 'reproducible',
+      reproducibilityStatus: 'unchecked',
       inputHash: registered.body.dataset.currentVersion.contentHash,
       exitCode: 0,
       summary: {
@@ -238,6 +238,15 @@ describe('Science workspace API', () => {
     const report = await fs.readFile(path.join(projectRoot, reportArtifact.relativePath), 'utf8')
     expect(report).toContain('Data quality profile')
     expect(report).toContain('No table contents were sent to a model')
+    const snapshotPath = path.join(
+      projectRoot,
+      '.sciencex',
+      'objects',
+      'sha256',
+      started.body.run.inputHash.slice(0, 2),
+      `${started.body.run.inputHash}.csv`,
+    )
+    expect(await fs.readFile(snapshotPath, 'utf8')).toBe(await fs.readFile(tablePath, 'utf8'))
 
     const events = await callApi(`/api/runs/${started.body.run.id}/events`)
     expect(events.status).toBe(200)
@@ -262,20 +271,35 @@ describe('Science workspace API', () => {
       parentRunId: started.body.run.id,
       status: 'completed',
       reproducibilityStatus: 'reproducible',
+      datasetVersionId: started.body.run.datasetVersionId,
+      inputHash: started.body.run.inputHash,
     })
     expect(replayed.body.run.id).not.toBe(started.body.run.id)
+
+    const verifiedRuns = await callApi(`/api/research-projects/${created.body.project.id}/runs`)
+    expect(verifiedRuns.body.runs.every((run: any) => run.reproducibilityStatus === 'reproducible')).toBe(true)
 
     await fs.appendFile(tablePath, 'S4,control,3.1\n', 'utf8')
     await callApi(
       `/api/research-projects/${created.body.project.id}/datasets`,
       { method: 'POST', body: { filePath: tablePath, name: 'Assay measurements' } },
     )
-    const staleRuns = await callApi(`/api/research-projects/${created.body.project.id}/runs`)
-    expect(staleRuns.body.runs).toHaveLength(2)
-    expect(staleRuns.body.runs.every((run: any) => run.reproducibilityStatus === 'stale')).toBe(true)
+    await fs.unlink(tablePath)
+    const replayedAfterSourceRemoval = await callApi(
+      `/api/runs/${started.body.run.id}/replay`,
+      { method: 'POST' },
+    )
+    expect(replayedAfterSourceRemoval.status).toBe(201)
+    expect(replayedAfterSourceRemoval.body.run).toMatchObject({
+      datasetVersionId: started.body.run.datasetVersionId,
+      inputHash: started.body.run.inputHash,
+      inputCurrentness: 'superseded',
+      reproducibilityStatus: 'reproducible',
+      summary: started.body.run.summary,
+    })
   })
 
-  it('records a failed run when the registered source changes before analysis', async () => {
+  it('runs the immutable registered snapshot when the external source changes', async () => {
     const created = await callApi('/api/research-projects', {
       method: 'POST',
       body: { name: 'Changed input project', rootDir: projectRoot },
@@ -288,19 +312,25 @@ describe('Science workspace API', () => {
     )
     await fs.writeFile(tablePath, 'sample,value\nA,1\nB,2\n', 'utf8')
 
-    const failed = await callApi(`/api/research-projects/${created.body.project.id}/runs`, {
+    const completed = await callApi(`/api/research-projects/${created.body.project.id}/runs`, {
       method: 'POST',
       body: { datasetId: registered.body.dataset.id, recipe: 'table-quality-v1' },
     })
-    expect(failed.status).toBe(409)
-    expect(failed.body.message).toContain('register it again')
+    expect(completed.status).toBe(201)
+    expect(completed.body.run).toMatchObject({
+      status: 'completed',
+      reproducibilityStatus: 'unchecked',
+      inputHash: registered.body.dataset.currentVersion.contentHash,
+      summary: { sampledRowCount: 1 },
+    })
 
     const listed = await callApi(`/api/research-projects/${created.body.project.id}/runs`)
     expect(listed.body.runs).toHaveLength(1)
     expect(listed.body.runs[0]).toMatchObject({
-      status: 'failed',
-      reproducibilityStatus: 'failed',
-      exitCode: 1,
+      status: 'completed',
+      reproducibilityStatus: 'unchecked',
+      inputCurrentness: 'current',
+      exitCode: 0,
     })
   })
 
@@ -455,22 +485,32 @@ describe('Science workspace API', () => {
 
     const listed = await callApi('/api/research-projects')
     expect(listed.status).toBe(200)
-    expect(listed.body.projects[0]).toMatchObject({ id: projectId, schemaVersion: 2 })
+    expect(listed.body.projects[0]).toMatchObject({ id: projectId, schemaVersion: 5 })
 
     const inspected = new Database(projectDatabasePath, { readonly: true })
     try {
       expect(inspected.query("SELECT value FROM science_meta WHERE key = 'schema_version'").get())
-        .toEqual({ value: '2' })
-      expect(inspected.query('SELECT schema_version FROM project').get()).toEqual({ schema_version: 2 })
+        .toEqual({ value: '5' })
+      expect(inspected.query('SELECT schema_version FROM project').get()).toEqual({ schema_version: 5 })
       expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'analysis_runs'").get())
         .toEqual({ name: 'analysis_runs' })
       expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'science_artifacts'").get())
         .toEqual({ name: 'science_artifacts' })
+      expect(inspected.query("SELECT name FROM pragma_table_info('dataset_versions') WHERE name = 'snapshot_path'").get())
+        .toEqual({ name: 'snapshot_path' })
+      expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'science_experiments'").get())
+        .toEqual({ name: 'science_experiments' })
+      expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'science_protocol_versions'").get())
+        .toEqual({ name: 'science_protocol_versions' })
+      expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'science_design_versions'").get())
+        .toEqual({ name: 'science_design_versions' })
+      expect(inspected.query("SELECT name FROM pragma_table_info('analysis_runs') WHERE name = 'experiment_id'").get())
+        .toEqual({ name: 'experiment_id' })
     } finally {
       inspected.close()
     }
     const migratedManifest = await fs.readFile(path.join(scienceDirectory, 'project.yaml'), 'utf8')
-    expect(migratedManifest).toContain('schemaVersion: 2')
+    expect(migratedManifest).toContain('schemaVersion: 5')
     expect(migratedManifest).toContain('labNote: preserve-me')
   })
 })

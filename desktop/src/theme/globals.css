@@ -1490,6 +1490,25 @@ button, input, textarea, select, a, [role="button"] {
   }
 }
 
+.science-experiment-detail-panel {
+  container-type: inline-size;
+}
+
+.science-experiment-detail-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container (min-width: 960px) {
+  .science-experiment-detail-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+
+  .science-experiment-readiness {
+    border-top-width: 0;
+    border-left-width: 1px;
+  }
+}
+
 .activity-heat-cell {
   position: relative;
   transform: translateZ(0);

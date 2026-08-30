@@ -1,8 +1,10 @@
 import type {
   ScienceAnalysisRun,
   ScienceArtifact,
+  CreateScienceExperimentInput,
   ScienceDataset,
   ScienceDatasetPreview,
+  ScienceExperiment,
   ScienceProject,
   ScienceRunEvent,
 } from '../types/science'
@@ -48,6 +50,39 @@ export const scienceApi = {
     return response.preview
   },
 
+  async listExperiments(projectId: string): Promise<ScienceExperiment[]> {
+    const response = await api.get<{ experiments: ScienceExperiment[] }>(
+      `/api/research-projects/${encodeURIComponent(projectId)}/experiments`,
+    )
+    return response.experiments
+  },
+
+  async createExperiment(input: CreateScienceExperimentInput): Promise<ScienceExperiment> {
+    const response = await api.post<{ experiment: ScienceExperiment }>(
+      `/api/research-projects/${encodeURIComponent(input.projectId)}/experiments`,
+      {
+        name: input.name,
+        objective: input.objective,
+        assayType: 'cell-viability-dose-response',
+        linkedDatasetId: input.linkedDatasetId,
+        protocol: input.protocol,
+      },
+    )
+    return response.experiment
+  },
+
+  async linkExperimentDataset(input: {
+    projectId: string
+    experimentId: string
+    datasetId: string
+  }): Promise<ScienceExperiment> {
+    const response = await api.patch<{ experiment: ScienceExperiment }>(
+      `/api/research-projects/${encodeURIComponent(input.projectId)}/experiments/${encodeURIComponent(input.experimentId)}`,
+      { datasetId: input.datasetId },
+    )
+    return response.experiment
+  },
+
   async listRuns(projectId: string): Promise<ScienceAnalysisRun[]> {
     const response = await api.get<{ runs: ScienceAnalysisRun[] }>(
       `/api/research-projects/${encodeURIComponent(projectId)}/runs`,
@@ -66,6 +101,24 @@ export const scienceApi = {
         datasetId: input.datasetId,
         recipe: 'table-quality-v1',
         parameters: { maxRows: input.maxRows ?? 100 },
+      },
+    )
+  },
+
+  async createDoseResponseRun(input: {
+    projectId: string
+    experimentId: string
+    wellColumn: string
+    signalColumn: string
+  }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
+    return api.post<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }>(
+      `/api/research-projects/${encodeURIComponent(input.projectId)}/experiments/${encodeURIComponent(input.experimentId)}/runs`,
+      {
+        recipe: 'cell-viability-dose-response-v1',
+        parameters: {
+          wellColumn: input.wellColumn,
+          signalColumn: input.signalColumn,
+        },
       },
     )
   },

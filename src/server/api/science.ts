@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises'
 import { z } from 'zod'
 import { ApiError, errorResponse } from '../middleware/errorHandler.js'
 import { scienceAnalysisService } from '../services/scienceAnalysisService.js'
+import { scienceExperimentService } from '../services/scienceExperimentService.js'
 import { scienceWorkspaceService } from '../services/scienceWorkspaceService.js'
 import { isAllowedFilesystemPath } from './filesystem.js'
 
@@ -22,6 +23,56 @@ const CreateRunSchema = z.object({
   parameters: z.object({
     maxRows: z.number().int().min(10).max(100).optional(),
   }).optional(),
+})
+
+const ConcentrationUnitSchema = z.enum(['nM', 'µM', 'mM'])
+
+const PlateWellSchema = z.object({
+  well: z.string().trim().min(1).max(4),
+  role: z.enum(['blank', 'vehicle-control', 'positive-control', 'treatment']),
+  label: z.string().trim().max(160),
+  concentration: z.number().finite().nullable(),
+  concentrationUnit: ConcentrationUnitSchema.nullable(),
+  replicate: z.number().int().min(1).max(8),
+})
+
+const CreateExperimentSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  objective: z.string().trim().max(2000).optional(),
+  assayType: z.literal('cell-viability-dose-response'),
+  linkedDatasetId: z.string().trim().min(1).max(160).nullable().optional(),
+  protocol: z.object({
+    cellLine: z.string().trim().max(160),
+    compoundName: z.string().trim().max(160),
+    readout: z.enum(['cck-8', 'celltiter-glo']),
+    treatmentDurationHours: z.number().finite().min(0).max(10000),
+    seedingDensityCellsPerWell: z.number().int().min(0).max(1000000000),
+    concentrationUnit: ConcentrationUnitSchema.nullable(),
+    concentrations: z.array(z.number().finite()).max(8),
+    replicateCount: z.number().int().min(1).max(8),
+    includeBlankControl: z.boolean(),
+    vehicleControl: z.object({
+      name: z.string().trim().max(160),
+      finalPercent: z.number().finite().min(0).max(100),
+    }).nullable(),
+    positiveControl: z.string().trim().max(160),
+  }),
+  design: z.object({
+    plateFormat: z.literal(96),
+    wells: z.array(PlateWellSchema).max(96),
+  }).optional(),
+})
+
+const LinkExperimentDatasetSchema = z.object({
+  datasetId: z.string().trim().min(1).max(160),
+})
+
+const CreateDoseResponseRunSchema = z.object({
+  recipe: z.literal('cell-viability-dose-response-v1'),
+  parameters: z.object({
+    wellColumn: z.string().trim().min(1).max(160),
+    signalColumn: z.string().trim().min(1).max(160),
+  }),
 })
 
 async function parseJsonBody(request: Request): Promise<unknown> {
@@ -122,6 +173,54 @@ export async function handleScienceApi(
             maxRows: parsed.data.parameters?.maxRows,
           })
           return Response.json(result, { status: 201 })
+        }
+        throw methodNotAllowed(request)
+      }
+
+      if (childResource === 'experiments') {
+        const experimentId = segments[4]
+        const experimentAction = segments[5]
+        if (experimentId && experimentAction === 'runs') {
+          if (request.method !== 'POST') throw methodNotAllowed(request)
+          const parsed = CreateDoseResponseRunSchema.safeParse(await parseJsonBody(request))
+          if (!parsed.success) {
+            throw ApiError.badRequest(parsed.error.issues.map(issue => issue.message).join('; '))
+          }
+          return Response.json(await scienceAnalysisService.createDoseResponseRun({
+            projectId,
+            experimentId,
+            wellColumn: parsed.data.parameters.wellColumn,
+            signalColumn: parsed.data.parameters.signalColumn,
+          }), { status: 201 })
+        }
+        if (experimentId) {
+          if (request.method !== 'PATCH') throw methodNotAllowed(request)
+          const parsed = LinkExperimentDatasetSchema.safeParse(await parseJsonBody(request))
+          if (!parsed.success) {
+            throw ApiError.badRequest(parsed.error.issues.map(issue => issue.message).join('; '))
+          }
+          const experiment = await scienceExperimentService.linkDataset({
+            projectId,
+            experimentId,
+            datasetId: parsed.data.datasetId,
+          })
+          return Response.json({ experiment })
+        }
+        if (request.method === 'GET') {
+          return Response.json({
+            experiments: await scienceExperimentService.listExperiments(projectId),
+          })
+        }
+        if (request.method === 'POST') {
+          const parsed = CreateExperimentSchema.safeParse(await parseJsonBody(request))
+          if (!parsed.success) {
+            throw ApiError.badRequest(parsed.error.issues.map(issue => issue.message).join('; '))
+          }
+          const experiment = await scienceExperimentService.createExperiment({
+            projectId,
+            ...parsed.data,
+          })
+          return Response.json({ experiment }, { status: 201 })
         }
         throw methodNotAllowed(request)
       }

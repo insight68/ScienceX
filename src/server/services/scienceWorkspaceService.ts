@@ -9,7 +9,7 @@ import { getScienceXProjectRegistryDir } from '../../utils/envUtils.js'
 import { ApiError } from '../middleware/errorHandler.js'
 import { ScienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
 
-const SCIENCE_PROJECT_SCHEMA_VERSION = 2
+const SCIENCE_PROJECT_SCHEMA_VERSION = 5
 const SCIENCE_REGISTRY_SCHEMA_VERSION = 1
 const PROJECT_DIRECTORY_NAME = '.sciencex'
 const PROJECT_DATABASE_NAME = 'research.sqlite'
@@ -37,6 +37,7 @@ export type ScienceDatasetVersion = {
   sizeBytes: number
   contentHash: string
   modifiedAtMs: number
+  snapshotPath: string | null
   createdAt: string
 }
 
@@ -111,6 +112,7 @@ type DatasetRow = {
   size_bytes: number
   content_hash: string
   modified_at_ms: number
+  snapshot_path: string | null
   version_created_at: string
 }
 
@@ -282,6 +284,76 @@ function migrateProjectDatabase(database: Database): void {
     `)
     setSchemaVersion(database, 2)
   }
+  if (currentVersion < 3) {
+    database.exec(`
+      ALTER TABLE dataset_versions ADD COLUMN snapshot_path TEXT;
+      UPDATE analysis_runs
+      SET reproducibility_status = 'unchecked'
+      WHERE reproducibility_status = 'stale';
+      UPDATE project SET schema_version = 3;
+    `)
+    setSchemaVersion(database, 3)
+  }
+  if (currentVersion < 4) {
+    database.exec(`
+      CREATE TABLE IF NOT EXISTS science_experiments (
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        objective TEXT NOT NULL,
+        assay_type TEXT NOT NULL CHECK (
+          assay_type IN ('cell-viability-dose-response')
+        ),
+        status TEXT NOT NULL CHECK (status IN ('draft', 'ready')),
+        linked_dataset_id TEXT,
+        linked_dataset_version_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(project_id) REFERENCES project(id) ON DELETE CASCADE,
+        FOREIGN KEY(linked_dataset_id) REFERENCES datasets(id) ON DELETE RESTRICT,
+        FOREIGN KEY(linked_dataset_version_id) REFERENCES dataset_versions(id) ON DELETE RESTRICT
+      );
+
+      CREATE INDEX IF NOT EXISTS science_experiments_project_updated_idx
+        ON science_experiments(project_id, updated_at DESC);
+
+      CREATE TABLE IF NOT EXISTS science_protocol_versions (
+        id TEXT PRIMARY KEY,
+        experiment_id TEXT NOT NULL,
+        ordinal INTEGER NOT NULL,
+        protocol_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(experiment_id) REFERENCES science_experiments(id) ON DELETE CASCADE,
+        UNIQUE(experiment_id, ordinal)
+      );
+
+      CREATE TABLE IF NOT EXISTS science_design_versions (
+        id TEXT PRIMARY KEY,
+        experiment_id TEXT NOT NULL,
+        ordinal INTEGER NOT NULL,
+        plate_format INTEGER NOT NULL CHECK (plate_format = 96),
+        layout_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(experiment_id) REFERENCES science_experiments(id) ON DELETE CASCADE,
+        UNIQUE(experiment_id, ordinal)
+      );
+
+      UPDATE project SET schema_version = 4;
+    `)
+    setSchemaVersion(database, 4)
+  }
+  if (currentVersion < 5) {
+    database.exec(`
+      ALTER TABLE analysis_runs ADD COLUMN experiment_id TEXT
+        REFERENCES science_experiments(id) ON DELETE RESTRICT;
+
+      CREATE INDEX IF NOT EXISTS analysis_runs_experiment_created_idx
+        ON analysis_runs(experiment_id, created_at DESC);
+
+      UPDATE project SET schema_version = 5;
+    `)
+    setSchemaVersion(database, 5)
+  }
 }
 
 function registryDatabasePath(): string {
@@ -435,6 +507,66 @@ async function calculateSha256(filePath: string): Promise<string> {
   return hash.digest('hex')
 }
 
+function datasetSnapshotPath(contentHash: string, format: ScienceDataset['format']): string {
+  return path.join(
+    PROJECT_DIRECTORY_NAME,
+    'objects',
+    'sha256',
+    contentHash.slice(0, 2),
+    `${contentHash}.${format}`,
+  )
+}
+
+function resolveDatasetSnapshot(project: ScienceProject, snapshotPath: string): string {
+  const objectsRoot = path.resolve(project.rootDir, PROJECT_DIRECTORY_NAME, 'objects')
+  const resolved = path.resolve(project.rootDir, snapshotPath)
+  if (resolved !== objectsRoot && !resolved.startsWith(`${objectsRoot}${path.sep}`)) {
+    throw ApiError.conflict('Registered dataset snapshot path escapes the project object store')
+  }
+  return resolved
+}
+
+async function preserveDatasetSnapshot(input: {
+  project: ScienceProject
+  sourcePath: string
+  contentHash: string
+  format: ScienceDataset['format']
+  sizeBytes: number
+}): Promise<string> {
+  const relativePath = datasetSnapshotPath(input.contentHash, input.format)
+  const destination = resolveDatasetSnapshot(input.project, relativePath)
+  const existing = await fs.stat(destination).catch(error => {
+    if (errnoCode(error) === 'ENOENT') return null
+    throw error
+  })
+  if (existing) {
+    if (!existing.isFile() || existing.size !== input.sizeBytes) {
+      throw ApiError.conflict(`Dataset snapshot is invalid: ${relativePath}`)
+    }
+    const existingHash = await calculateSha256(destination)
+    if (existingHash !== input.contentHash) {
+      throw ApiError.conflict(`Dataset snapshot integrity check failed: ${relativePath}`)
+    }
+    return relativePath
+  }
+
+  await fs.mkdir(path.dirname(destination), { recursive: true, mode: 0o700 })
+  const temporaryPath = `${destination}.tmp.${process.pid}.${randomBytes(6).toString('hex')}`
+  try {
+    await fs.copyFile(input.sourcePath, temporaryPath)
+    await fs.chmod(temporaryPath, 0o600)
+    const copied = await fs.stat(temporaryPath)
+    if (copied.size !== input.sizeBytes || await calculateSha256(temporaryPath) !== input.contentHash) {
+      throw ApiError.conflict('Dataset source changed while its immutable snapshot was being created')
+    }
+    await fs.rename(temporaryPath, destination)
+  } catch (error) {
+    await fs.unlink(temporaryPath).catch(() => undefined)
+    throw error
+  }
+  return relativePath
+}
+
 function mapProject(row: ProjectRow, rootAvailable = true): ScienceProject {
   return {
     id: row.id,
@@ -477,6 +609,7 @@ function mapDataset(row: DatasetRow): ScienceDataset {
       sizeBytes: row.size_bytes,
       contentHash: row.content_hash,
       modifiedAtMs: row.modified_at_ms,
+      snapshotPath: row.snapshot_path,
       createdAt: row.version_created_at,
     },
   }
@@ -498,6 +631,7 @@ const DATASET_SELECT = `
     v.size_bytes,
     v.content_hash,
     v.modified_at_ms,
+    v.snapshot_path,
     v.created_at AS version_created_at
   FROM datasets d
   JOIN dataset_versions v ON v.dataset_id = d.id
@@ -506,6 +640,29 @@ const DATASET_SELECT = `
     FROM dataset_versions latest
     WHERE latest.dataset_id = d.id
   )
+`
+
+const DATASET_VERSION_SELECT = `
+  SELECT
+    d.id,
+    d.project_id,
+    d.name,
+    d.canonical_path,
+    d.format,
+    d.created_at,
+    d.updated_at,
+    (SELECT COUNT(*) FROM dataset_versions count_versions WHERE count_versions.dataset_id = d.id)
+      AS version_count,
+    v.id AS version_id,
+    v.ordinal AS version_ordinal,
+    v.size_bytes,
+    v.content_hash,
+    v.modified_at_ms,
+    v.snapshot_path,
+    v.created_at AS version_created_at
+  FROM datasets d
+  JOIN dataset_versions v ON v.dataset_id = d.id
+  WHERE d.project_id = ? AND d.id = ? AND v.id = ?
 `
 
 async function readRegistryProjects(): Promise<RegistryProjectRow[]> {
@@ -767,6 +924,28 @@ export class ScienceWorkspaceService {
     return requiredProject(projectId)
   }
 
+  async touchProject(projectId: string, updatedAt = new Date().toISOString()): Promise<void> {
+    const project = await requiredProject(projectId)
+    const database = openProjectDatabase(project.rootDir)
+    try {
+      database
+        .query('UPDATE project SET updated_at = ? WHERE id = ?')
+        .run(updatedAt, project.id)
+    } finally {
+      database.close()
+    }
+
+    await writeProjectManifest({ ...project, updatedAt }, updatedAt)
+    const registry = await openRegistryDatabase()
+    try {
+      registry
+        .query('UPDATE projects SET updated_at = ? WHERE id = ?')
+        .run(updatedAt, project.id)
+    } finally {
+      registry.close()
+    }
+  }
+
   async listDatasets(projectId: string): Promise<ScienceDataset[]> {
     const project = await requiredProject(projectId)
     const database = openProjectDatabase(project.rootDir)
@@ -786,6 +965,13 @@ export class ScienceWorkspaceService {
     const project = await requiredProject(input.projectId)
     const table = await canonicalTableFile(input.filePath)
     const contentHash = await calculateSha256(table.canonicalPath)
+    const snapshotPath = await preserveDatasetSnapshot({
+      project,
+      sourcePath: table.canonicalPath,
+      contentHash,
+      format: table.format,
+      sizeBytes: table.sizeBytes,
+    })
     const now = new Date().toISOString()
     const database = openProjectDatabase(project.rootDir)
     let datasetId = randomUUID()
@@ -801,16 +987,18 @@ export class ScienceWorkspaceService {
           datasetId = existing.id
           const currentVersion = database
             .query(`
-              SELECT content_hash, size_bytes, modified_at_ms
+              SELECT id, content_hash, size_bytes, modified_at_ms, snapshot_path
               FROM dataset_versions
               WHERE dataset_id = ?
               ORDER BY ordinal DESC
               LIMIT 1
             `)
             .get(datasetId) as {
+              id: string
               content_hash: string
               size_bytes: number
               modified_at_ms: number
+              snapshot_path: string | null
             } | null
           database
             .query('UPDATE datasets SET name = ?, updated_at = ? WHERE id = ?')
@@ -821,6 +1009,11 @@ export class ScienceWorkspaceService {
             Math.abs(currentVersion.modified_at_ms - table.modifiedAtMs) <= 0.5
           ) {
             versionCreated = false
+            if (!currentVersion.snapshot_path) {
+              database
+                .query('UPDATE dataset_versions SET snapshot_path = ? WHERE id = ?')
+                .run(snapshotPath, currentVersion.id)
+            }
           }
         } else {
           database
@@ -851,8 +1044,9 @@ export class ScienceWorkspaceService {
           database
             .query(`
               INSERT INTO dataset_versions (
-                id, dataset_id, ordinal, size_bytes, content_hash, modified_at_ms, created_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                id, dataset_id, ordinal, size_bytes, content_hash, modified_at_ms,
+                snapshot_path, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `)
             .run(
               randomUUID(),
@@ -861,6 +1055,7 @@ export class ScienceWorkspaceService {
               table.sizeBytes,
               contentHash,
               table.modifiedAtMs,
+              snapshotPath,
               now,
             )
         }
@@ -896,13 +1091,6 @@ export class ScienceWorkspaceService {
     options?: { maxRows?: number; offset?: number; search?: string; maxBytes?: number },
   ): Promise<ScienceDatasetPreview> {
     const { dataset } = await findDataset(datasetId)
-    const maxRows = Math.max(
-      1,
-      Math.min(options?.maxRows ?? DEFAULT_PREVIEW_ROWS, MAX_PREVIEW_ROWS),
-    )
-    const offset = Math.max(0, options?.offset ?? 0)
-    const search = options?.search ?? ''
-
     const before = await fs.stat(dataset.canonicalPath).catch(error => {
       if (errnoCode(error) === 'ENOENT') {
         throw ApiError.conflict(`Dataset source file is unavailable: ${dataset.canonicalPath}`)
@@ -910,13 +1098,99 @@ export class ScienceWorkspaceService {
       throw error
     })
     if (!before.isFile()) throw ApiError.conflict('Dataset source path is no longer a file')
-
-    const current = dataset.currentVersion
-    if (before.size !== current.sizeBytes || Math.abs(before.mtimeMs - current.modifiedAtMs) > 0.5) {
+    if (
+      before.size !== dataset.currentVersion.sizeBytes ||
+      Math.abs(before.mtimeMs - dataset.currentVersion.modifiedAtMs) > 0.5
+    ) {
       throw ApiError.conflict(
         'Dataset source changed after registration; register it again to create a new version',
       )
     }
+    return this.previewFile(dataset, dataset.currentVersion, dataset.canonicalPath, options)
+  }
+
+  async getDatasetVersion(input: {
+    projectId: string
+    datasetId: string
+    versionId?: string
+  }): Promise<ScienceDataset> {
+    const project = await requiredProject(input.projectId)
+    if (!input.versionId) {
+      const dataset = (await this.listDatasets(project.id))
+        .find(candidate => candidate.id === input.datasetId)
+      if (!dataset) throw ApiError.notFound(`Dataset not found in research project: ${input.datasetId}`)
+      return dataset
+    }
+
+    const database = openProjectDatabase(project.rootDir)
+    try {
+      const row = database
+        .query(DATASET_VERSION_SELECT)
+        .get(project.id, input.datasetId, input.versionId) as DatasetRow | null
+      if (!row) {
+        throw ApiError.notFound(
+          `Dataset version not found in research project: ${input.datasetId}/${input.versionId}`,
+        )
+      }
+      return mapDataset(row)
+    } finally {
+      database.close()
+    }
+  }
+
+  async previewDatasetVersion(
+    projectId: string,
+    datasetId: string,
+    versionId: string,
+    options?: { maxRows?: number; offset?: number; search?: string; maxBytes?: number },
+  ): Promise<ScienceDatasetPreview> {
+    const project = await requiredProject(projectId)
+    const dataset = await this.getDatasetVersion({ projectId, datasetId, versionId })
+    const version = dataset.currentVersion
+    let sourcePath: string
+    if (version.snapshotPath) {
+      sourcePath = resolveDatasetSnapshot(project, version.snapshotPath)
+    } else {
+      sourcePath = dataset.canonicalPath
+    }
+
+    const snapshot = await fs.stat(sourcePath).catch(error => {
+      if (errnoCode(error) === 'ENOENT') {
+        throw ApiError.conflict(
+          `Dataset version ${version.ordinal} has no available immutable snapshot`,
+        )
+      }
+      throw error
+    })
+    if (!snapshot.isFile() || snapshot.size !== version.sizeBytes) {
+      throw ApiError.conflict(`Dataset version ${version.ordinal} snapshot is invalid`)
+    }
+    if (await calculateSha256(sourcePath) !== version.contentHash) {
+      throw ApiError.conflict(`Dataset version ${version.ordinal} snapshot integrity check failed`)
+    }
+    return this.previewFile(dataset, version, sourcePath, options)
+  }
+
+  private async previewFile(
+    dataset: ScienceDataset,
+    version: ScienceDatasetVersion,
+    filePath: string,
+    options?: { maxRows?: number; offset?: number; search?: string; maxBytes?: number },
+  ): Promise<ScienceDatasetPreview> {
+    const maxRows = Math.max(
+      1,
+      Math.min(options?.maxRows ?? DEFAULT_PREVIEW_ROWS, MAX_PREVIEW_ROWS),
+    )
+    const offset = Math.max(0, options?.offset ?? 0)
+    const search = options?.search ?? ''
+
+    const before = await fs.stat(filePath).catch(error => {
+      if (errnoCode(error) === 'ENOENT') {
+        throw ApiError.conflict(`Dataset version source is unavailable: ${filePath}`)
+      }
+      throw error
+    })
+    if (!before.isFile()) throw ApiError.conflict('Dataset version source is no longer a file')
 
     const delimiter = dataset.format === 'csv' ? ',' : '\t'
 
@@ -925,8 +1199,8 @@ export class ScienceWorkspaceService {
       Math.min(options?.maxBytes ?? DEFAULT_PREVIEW_BYTES, DEFAULT_PREVIEW_BYTES),
     )
 
-    const buffer = await readFilePrefix(dataset.canonicalPath, before.size, maxBytes)
-    const after = await fs.stat(dataset.canonicalPath)
+    const buffer = await readFilePrefix(filePath, before.size, maxBytes)
+    const after = await fs.stat(filePath)
     if (after.size !== before.size || Math.abs(after.mtimeMs - before.mtimeMs) > 0.5) {
       throw ApiError.conflict('Dataset source changed while the preview was being read')
     }
@@ -976,7 +1250,7 @@ export class ScienceWorkspaceService {
       totalRowCount: matchingRows.length,
       truncated: sourceWasTruncated || matchingRows.length > offset + maxRows,
       sizeBytes: before.size,
-      contentHash: current.contentHash,
+      contentHash: version.contentHash,
       localOnly: true,
     }
   }

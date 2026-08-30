@@ -45,18 +45,20 @@ ScienceX 的基础不是一个单用途聊天框，而是两层协同的本地�
 | 状态 | 能力 | 当前行为 |
 | --- | --- | --- |
 | ✅ 可用 | 研究项目 | 在本地目录创建 `.sciencex` manifest 和 SQLite 研究数据库 |
+| ✅ 可用 | 细胞活力实验蓝图 | 创建带版本的 CCK-8 / CellTiter-Glo 方案，校验剂量、对照、复孔与 96 孔板布局 |
 | ✅ 可用 | 实验表格登记 | 支持 UTF-8 CSV/TSV，记录规范化路径、大小、修改时间和 SHA-256 版本 |
 | ✅ 可用 | 本地数据画像 | 推断列类型，统计样本中的缺失值、唯一值、完整行和数值列 |
+| ✅ 可用 | 细胞活力剂量反应 | 显式孔位/信号映射、空白扣除、溶剂对照归一化、复孔汇总和确定性 4PL / 相对 IC50 拟合 |
 | ✅ 可用 | 可追溯 Run | 显式记录 `queued / running / completed / failed / interrupted` 状态、参数和运行环境 |
 | ✅ 可用 | Provenance | 保存 append-only `events.jsonl`、Run manifest、输入哈希和配方哈希 |
-| ✅ 可用 | Artifacts | 生成并登记 `quality-report.md` 与 `profile.json`，保存大小和内容哈希 |
-| ✅ 可用 | 重放与过期检测 | 历史 Run 可重放为子 Run；数据产生新版本后旧 Run 标记为 `stale` |
+| ✅ 可用 | Artifacts | 生成并登记质量报告、归一化孔级数据、4PL 结果 JSON，保存大小和内容哈希 |
+| ✅ 可用 | 精确重放与输入版本状态 | 历史 Run 固定原始数据版本重放；首次运行待验证，确定性结果一致后标记重放验证通过 |
 | ✅ 可用 | Agent 基础设施 | 多模型、多会话、Skills、MCP、SubAgent、终端、Computer Use、权限审批 |
 | 🚧 开发中 | 通用计算环境 | 受控 Python / Jupyter / R、依赖锁定和 Restart & Run All |
 | 🚧 开发中 | 科研连接器 | 文献、科学数据库、实验室内部数据和 HPC / 调度系统连接器 |
 | 🚧 开发中 | 富科研产物 | 图表与代码绑定、论文稿件、领域可视化和 Reviewer Agent |
 
-当前 `table-quality-v1` 配方最多分析 100 个安全解析的样本行。它用于检查数据结构和质量，**不构成完整数据集统计、显著性检验或科学结论**。
+实验蓝图中的“可执行”只表示必要的设计字段和孔板分配已通过确定性检查，不代表湿实验已经完成或科学结果有效。`table-quality-v1` 最多画像 100 个安全解析的样本行；`cell-viability-dose-response-v1` 会完整读取已锁定的单板数据版本，并要求每个设计孔恰好对应一个数值信号。它报告的是无置信区间的单板相对 IC50，**不构成生物学重复推断、显著性检验、统计签署或科学结论**。
 
 <p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
@@ -65,10 +67,11 @@ ScienceX 的基础不是一个单用途聊天框，而是两层协同的本地�
 ## 核心工作流
 
 1. **创建研究项目**：选择一个本地目录，记录项目名称和研究问题。
-2. **登记实验表格**：添加 CSV/TSV，计算完整文件 SHA-256 并创建数据版本。
-3. **检查数据结构**：在 Data 页查看列画像、缺失值和样本行。
-4. **执行质量分析**：运行确定性配方，并记录输入、环境、参数和状态转换。
-5. **审阅与重放**：在 Runs 查看 Provenance，在 Artifacts 查看报告或以新 Run 重放。
+2. **设计细胞活力实验**：记录细胞系、化合物、检测方法、剂量、对照和复孔，生成 96 孔板蓝图并通过就绪检查。
+3. **执行并登记实验表格**：人工审阅方案并完成湿实验，再添加 CSV/TSV，计算完整文件 SHA-256 并创建数据版本。
+4. **检查数据结构**：在 Data 页查看列画像、缺失值和样本行。
+5. **执行分析**：可运行通用质量画像，或从实验蓝图显式选择孔位/信号列并完成空白扣除、归一化、复孔汇总和 4PL 拟合。
+6. **审阅与重放**：在 Runs 查看 Provenance，在 Artifacts 查看报告或以新 Run 重放。
 
 ```text
 研究目录/
@@ -77,10 +80,10 @@ ScienceX 的基础不是一个单用途聊天框，而是两层协同的本地�
 │   ├── project.yaml
 │   ├── research.sqlite
 │   └── runs/<run-id>/{run.json,events.jsonl}
-└── artifacts/sciencex/<run-id>/{quality-report.md,profile.json}
+└── artifacts/sciencex/<run-id>/{quality-report.md,profile.json,dose-response-report.md,normalized-wells.csv,dose-response.json}
 ```
 
-表格登记保存的是原文件绝对路径，不会复制原始数据。建议把数据放在项目的 `data/` 目录，并将数据、`.sciencex/` 和 `artifacts/` 一起备份。
+表格登记会保存原文件绝对路径，并在 `.sciencex/objects/sha256/` 创建按内容寻址的只读快照。快照用于精确重放；原路径仍用于当前表格预览和再次登记。建议将项目目录整体备份，原始实验文件仍应按实验室数据保留策略单独保存。
 
 ## 快速开始
 
@@ -141,10 +144,13 @@ bun run electron:dev
 ## 路线图
 
 - [x] 本地研究项目、数据版本和通用实验表格。
+- [x] 板式细胞活力实验蓝图、协议/设计版本、执行前校验和 96 孔板布局。
 - [x] 确定性质量分析、Run 状态机、Provenance 和 Artifacts。
 - [x] Run 重放、数据版本变化检测和旧项目 schema 迁移。
 - [ ] 受控 Python / Jupyter / R 运行时与环境锁定。
 - [ ] 标准 `.ipynb` 生成、Restart & Run All 和单元级执行证据。
+- [x] 仪器表格孔位映射、空白扣除、归一化、4PL / 相对 IC50 分析和人工告警审阅入口。
+- [ ] 生物学重复汇总、置信区间、模型比较、统计签署与领域审核闭环。
 - [ ] 图表、统计表、稿件与其生成代码的双向绑定。
 - [ ] 文献检索、引文证据库和科学数据库连接器。
 - [ ] 生物信息、化学、临床与其他领域的可安装能力包。

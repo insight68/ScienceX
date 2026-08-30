@@ -1,8 +1,8 @@
 # Science Workbench: Deployment and Experiment Workflow
 
-The Science workbench registers local CSV/TSV experiment tables, inspects column structure and missing values, and runs a traceable deterministic quality profile. This page covers release deployment, source development, desktop packaging, the complete workflow, storage locations, and troubleshooting.
+The Science workbench designs plate-based cell viability assays, registers local CSV/TSV experiment tables, inspects data structure, and runs either a traceable quality profile or a single-plate 4PL dose-response analysis. This page covers release deployment, source development, desktop packaging, the complete workflow, storage locations, and troubleshooting.
 
-> The current quality profile runs entirely on the local machine. It does not require a model API key and does not send table contents to a model. It is a structural and data-quality sample of at most 100 rows, not full-dataset statistics, significance testing, or a scientific conclusion.
+> Assay blueprints and built-in analyses run entirely on the local machine, require no model API key, and do not send table contents to a model. “Ready” means only that a design passed preflight checks. The quality profile samples at most 100 rows; the 4PL recipe processes one pinned 96-well plate version. Neither proves wet-lab completion, biological-replicate inference, significance testing, statistical sign-off, or a scientific conclusion.
 
 ## Choose a deployment mode
 
@@ -122,11 +122,11 @@ Do not bind an unauthenticated server to a public interface for convenience. Sci
 
 ```mermaid
 flowchart LR
-  A["Prepare CSV / TSV"] --> B["Create research project"]
-  B --> C["Register table version"]
-  C --> D["Run quality profile"]
-  D --> E["Inspect Run and provenance"]
-  E --> F["Review or replay artifacts"]
+  A["Create research project"] --> B["Design and check assay blueprint"]
+  B --> C["Human review and wet-lab execution"]
+  C --> D["Register and link instrument table version"]
+  D --> E["Run quality profile or 4PL analysis"]
+  E --> F["Inspect provenance and artifacts"]
 ```
 
 ### 1. Prepare a table
@@ -150,17 +150,39 @@ The table may be inside the research project or another permitted local director
 
 ScienceX writes `.sciencex/project.yaml` and `.sciencex/research.sqlite` into that directory. Creation fails if the directory is not writable.
 
-### 3. Register an experiment table
+### 3. Design a cell viability assay
 
-1. Select the new project.
-2. Select **Add table** and choose a CSV/TSV file.
-3. On **Data**, inspect inferred types, missing counts, unique counts, and sampled rows.
+1. Open **Experiments**.
+2. Enter the experiment name, cell line, compound, treatment duration, and seeding density.
+3. Choose `CCK-8 · OD450` or `CellTiter-Glo · luminescence`.
+4. Enter 4–8 non-zero dose levels, one common unit, and 3–8 replicates per group.
+5. Keep blank and vehicle controls; add a positive control when the assay requires one.
+6. Confirm that preflight passes, then save the assay blueprint.
 
-Registration hashes the complete file with SHA-256 and records its size, modification time, and canonical absolute path. **The source table is not copied into `.sciencex`**, so do not delete or move it after registration.
+ScienceX stores the biological setup as a `protocolVersion` and the generated 96-well assignment as a `designVersion`. Each control or dose group occupies a column and replicates are assigned down rows A–H. These conditions block “Ready”:
 
-After modifying the source file, select the same file again to create a new dataset version. Existing Runs become `stale`, while their events and artifacts remain available.
+- Missing cell line, compound, duration, seeding density, or dose unit.
+- Fewer than four non-zero doses, duplicate doses, or non-positive values.
+- Fewer than three replicate wells per group.
+- Missing blank control or a valid vehicle control.
+- A design that exceeds one 96-well plate, contains invalid or duplicate wells, or lacks required assignments.
 
-### 4. Run the quality profile
+A positive control is a warning rather than a universal blocker in this generic template. Its necessity remains an assay-specific expert decision. “Ready” still requires a scientist to review culture conditions, reagents, instrumentation, safety, and laboratory SOPs before wet-lab execution.
+
+### 4. Execute the assay, register the readout, and link it
+
+1. Execute the human-reviewed wet-lab protocol and export a CSV/TSV from the instrument.
+2. Select the project, choose **Add table**, and select the exported file.
+3. Return to **Experiments**, choose the registered readout table for the blueprint, and save the link.
+4. On **Data**, inspect inferred types, missing counts, unique counts, and sampled rows.
+
+Registration hashes the complete file with SHA-256, records its size, modification time, and canonical absolute path, and creates a content-addressed immutable snapshot under `.sciencex/objects/sha256/`. Linking also pins the current `datasetVersionId`; later re-registration cannot silently rewrite the experiment reference. Historical Runs read their registered version from that snapshot; the absolute source path remains the location used for current preview and re-registration.
+
+After modifying the source file, select it again to create a new dataset version. Existing Runs keep their replay verification state and are separately labelled as using historical input; their events and artifacts remain available.
+
+### 5. Run an analysis
+
+#### General table quality profile
 
 1. Select the target table.
 2. Select **Run quality profile**.
@@ -176,7 +198,27 @@ The built-in `table-quality-v1` recipe records:
 
 Statuses are `queued`, `running`, `completed`, `failed`, and `interrupted`. After an unexpected application exit, leftover queued or running records are recovered as `interrupted` the next time they are read.
 
-### 5. Inspect provenance and artifacts
+#### Cell-viability dose response
+
+1. Open an assay blueprint with a linked readout table.
+2. Explicitly select the well and signal columns. The UI offers convenience defaults only for common exact headers; the service does not fuzzy-guess columns.
+3. Select **Run 4PL analysis**, then review the curve, replicate mean/SD, relative IC50, Hill slope, R², RMSE, and warnings on **Runs**.
+
+The built-in `cell-viability-dose-response-v1` recipe is pinned to the blueprint's `datasetVersionId`, `protocolVersion`, and `designVersion`. Every designed well must appear exactly once, wells must match `A1`–`H12`, assigned signals must be present and finite, and the table must fit the safe single-plate parse limit. A missing, duplicate, or invalid well or a non-numeric signal fails the Run rather than imputing data or switching to a newer current version.
+
+The calculation order is fixed:
+
+```text
+blank-corrected = raw signal - mean(blank signals)
+normalized viability (%) = 100 × blank-corrected / mean(blank-corrected vehicle signals)
+4PL: y = bottom + (top - bottom) / (1 + (dose / relative IC50) ^ Hill slope)
+```
+
+Blank and vehicle wells are used for correction and normalization; the 4PL fit uses individual treatment-replicate observations. “Relative IC50” is the midpoint between the fitted top and bottom rather than an absolute inhibitory concentration with fixed 0% and 100% boundaries. See the [NCBI Assay Guidance Manual](https://www.ncbi.nlm.nih.gov/books/NBK91993/) and its [dose-response fitting operations chapter](https://www.ncbi.nlm.nih.gov/sites/books/NBK91994/) for the method boundary.
+
+Deterministic review warnings are raised when any dose has replicate CV above 20%, the observed response span is below 30 percentage points, R² is below 0.80, relative IC50 lies outside the tested range, or fitted asymptotes fall outside the automated plausibility range. These are screening rules, not domain acceptance criteria; an out-of-range IC50 is extrapolation only. The current recipe provides no confidence interval, independent biological-replicate aggregation, alternative-model comparison, or statistical/biological sign-off.
+
+### 6. Inspect provenance and artifacts
 
 The Runs page displays the append-only event timeline, including events such as:
 
@@ -185,12 +227,20 @@ The Runs page displays the append-only event timeline, including events such as:
 - `artifact.created`
 - `run.completed` or `run.failed`
 
-The Artifacts page records each artifact's relative path, size, content hash, and producing Run. Every successful run creates:
+The Artifacts page records each artifact's relative path, size, content hash, and producing Run. A successful quality profile creates:
 
 - `quality-report.md`: a human-readable quality report.
 - `profile.json`: structured column-profile data for downstream tools.
 
-Selecting **Replay run** creates a new child Run using the original dataset and parameters. It never overwrites history.
+A successful dose-response analysis creates:
+
+- `dose-response-report.md`: a human-review report with pinned inputs, method, fit parameters, warnings, and interpretation limits.
+- `normalized-wells.csv`: well-level raw signals, blank-corrected values, and normalized viability.
+- `dose-response.json`: replicate summaries, 4PL curve, relative IC50, and machine-readable warnings.
+
+Selecting **Replay run** creates a child Run pinned to the original `datasetVersionId`, input hash, recipe, and parameters. A first successful execution remains “not replay-verified”; the parent and child become “replay verified” only when their deterministic summaries match. History is never overwritten.
+
+This vertical slice covers “assay design → preflight → human wet-lab work → versioned data registration/link → explicit well mapping → blank correction and vehicle normalization → replicate summary and single-plate 4PL / relative IC50 → provenance/artifacts/replay.” Independent biological-replicate aggregation, confidence intervals, model comparison, statistical review, and conclusion sign-off remain later stages.
 
 ## Files and storage locations
 
@@ -203,6 +253,7 @@ For a research project at `/work/my-study`, one completed run produces:
 ├── .sciencex/
 │   ├── project.yaml
 │   ├── research.sqlite
+│   ├── objects/sha256/       # Content-addressed managed input snapshots
 │   └── runs/
 │       └── <run-id>/
 │           ├── events.jsonl
@@ -211,7 +262,10 @@ For a research project at `/work/my-study`, one completed run produces:
     └── sciencex/
         └── <run-id>/
             ├── quality-report.md
-            └── profile.json
+            ├── profile.json
+            ├── dose-response-report.md
+            ├── normalized-wells.csv
+            └── dose-response.json
 ```
 
 The global project index defaults to:
@@ -226,7 +280,7 @@ When `CLAUDE_CONFIG_DIR` is set, or a portable data directory is enabled in desk
 <CLAUDE_CONFIG_DIR>/science/projects-v1.sqlite
 ```
 
-A backup should include `.sciencex/`, `artifacts/`, and every registered source table. Project roots and dataset sources currently use absolute paths. Moving either makes existing registrations unavailable, and the current version has no automatic relink workflow.
+A backup should include `.sciencex/` and `artifacts/`; `.sciencex/objects/` contains the managed input snapshots required for exact replay. Project roots and dataset sources still use absolute paths. Moving the project root makes its registration unavailable, while moving a source table affects current preview and re-registration but does not invalidate replay of an existing managed version. The current version has no automatic relink workflow.
 
 ## REST API automation
 
@@ -241,22 +295,38 @@ curl -sS -X POST http://127.0.0.1:3456/api/research-projects \
   -H 'Content-Type: application/json' \
   -d '{"name":"Pilot study","question":"Are the input tables analysis-ready?","rootDir":"/absolute/path/to/study"}'
 
-# 2. Register a table; save dataset.id from the response
+# 2. Create an assay blueprint; save experiment.id from the response
+curl -sS -X POST http://127.0.0.1:3456/api/research-projects/<project-id>/experiments \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"X-402 · A549 · 48 h","assayType":"cell-viability-dose-response","protocol":{"cellLine":"A549","compoundName":"X-402","readout":"cck-8","treatmentDurationHours":48,"seedingDensityCellsPerWell":4000,"concentrationUnit":"µM","concentrations":[0.01,0.1,1,5,25,100],"replicateCount":3,"includeBlankControl":true,"vehicleControl":{"name":"DMSO","finalPercent":0.1},"positiveControl":""}}'
+
+# 3. After wet-lab execution, register the instrument table; save dataset.id
 curl -sS -X POST http://127.0.0.1:3456/api/research-projects/<project-id>/datasets \
   -H 'Content-Type: application/json' \
   -d '{"filePath":"/absolute/path/to/study/data/experiment.csv"}'
 
-# 3. Create a quality-profile Run
+# 4. Link the experiment to the current dataset version
+curl -sS -X PATCH http://127.0.0.1:3456/api/research-projects/<project-id>/experiments/<experiment-id> \
+  -H 'Content-Type: application/json' \
+  -d '{"datasetId":"<dataset-id>"}'
+
+# 5. Create a quality-profile Run
 curl -sS -X POST http://127.0.0.1:3456/api/research-projects/<project-id>/runs \
   -H 'Content-Type: application/json' \
   -d '{"datasetId":"<dataset-id>","recipe":"table-quality-v1","parameters":{"maxRows":100}}'
 
-# 4. Read runs, events, and artifacts
+# 6. Create a 4PL dose-response Run pinned to the experiment versions
+curl -sS -X POST http://127.0.0.1:3456/api/research-projects/<project-id>/experiments/<experiment-id>/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"recipe":"cell-viability-dose-response-v1","parameters":{"wellColumn":"well","signalColumn":"signal"}}'
+
+# 7. Read experiments, runs, events, and artifacts
+curl -sS http://127.0.0.1:3456/api/research-projects/<project-id>/experiments
 curl -sS http://127.0.0.1:3456/api/research-projects/<project-id>/runs
 curl -sS http://127.0.0.1:3456/api/runs/<run-id>/events
 curl -sS http://127.0.0.1:3456/api/research-projects/<project-id>/artifacts
 
-# 5. Replay a historical Run
+# 8. Replay a historical Run
 curl -sS -X POST http://127.0.0.1:3456/api/runs/<run-id>/replay \
   -H 'Content-Type: application/json' \
   -d '{}'
@@ -270,7 +340,7 @@ Run at least these deterministic checks in development:
 
 ```bash
 # Science server regression tests
-bun test src/server/__tests__/science-workspace.test.ts
+bun test src/server/services/scienceDoseResponseAnalysis.test.ts src/server/__tests__/science-dose-response.test.ts src/server/__tests__/science-experiments.test.ts src/server/__tests__/science-workspace.test.ts
 
 # Science desktop store and page tests
 cd desktop
