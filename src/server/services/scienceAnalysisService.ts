@@ -13,6 +13,12 @@ import {
   type ScienceExperiment,
 } from './scienceExperimentService.js'
 import {
+  CELL_VIABILITY_EVALUATION_CONTRACT,
+  evaluateCellViabilityEvidence,
+  type ScienceEvaluationContract,
+  type ScienceEvidence,
+} from './scienceEvidence.js'
+import {
   scienceWorkspaceService,
   type ScienceColumnProfile,
   type ScienceDataset,
@@ -67,6 +73,8 @@ export type ScienceAnalysisRun = {
   recipe: ScienceAnalysisRecipe
   status: ScienceRunStatus
   reproducibilityStatus: ScienceReproducibilityStatus
+  evaluationContract: ScienceEvaluationContract | null
+  evidence: ScienceEvidence | null
   parameters: ScienceAnalysisParameters
   environment: {
     runtime: 'bun'
@@ -103,7 +111,7 @@ export type ScienceArtifact = {
 export type ScienceRunEvent = {
   id: string
   runId: string
-  type: 'run.created' | 'run.started' | 'artifact.created' | 'run.completed' | 'run.failed' | 'run.interrupted'
+  type: 'run.created' | 'run.started' | 'artifact.created' | 'run.evaluated' | 'run.completed' | 'run.failed' | 'run.interrupted'
   at: string
   data: Record<string, unknown>
 }
@@ -120,6 +128,8 @@ type RunRow = {
   recipe: ScienceAnalysisRecipe
   status: ScienceRunStatus
   reproducibility_status: ScienceReproducibilityStatus
+  evaluation_contract_json: string | null
+  evidence_json: string | null
   parameters_json: string
   environment_json: string
   input_hash: string
@@ -162,6 +172,7 @@ type AnalysisArtifactInput = {
 
 type AnalysisOutput = {
   summary: ScienceQualitySummary | ScienceDoseResponseSummary
+  evidence?: ScienceEvidence
   artifacts: AnalysisArtifactInput[]
 }
 
@@ -214,6 +225,10 @@ function mapRun(row: RunRow): ScienceAnalysisRun {
     recipe: row.recipe,
     status: row.status,
     reproducibilityStatus: row.reproducibility_status,
+    evaluationContract: row.evaluation_contract_json
+      ? parseJson(row.evaluation_contract_json, 'evaluation contract')
+      : null,
+    evidence: row.evidence_json ? parseJson(row.evidence_json, 'evidence') : null,
     parameters: parseJson(row.parameters_json, 'run parameters'),
     environment: parseJson(row.environment_json, 'run environment'),
     inputHash: row.input_hash,
@@ -415,9 +430,10 @@ function doseResponseReport(input: {
   experiment: ScienceExperiment
   runId: string
   summary: ScienceDoseResponseSummary
+  evidence: ScienceEvidence
   createdAt: string
 }): string {
-  const { project, dataset, experiment, runId, summary, createdAt } = input
+  const { project, dataset, experiment, runId, summary, evidence, createdAt } = input
   const unit = experiment.protocolVersion.protocol.concentrationUnit ?? ''
   const warningLines = summary.warnings.length === 0
     ? '- No deterministic review flags were raised.'
@@ -465,6 +481,13 @@ function doseResponseReport(input: {
     `- RMSE: ${summary.fit.rmse.toFixed(6)}\n` +
     `- Review status: ${summary.fit.reviewStatus}\n\n` +
     `## Deterministic review flags\n\n${warningLines}\n\n` +
+    `## Scientific evidence\n\n` +
+    `- Evidence level: ${evidence.level}\n` +
+    `- Technical verdict: ${evidence.verdict}\n` +
+    `- Evaluation contract: \`${evidence.contractId}@${evidence.contractVersion}\`\n` +
+    `- Passed criteria: ${evidence.metrics.filter(metric => metric.passed).length}/${evidence.metrics.length}\n` +
+    `${evidence.failedCriterionIds.length > 0 ? `- Failed criteria: ${evidence.failedCriterionIds.join(', ')}\n` : ''}\n` +
+    `The verdict applies only to the versioned deterministic technical criteria. It is separate from run completion and does not constitute external verification.\n\n` +
     `## Limitations\n\n` +
     `The relative IC50 is the fitted midpoint between the 4PL top and bottom. A value outside the tested ` +
     `concentration range is an extrapolation. This deterministic output does not provide confidence intervals, ` +
@@ -610,6 +633,7 @@ export class ScienceAnalysisService {
       experimentId: experiment.id,
       recipe: DOSE_RESPONSE_RECIPE,
       recipeSource: DOSE_RESPONSE_RECIPE_SOURCE,
+      evaluationContract: CELL_VIABILITY_EVALUATION_CONTRACT,
       parameters,
       inputHash,
       parentRunId: input.parentRunId,
@@ -633,6 +657,11 @@ export class ScienceAnalysisService {
           wellColumn,
           signalColumn,
         })
+        const evidence = evaluateCellViabilityEvidence({
+          summary,
+          artifactIds: [],
+          evaluatedAt: createdAt,
+        })
         const artifactDirectory = path.join('artifacts', 'sciencex', runId)
         const reportContents = doseResponseReport({
           project,
@@ -640,6 +669,7 @@ export class ScienceAnalysisService {
           experiment,
           runId,
           summary,
+          evidence,
           createdAt,
         })
         const resultContents = `${JSON.stringify({
@@ -659,6 +689,7 @@ export class ScienceAnalysisService {
         }, null, 2)}\n`
         return {
           summary,
+          evidence,
           artifacts: [
             {
               kind: 'report',
@@ -693,6 +724,7 @@ export class ScienceAnalysisService {
     experimentId: string | null
     recipe: ScienceAnalysisRecipe
     recipeSource: string
+    evaluationContract?: ScienceEvaluationContract
     parameters: ScienceAnalysisParameters
     inputHash: string
     parentRunId?: string
@@ -709,6 +741,7 @@ export class ScienceAnalysisService {
       experimentId,
       recipe,
       recipeSource,
+      evaluationContract,
       parameters,
       inputHash,
       parentRunId,
@@ -725,15 +758,19 @@ export class ScienceAnalysisService {
       architecture: process.arch,
       localOnly: true,
     }
-    const recipeHash = sha256(recipeSource)
+    const evaluationContractJson = evaluationContract ? JSON.stringify(evaluationContract) : null
+    const recipeHash = sha256(evaluationContractJson
+      ? `${recipeSource}\n${evaluationContractJson}`
+      : recipeSource)
     const database = openProjectDatabase(project)
     database
       .query(`
         INSERT INTO analysis_runs (
           id, project_id, dataset_id, dataset_version_id, experiment_id, parent_run_id, recipe, status,
-          reproducibility_status, parameters_json, environment_json, input_hash, recipe_hash,
+          reproducibility_status, evaluation_contract_json, evidence_json,
+          parameters_json, environment_json, input_hash, recipe_hash,
           event_log_path, manifest_path, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, NULL, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(
         runId,
@@ -743,6 +780,7 @@ export class ScienceAnalysisService {
         experimentId,
         parentRunId ?? null,
         recipe,
+        evaluationContractJson,
         JSON.stringify(parameters),
         JSON.stringify(environment),
         inputHash,
@@ -769,6 +807,9 @@ export class ScienceAnalysisService {
       const output = await buildOutput({ runId, createdAt, recipeHash, environment })
       const summary = output.summary
       const artifactInputs = output.artifacts
+      if (Boolean(output.evidence) !== Boolean(evaluationContract)) {
+        throw ApiError.internal('Science evaluation output does not match the registered contract')
+      }
       for (const artifact of artifactInputs) {
         await writeFileAtomically(path.join(project.rootDir, artifact.relativePath), artifact.contents)
       }
@@ -817,6 +858,10 @@ export class ScienceAnalysisService {
         })
       }
 
+      const evidence = output.evidence
+        ? { ...output.evidence, artifactIds: artifacts.map(artifact => artifact.id) }
+        : null
+
       let reproducibilityStatus: ScienceReproducibilityStatus = 'unchecked'
       if (parentRunId) {
         const parent = database
@@ -845,18 +890,36 @@ export class ScienceAnalysisService {
           .query(`
             UPDATE analysis_runs
             SET status = 'completed', reproducibility_status = ?,
-                summary_json = ?, exit_code = 0, completed_at = ?
+                summary_json = ?, evidence_json = ?, exit_code = 0, completed_at = ?
             WHERE id = ? AND status = 'running'
           `)
-          .run(reproducibilityStatus, JSON.stringify(summary), completedAt, runId)
+          .run(
+            reproducibilityStatus,
+            JSON.stringify(summary),
+            evidence ? JSON.stringify(evidence) : null,
+            completedAt,
+            runId,
+          )
         if (result.changes !== 1) {
           throw ApiError.conflict('Analysis run left the running state unexpectedly')
         }
       })
       completeRun()
+      if (evidence) {
+        await appendEvent(project, eventLogPath, runId, 'run.evaluated', {
+          evidenceLevel: evidence.level,
+          verdict: evidence.verdict,
+          contractId: evidence.contractId,
+          contractVersion: evidence.contractVersion,
+          contractHash: evidence.contractHash,
+          failedCriterionIds: evidence.failedCriterionIds,
+          artifactIds: evidence.artifactIds,
+        })
+      }
       await appendEvent(project, eventLogPath, runId, 'run.completed', {
         exitCode: 0,
         reproducibilityStatus,
+        evidenceVerdict: evidence?.verdict ?? null,
         artifactIds: artifacts.map(artifact => artifact.id),
       })
 
@@ -1008,7 +1071,7 @@ export class ScienceAnalysisService {
   ): Promise<void> {
     await writeFileAtomically(
       path.join(project.rootDir, run.manifestPath),
-      `${JSON.stringify({ schemaVersion: 1, run, artifacts }, null, 2)}\n`,
+      `${JSON.stringify({ schemaVersion: 2, run, artifacts }, null, 2)}\n`,
     )
   }
 }

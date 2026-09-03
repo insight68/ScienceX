@@ -229,6 +229,61 @@ export type ScienceDoseResponseSummary = {
   warnings: ScienceDoseResponseWarning[]
 }
 
+export type ScienceEvidenceLevel = 'design' | 'ran' | 'evaluated' | 'externally_verified'
+export type ScienceEvidenceVerdict = 'supported' | 'refuted' | 'inconclusive'
+export type ScienceClaimCode =
+  | 'deterministic-fit-evaluated'
+  | 'technical-criteria-met'
+  | 'relative-ic50-within-tested-range'
+  | 'statistical-significance'
+  | 'biological-replication'
+  | 'external-verification'
+  | 'clinical-efficacy-or-safety'
+
+export type ScienceEvaluationContract = {
+  schemaVersion: 1
+  id: string
+  version: number
+  recipe: 'cell-viability-dose-response-v1'
+  evidenceLevel: 'evaluated'
+  claim: 'technical-interpretability'
+  requiredArtifacts: string[]
+  criteria: Array<{
+    id: string
+    metric: string
+    operator: 'lte' | 'gte' | 'equals' | 'within'
+    threshold: number | string | Record<string, number>
+  }>
+  limitations: ScienceClaimCode[]
+}
+
+export type ScienceEvidence = {
+  schemaVersion: 1
+  contractId: string
+  contractVersion: number
+  contractHash: string
+  evaluator: {
+    id: string
+    version: number
+    hash: string
+  }
+  level: ScienceEvidenceLevel
+  verdict: ScienceEvidenceVerdict
+  evaluatedAt: string
+  metrics: Array<{
+    criterionId: string
+    metric: string
+    observed: number | string | Record<string, number>
+    passed: boolean
+  }>
+  artifactIds: string[]
+  failedCriterionIds: string[]
+  claimBoundary: {
+    canClaim: ScienceClaimCode[]
+    cannotClaim: ScienceClaimCode[]
+  }
+}
+
 export type ScienceAnalysisRun = {
   id: string
   projectId: string
@@ -241,6 +296,8 @@ export type ScienceAnalysisRun = {
   recipe: 'table-quality-v1' | 'cell-viability-dose-response-v1'
   status: ScienceRunStatus
   reproducibilityStatus: ScienceReproducibilityStatus
+  evaluationContract: ScienceEvaluationContract | null
+  evidence: ScienceEvidence | null
   parameters:
     | { maxRows: number }
     | { experimentId: string; wellColumn: string; signalColumn: string }
@@ -279,7 +336,7 @@ export type ScienceArtifact = {
 export type ScienceRunEvent = {
   id: string
   runId: string
-  type: 'run.created' | 'run.started' | 'artifact.created' | 'run.completed' | 'run.failed' | 'run.interrupted'
+  type: 'run.created' | 'run.started' | 'artifact.created' | 'run.evaluated' | 'run.completed' | 'run.failed' | 'run.interrupted'
   at: string
   data: Record<string, unknown>
 }

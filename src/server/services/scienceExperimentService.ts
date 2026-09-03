@@ -214,7 +214,7 @@ function normalizeDesign(design: SciencePlateDesign): SciencePlateDesign {
   }
 }
 
-function generatePlateDesign(protocol: ScienceCellViabilityProtocol): SciencePlateDesign {
+export function generateSciencePlateDesign(protocol: ScienceCellViabilityProtocol): SciencePlateDesign {
   const groups: Array<{
     role: SciencePlateWellRole
     label: string
@@ -271,7 +271,7 @@ function generatePlateDesign(protocol: ScienceCellViabilityProtocol): SciencePla
   return { plateFormat: 96, wells }
 }
 
-function validateExperiment(
+export function validateScienceExperimentDesign(
   protocol: ScienceCellViabilityProtocol,
   design: SciencePlateDesign,
 ): ScienceExperimentReadiness {
@@ -400,7 +400,7 @@ function mapExperiment(row: ExperimentRow): ScienceExperiment {
       design,
       createdAt: row.design_created_at,
     },
-    readiness: validateExperiment(protocol, design),
+    readiness: validateScienceExperimentDesign(protocol, design),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -447,8 +447,8 @@ export class ScienceExperimentService {
     const protocol = normalizeProtocol(input.protocol)
     const design = input.design
       ? normalizeDesign(input.design)
-      : generatePlateDesign(protocol)
-    const readiness = validateExperiment(protocol, design)
+      : generateSciencePlateDesign(protocol)
+    const readiness = validateScienceExperimentDesign(protocol, design)
     const status: ScienceExperimentStatus = readiness.blockingCount === 0 ? 'ready' : 'draft'
     const now = new Date().toISOString()
     const experimentId = randomUUID()

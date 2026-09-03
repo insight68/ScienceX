@@ -9,7 +9,7 @@ import { getScienceXProjectRegistryDir } from '../../utils/envUtils.js'
 import { ApiError } from '../middleware/errorHandler.js'
 import { ScienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
 
-const SCIENCE_PROJECT_SCHEMA_VERSION = 5
+const SCIENCE_PROJECT_SCHEMA_VERSION = 6
 const SCIENCE_REGISTRY_SCHEMA_VERSION = 1
 const PROJECT_DIRECTORY_NAME = '.sciencex'
 const PROJECT_DATABASE_NAME = 'research.sqlite'
@@ -353,6 +353,15 @@ function migrateProjectDatabase(database: Database): void {
       UPDATE project SET schema_version = 5;
     `)
     setSchemaVersion(database, 5)
+  }
+  if (currentVersion < 6) {
+    database.exec(`
+      ALTER TABLE analysis_runs ADD COLUMN evaluation_contract_json TEXT;
+      ALTER TABLE analysis_runs ADD COLUMN evidence_json TEXT;
+
+      UPDATE project SET schema_version = 6;
+    `)
+    setSchemaVersion(database, 6)
   }
 }
 

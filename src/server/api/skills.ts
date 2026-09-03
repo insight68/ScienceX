@@ -15,6 +15,10 @@ import { getCwd } from '../../utils/cwd.js'
 import { clearInstalledPluginsCache } from '../../utils/plugins/installedPluginsManager.js'
 import { clearPluginCache, loadAllPlugins, loadAllPluginsCacheOnly } from '../../utils/plugins/pluginLoader.js'
 import { getSkillDirCommands } from '../../skills/loadSkillsDir.js'
+import {
+  getBundledSkillFiles,
+  getBundledSkills,
+} from '../../skills/bundledSkills.js'
 import { resetSettingsCache } from '../../utils/settings/settingsCache.js'
 import type { LoadedPlugin } from '../../types/plugin.js'
 import { ApiError, errorResponse } from '../middleware/errorHandler.js'
@@ -25,7 +29,7 @@ type SkillMeta = {
   name: string
   displayName?: string
   description: string
-  source: 'user' | 'project' | 'plugin'
+  source: 'user' | 'project' | 'plugin' | 'bundled'
   userInvocable: boolean
   version?: string
   contentLength: number
@@ -211,6 +215,66 @@ async function buildFileTree(
   return { tree, files }
 }
 
+export function buildBundledFileTree(
+  bundledFiles: Record<string, string>,
+): { tree: FileTreeNode[]; files: SkillFile[] } {
+  const tree: FileTreeNode[] = []
+  const files: SkillFile[] = []
+
+  for (const [filePath, rawContent] of Object.entries(bundledFiles).sort(
+    ([a], [b]) => a.localeCompare(b),
+  )) {
+    const parts = filePath.split('/').filter(Boolean)
+    if (parts.length === 0) continue
+
+    let nodes = tree
+    const parentParts: string[] = []
+    for (const part of parts.slice(0, -1)) {
+      parentParts.push(part)
+      let directory = nodes.find(
+        (node) => node.type === 'directory' && node.name === part,
+      )
+      if (!directory) {
+        directory = {
+          name: part,
+          path: parentParts.join('/'),
+          type: 'directory',
+          children: [],
+        }
+        nodes.push(directory)
+      }
+      directory.children ??= []
+      nodes = directory.children
+    }
+
+    const filename = parts.at(-1)!
+    nodes.push({ name: filename, path: filePath, type: 'file' })
+
+    const language = detectLanguage(filename)
+    const isEntry = filePath === 'SKILL.md'
+    if (isEntry && language === 'markdown') {
+      const { frontmatter, body } = normalizeFrontmatter(rawContent)
+      files.push({
+        path: filePath,
+        content: body,
+        body,
+        frontmatter,
+        language,
+        isEntry: true,
+      })
+    } else {
+      files.push({
+        path: filePath,
+        content: rawContent,
+        language,
+        isEntry: false,
+      })
+    }
+  }
+
+  return { tree, files }
+}
+
 async function collectSkillsFromRoots(
   skillRoots: string[],
   source: SkillSource,
@@ -391,6 +455,40 @@ async function collectPluginSkills(): Promise<SkillMeta[]> {
   return skills
 }
 
+function getBundledSkillMeta(name: string): SkillMeta | null {
+  const command = getBundledSkills().find(
+    (candidate) => candidate.type === 'prompt' && candidate.name === name,
+  )
+  const bundledFiles = getBundledSkillFiles(name)
+  const entry = bundledFiles?.['SKILL.md']
+  if (!command || command.type !== 'prompt' || !bundledFiles || !entry) {
+    return null
+  }
+
+  const { frontmatter } = normalizeFrontmatter(entry)
+  return {
+    name: command.name,
+    displayName:
+      typeof frontmatter.name === 'string' ? frontmatter.name : undefined,
+    description: command.description,
+    source: 'bundled',
+    userInvocable: command.userInvocable !== false,
+    version:
+      frontmatter.version != null ? String(frontmatter.version) : undefined,
+    contentLength: Object.values(bundledFiles).reduce(
+      (total, content) => total + content.length,
+      0,
+    ),
+    hasDirectory: true,
+  }
+}
+
+function collectBundledSkills(): SkillMeta[] {
+  return getBundledSkills()
+    .map((command) => getBundledSkillMeta(command.name))
+    .filter((skill): skill is SkillMeta => skill !== null)
+}
+
 async function collectAllSkills(cwd?: string): Promise<SkillMeta[]> {
   const [userSkills, projectSkills, pluginSkills] = await Promise.all([
     collectSkillsFromRoots([getUserSkillsDir()], 'user'),
@@ -398,7 +496,12 @@ async function collectAllSkills(cwd?: string): Promise<SkillMeta[]> {
     collectPluginSkills(),
   ])
 
-  const skills = [...userSkills, ...projectSkills, ...pluginSkills]
+  const skills = [
+    ...userSkills,
+    ...projectSkills,
+    ...pluginSkills,
+    ...collectBundledSkills(),
+  ]
   skills.sort((a, b) => a.name.localeCompare(b.name))
   return skills
 }
@@ -482,8 +585,31 @@ async function getSkillDetail(url: URL): Promise<Response> {
     throw ApiError.badRequest('Invalid skill name')
   }
 
-  if (source !== 'user' && source !== 'project' && source !== 'plugin') {
+  if (
+    source !== 'user' &&
+    source !== 'project' &&
+    source !== 'plugin' &&
+    source !== 'bundled'
+  ) {
     throw ApiError.badRequest(`Unsupported source: ${source}`)
+  }
+
+  if (source === 'bundled') {
+    const meta = getBundledSkillMeta(name)
+    const bundledFiles = getBundledSkillFiles(name)
+    if (!meta || !bundledFiles) {
+      throw ApiError.notFound(`Skill not found: ${name}`)
+    }
+
+    const { tree, files } = buildBundledFileTree(bundledFiles)
+    return Response.json({
+      detail: {
+        meta,
+        tree,
+        files,
+        skillRoot: `bundled:${name}`,
+      },
+    })
   }
 
   const cwd = getRequestedCwd(url)

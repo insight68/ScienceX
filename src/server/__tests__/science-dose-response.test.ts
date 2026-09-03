@@ -45,7 +45,11 @@ function plateCsv(signalOffset = 0): string {
   for (const role of roles) {
     for (let replicateIndex = 0; replicateIndex < 3; replicateIndex += 1) {
       const well = `${'ABC'[replicateIndex]}${role.column}`
-      const signal = 10 + role.viability + ((replicateIndex - 1) * 0.4) + signalOffset
+      const replicateDirection = replicateIndex - 1
+      const variation = role.column >= 4
+        ? role.viability * replicateDirection * 0.004
+        : replicateDirection * 0.4
+      const signal = 10 + role.viability + variation + signalOffset
       rows.push(`${well},${signal}`)
     }
   }
@@ -139,6 +143,16 @@ describe('Science dose-response run API', () => {
       recipe: 'cell-viability-dose-response-v1',
       status: 'completed',
       reproducibilityStatus: 'unchecked',
+      evaluationContract: {
+        id: 'cell-viability-dose-response-technical-v1',
+        version: 1,
+        evidenceLevel: 'evaluated',
+      },
+      evidence: {
+        level: 'evaluated',
+        verdict: 'supported',
+        failedCriterionIds: [],
+      },
       parameters: { experimentId, wellColumn: 'well', signalColumn: 'signal' },
       summary: {
         scope: 'full-linked-plate',
@@ -153,6 +167,10 @@ describe('Science dose-response run API', () => {
     })
     expect(analyzed.body.run.summary.fit.relativeIc50).toBeCloseTo(1, 1)
     expect(analyzed.body.run.summary.fit.rSquared).toBeGreaterThan(0.99)
+    expect(analyzed.body.run.evidence.artifactIds).toEqual(
+      analyzed.body.artifacts.map((artifact: any) => artifact.id),
+    )
+    expect(analyzed.body.run.evidence.contractHash).toHaveLength(64)
     expect(analyzed.body.artifacts.map((artifact: any) => artifact.name)).toEqual([
       'Dose-response analysis report',
       'Normalized well responses',
@@ -161,6 +179,24 @@ describe('Science dose-response run API', () => {
     for (const artifact of analyzed.body.artifacts) {
       expect(await fs.readFile(path.join(projectRoot, artifact.relativePath), 'utf8')).not.toBe('')
     }
+    const reportArtifact = analyzed.body.artifacts.find((artifact: any) => (
+      artifact.name === 'Dose-response analysis report'
+    ))
+    const report = await fs.readFile(path.join(projectRoot, reportArtifact.relativePath), 'utf8')
+    expect(report).toContain('## Scientific evidence')
+    expect(report).toContain('Technical verdict: supported')
+    expect(report).toContain('cell-viability-dose-response-technical-v1@1')
+    const runManifest = JSON.parse(await fs.readFile(
+      path.join(projectRoot, analyzed.body.run.manifestPath),
+      'utf8',
+    ))
+    expect(runManifest).toMatchObject({
+      schemaVersion: 2,
+      run: {
+        id: analyzed.body.run.id,
+        evidence: { verdict: 'supported' },
+      },
+    })
 
     const replayed = await callApi(`/api/runs/${analyzed.body.run.id}/replay`, {
       method: 'POST',
@@ -174,6 +210,7 @@ describe('Science dose-response run API', () => {
       recipe: 'cell-viability-dose-response-v1',
       status: 'completed',
       reproducibilityStatus: 'reproducible',
+      evidence: { level: 'evaluated', verdict: 'supported' },
     })
     expect(replayed.body.run.summary).toEqual(analyzed.body.run.summary)
 
@@ -184,6 +221,7 @@ describe('Science dose-response run API', () => {
       'artifact.created',
       'artifact.created',
       'artifact.created',
+      'run.evaluated',
       'run.completed',
     ])
   })

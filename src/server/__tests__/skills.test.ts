@@ -3,11 +3,14 @@ import * as fs from 'node:fs/promises'
 import * as os from 'node:os'
 import * as path from 'node:path'
 import { getCwdState, setCwdState } from '../../bootstrap/state.js'
+import { registerGoodQuestionSkill } from '../../skills/bundled/goodQuestion.js'
+import { registerScanSciPdfSkill } from '../../skills/bundled/scansciPdf.js'
+import { clearBundledSkills } from '../../skills/bundledSkills.js'
 import { clearInstalledPluginsCache } from '../../utils/plugins/installedPluginsManager.js'
 import { clearPluginCache } from '../../utils/plugins/pluginLoader.js'
 import { resetSettingsCache } from '../../utils/settings/settingsCache.js'
 import { handlePluginsApi } from '../api/plugins.js'
-import { handleSkillsApi } from '../api/skills.js'
+import { buildBundledFileTree, handleSkillsApi } from '../api/skills.js'
 
 let tmpHome: string
 let originalHome: string | undefined
@@ -53,12 +56,16 @@ describe('Skills API', () => {
     process.env.USERPROFILE = tmpHome
     process.env.CLAUDE_CONFIG_DIR = path.join(tmpHome, '.claude')
     setCwdState(tmpHome)
+    clearBundledSkills()
+    registerScanSciPdfSkill()
+    registerGoodQuestionSkill()
     clearInstalledPluginsCache()
     clearPluginCache('skills-api-test-setup')
     resetSettingsCache()
   })
 
   afterEach(async () => {
+    clearBundledSkills()
     clearInstalledPluginsCache()
     clearPluginCache('skills-api-test-teardown')
     resetSettingsCache()
@@ -107,6 +114,181 @@ describe('Skills API', () => {
     const body = await res.json() as { skills: Array<{ name: string; source: string }> }
     expect(body.skills).toContainEqual(expect.objectContaining({ name: 'user-skill', source: 'user' }))
     expect(body.skills).toContainEqual(expect.objectContaining({ name: 'project-skill', source: 'project' }))
+  })
+
+  it('lists the bundled ScanSci PDF skill by default and exposes its files', async () => {
+    const listRequest = makeRequest('/api/skills')
+    const listResponse = await handleSkillsApi(
+      listRequest.req,
+      listRequest.url,
+      listRequest.segments,
+    )
+
+    expect(listResponse.status).toBe(200)
+    const listBody = await listResponse.json() as {
+      skills: Array<{
+        name: string
+        source: string
+        version?: string
+        hasDirectory: boolean
+      }>
+    }
+    expect(listBody.skills).toContainEqual(
+      expect.objectContaining({
+        name: 'scansci-pdf',
+        source: 'bundled',
+        version: '1.14.0',
+        hasDirectory: true,
+      }),
+    )
+
+    const detailRequest = makeRequest(
+      '/api/skills/detail?source=bundled&name=scansci-pdf',
+    )
+    const detailResponse = await handleSkillsApi(
+      detailRequest.req,
+      detailRequest.url,
+      detailRequest.segments,
+    )
+
+    expect(detailResponse.status).toBe(200)
+    const detailBody = await detailResponse.json() as {
+      detail: {
+        skillRoot: string
+        files: Array<{ path: string; body?: string }>
+      }
+    }
+    expect(detailBody.detail.skillRoot).toBe('bundled:scansci-pdf')
+    expect(detailBody.detail.files).toContainEqual(
+      expect.objectContaining({
+        path: 'SKILL.md',
+        body: expect.stringContaining('## Operating boundaries'),
+      }),
+    )
+    expect(detailBody.detail.files).toContainEqual(
+      expect.objectContaining({
+        path: 'SKILL.md',
+        body: expect.stringContaining('Rimagination/scansci-pdf'),
+      }),
+    )
+  })
+
+  it('lists the bundled Good Question skill by default and exposes its files', async () => {
+    const listRequest = makeRequest('/api/skills')
+    const listResponse = await handleSkillsApi(
+      listRequest.req,
+      listRequest.url,
+      listRequest.segments,
+    )
+
+    expect(listResponse.status).toBe(200)
+    const listBody = await listResponse.json() as {
+      skills: Array<{
+        name: string
+        source: string
+        version?: string
+        hasDirectory: boolean
+      }>
+    }
+    expect(listBody.skills).toContainEqual(
+      expect.objectContaining({
+        name: 'good-question',
+        source: 'bundled',
+        version: '0.2.0',
+        hasDirectory: true,
+      }),
+    )
+
+    const detailRequest = makeRequest(
+      '/api/skills/detail?source=bundled&name=good-question',
+    )
+    const detailResponse = await handleSkillsApi(
+      detailRequest.req,
+      detailRequest.url,
+      detailRequest.segments,
+    )
+
+    expect(detailResponse.status).toBe(200)
+    const detailBody = await detailResponse.json() as {
+      detail: {
+        skillRoot: string
+        files: Array<{ path: string; body?: string }>
+      }
+    }
+    expect(detailBody.detail.skillRoot).toBe('bundled:good-question')
+    expect(detailBody.detail.files).toContainEqual(
+      expect.objectContaining({
+        path: 'SKILL.md',
+        body: expect.stringContaining('## Information sufficiency gate'),
+      }),
+    )
+  })
+
+  it('builds a nested file tree for bundled skill resources', () => {
+    const detail = buildBundledFileTree({
+      '': 'ignored',
+      'SKILL.md': [
+        '---',
+        'name: synthetic-skill',
+        '---',
+        '',
+        '# Synthetic skill',
+      ].join('\n'),
+      'references/guide.md': '# Guide',
+      'references/nested/notes.txt': 'Notes',
+    })
+
+    expect(detail.tree).toEqual([
+      {
+        name: 'references',
+        path: 'references',
+        type: 'directory',
+        children: [
+          { name: 'guide.md', path: 'references/guide.md', type: 'file' },
+          {
+            name: 'nested',
+            path: 'references/nested',
+            type: 'directory',
+            children: [
+              {
+                name: 'notes.txt',
+                path: 'references/nested/notes.txt',
+                type: 'file',
+              },
+            ],
+          },
+        ],
+      },
+      { name: 'SKILL.md', path: 'SKILL.md', type: 'file' },
+    ])
+    expect(detail.files).toContainEqual(
+      expect.objectContaining({
+        path: 'SKILL.md',
+        body: '# Synthetic skill',
+        frontmatter: { name: 'synthetic-skill' },
+        language: 'markdown',
+        isEntry: true,
+      }),
+    )
+    expect(detail.files).toContainEqual({
+      path: 'references/nested/notes.txt',
+      content: 'Notes',
+      language: 'text',
+      isEntry: false,
+    })
+  })
+
+  it('returns not found for an unknown bundled skill', async () => {
+    const detailRequest = makeRequest(
+      '/api/skills/detail?source=bundled&name=missing-skill',
+    )
+    const detailResponse = await handleSkillsApi(
+      detailRequest.req,
+      detailRequest.url,
+      detailRequest.segments,
+    )
+
+    expect(detailResponse.status).toBe(404)
   })
 
   it('lists user skills installed through a directory symlink or junction', async () => {

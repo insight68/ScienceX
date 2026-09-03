@@ -32,7 +32,7 @@ vi.mock('../api/science', () => ({
 
 const project: ScienceProject = {
   id: 'project-1',
-  schemaVersion: 5,
+  schemaVersion: 6,
   name: 'Viability pilot',
   question: 'Does treatment alter viability?',
   rootDir: '/tmp/viability',
@@ -140,6 +140,8 @@ const run: ScienceAnalysisRun = {
   recipe: 'table-quality-v1',
   status: 'completed',
   reproducibilityStatus: 'reproducible',
+  evaluationContract: null,
+  evidence: null,
   parameters: { maxRows: 100 },
   environment: {
     runtime: 'bun',

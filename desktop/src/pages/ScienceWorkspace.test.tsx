@@ -50,7 +50,7 @@ vi.mock('../lib/desktopHost', () => ({
 
 const project: ScienceProject = {
   id: 'project-1',
-  schemaVersion: 5,
+  schemaVersion: 6,
   name: 'Viability pilot',
   question: 'Does treatment alter viability?',
   rootDir: '/tmp/viability',
@@ -162,6 +162,8 @@ const run: ScienceAnalysisRun = {
   recipe: 'table-quality-v1',
   status: 'completed',
   reproducibilityStatus: 'reproducible',
+  evaluationContract: null,
+  evidence: null,
   parameters: { maxRows: 100 },
   environment: { runtime: 'bun', runtimeVersion: '1.3.10', platform: 'darwin', architecture: 'arm64', localOnly: true },
   inputHash: dataset.currentVersion.contentHash,
@@ -194,6 +196,47 @@ const doseRun: ScienceAnalysisRun = {
   recipe: 'cell-viability-dose-response-v1',
   parameters: { experimentId: experiment.id, wellColumn: 'well', signalColumn: 'signal' },
   inputHash: 'dose-input-hash',
+  evaluationContract: {
+    schemaVersion: 1,
+    id: 'cell-viability-dose-response-technical-v1',
+    version: 1,
+    recipe: 'cell-viability-dose-response-v1',
+    evidenceLevel: 'evaluated',
+    claim: 'technical-interpretability',
+    requiredArtifacts: ['dose-response-report', 'normalized-wells', 'dose-response-result'],
+    criteria: [],
+    limitations: ['biological-replication', 'statistical-significance'],
+  },
+  evidence: {
+    schemaVersion: 1,
+    contractId: 'cell-viability-dose-response-technical-v1',
+    contractVersion: 1,
+    contractHash: 'a'.repeat(64),
+    evaluator: {
+      id: 'cell-viability-dose-response-technical-evaluator',
+      version: 1,
+      hash: 'b'.repeat(64),
+    },
+    level: 'evaluated',
+    verdict: 'supported',
+    evaluatedAt: '2026-07-19T01:02:00.050Z',
+    metrics: [],
+    artifactIds: ['artifact-a'],
+    failedCriterionIds: [],
+    claimBoundary: {
+      canClaim: [
+        'deterministic-fit-evaluated',
+        'technical-criteria-met',
+        'relative-ic50-within-tested-range',
+      ],
+      cannotClaim: [
+        'statistical-significance',
+        'biological-replication',
+        'external-verification',
+        'clinical-efficacy-or-safety',
+      ],
+    },
+  },
   summary: {
     scope: 'full-linked-plate',
     wellColumn: 'well',
@@ -424,6 +467,10 @@ describe('ScienceWorkspace', () => {
     expect(screen.getByText('1 µM')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Dose-response curve with replicate mean and standard deviation' })).toBeInTheDocument()
     expect(screen.getByText('Automated checks passed')).toBeInTheDocument()
+    expect(screen.getByText('Scientific evidence')).toBeInTheDocument()
+    expect(screen.getByText('Technical criteria supported')).toBeInTheDocument()
+    expect(screen.getByText('Evaluated evidence')).toBeInTheDocument()
+    expect(screen.getByText('Does not establish statistical significance')).toBeInTheDocument()
     expect(screen.getByText(/no confidence interval or biological-replicate inference/)).toBeInTheDocument()
   })
 

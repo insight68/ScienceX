@@ -15,6 +15,11 @@ import type { HooksSettings } from '../utils/settings/types.js'
 export type BundledSkillDefinition = {
   name: string
   description: string
+  /**
+   * Original SKILL.md content for built-in skill discovery and detail views.
+   * Supporting files remain optional and are extracted on first use.
+   */
+  skillMarkdown?: string
   aliases?: string[]
   whenToUse?: string
   argumentHint?: string
@@ -42,6 +47,7 @@ export type BundledSkillDefinition = {
 
 // Internal registry for bundled skills
 const bundledSkills: Command[] = []
+const bundledSkillFiles = new Map<string, Record<string, string>>()
 
 /**
  * Register a bundled skill that will be available to the model.
@@ -52,6 +58,13 @@ const bundledSkills: Command[] = []
  */
 export function registerBundledSkill(definition: BundledSkillDefinition): void {
   const { files } = definition
+
+  if (definition.skillMarkdown) {
+    bundledSkillFiles.set(definition.name, {
+      ...files,
+      'SKILL.md': definition.skillMarkdown,
+    })
+  }
 
   let skillRoot: string | undefined
   let getPromptForCommand = definition.getPromptForCommand
@@ -108,10 +121,22 @@ export function getBundledSkills(): Command[] {
 }
 
 /**
+ * Get the displayable files for a bundled skill. Only skills that provide
+ * skillMarkdown opt in to the installed-skills UI.
+ */
+export function getBundledSkillFiles(
+  skillName: string,
+): Record<string, string> | undefined {
+  const files = bundledSkillFiles.get(skillName)
+  return files ? { ...files } : undefined
+}
+
+/**
  * Clear bundled skills registry (for testing).
  */
 export function clearBundledSkills(): void {
   bundledSkills.length = 0
+  bundledSkillFiles.clear()
 }
 
 /**

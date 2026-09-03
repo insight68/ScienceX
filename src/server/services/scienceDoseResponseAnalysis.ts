@@ -3,6 +3,7 @@ import type {
   SciencePlateDesign,
   SciencePlateWellRole,
 } from './scienceExperimentService.js'
+import { CELL_VIABILITY_TECHNICAL_THRESHOLDS } from './scienceEvidence.js'
 
 export type ScienceDoseResponseWarningCode =
   | 'high-replicate-variation'
@@ -371,31 +372,33 @@ export function analyzeCellViabilityDoseResponse(input: {
 
   const warnings: ScienceDoseResponseWarning[] = []
   const highVariation = points
-    .filter(point => (point.coefficientOfVariationPercent ?? 0) > 20)
+    .filter(point => (
+      point.coefficientOfVariationPercent ?? 0
+    ) > CELL_VIABILITY_TECHNICAL_THRESHOLDS.maximumReplicateCvPercent)
     .map(point => point.concentration)
   if (highVariation.length > 0) {
     warnings.push({
       code: 'high-replicate-variation',
       severity: 'warning',
-      message: 'One or more treatment groups have replicate CV above 20%.',
+      message: `One or more treatment groups have replicate CV above ${CELL_VIABILITY_TECHNICAL_THRESHOLDS.maximumReplicateCvPercent}%.`,
       concentrations: highVariation,
     })
   }
   const responseRange = Math.max(...points.map(point => point.meanViabilityPercent)) -
     Math.min(...points.map(point => point.meanViabilityPercent))
-  if (responseRange < 30) {
+  if (responseRange < CELL_VIABILITY_TECHNICAL_THRESHOLDS.minimumResponseRangePercent) {
     warnings.push({
       code: 'limited-response-range',
       severity: 'warning',
-      message: 'The tested concentrations span less than 30 percentage points of normalized viability.',
+      message: `The tested concentrations span less than ${CELL_VIABILITY_TECHNICAL_THRESHOLDS.minimumResponseRangePercent} percentage points of normalized viability.`,
       concentrations: [],
     })
   }
-  if (fitted.rSquared < 0.8) {
+  if (fitted.rSquared < CELL_VIABILITY_TECHNICAL_THRESHOLDS.minimumRSquared) {
     warnings.push({
       code: 'weak-model-fit',
       severity: 'warning',
-      message: 'The 4PL fit has R² below 0.80 and requires statistical review.',
+      message: `The 4PL fit has R² below ${CELL_VIABILITY_TECHNICAL_THRESHOLDS.minimumRSquared.toFixed(2)} and requires statistical review.`,
       concentrations: [],
     })
   }
@@ -407,7 +410,12 @@ export function analyzeCellViabilityDoseResponse(input: {
       concentrations: [],
     })
   }
-  if (fitted.top < 70 || fitted.top > 130 || fitted.bottom < -20 || fitted.bottom > 50) {
+  if (
+    fitted.top < CELL_VIABILITY_TECHNICAL_THRESHOLDS.minimumTopPercent ||
+    fitted.top > CELL_VIABILITY_TECHNICAL_THRESHOLDS.maximumTopPercent ||
+    fitted.bottom < CELL_VIABILITY_TECHNICAL_THRESHOLDS.minimumBottomPercent ||
+    fitted.bottom > CELL_VIABILITY_TECHNICAL_THRESHOLDS.maximumBottomPercent
+  ) {
     warnings.push({
       code: 'implausible-asymptote',
       severity: 'warning',

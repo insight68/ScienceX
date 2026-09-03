@@ -39,6 +39,7 @@ import { useUIStore } from '../stores/uiStore'
 import type {
   ScienceAnalysisRun,
   ScienceArtifact,
+  ScienceClaimCode,
   ScienceColumnProfile,
   ScienceDataset,
   ScienceDatasetPreview,
@@ -826,6 +827,7 @@ function RunsPanel({
               <RunMetric label={t('science.duration')} value={formatDuration(selectedRun.startedAt, selectedRun.completedAt)} />
             </div>
           </div>
+          {selectedRun.evidence && <ScienceEvidencePanel run={selectedRun} />}
           {selectedRun.summary?.scope === 'preview-sample' && <QualitySummary run={selectedRun} />}
           {selectedRun.summary?.scope === 'full-linked-plate' && (
             <DoseResponseSummary
@@ -842,6 +844,100 @@ function RunsPanel({
         </div>
       )}
     </section>
+  )
+}
+
+function ScienceEvidencePanel({ run }: { run: ScienceAnalysisRun }) {
+  const t = useTranslation()
+  const evidence = run.evidence
+  const contract = run.evaluationContract
+  if (!evidence || !contract) return null
+
+  const passedCount = evidence.metrics.filter(metric => metric.passed).length
+  const supported = evidence.verdict === 'supported'
+  const verdictTone = supported
+    ? 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+    : evidence.verdict === 'refuted'
+      ? 'border-[var(--color-error)]/30 bg-[var(--color-error)]/10 text-[var(--color-error)]'
+      : 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+
+  return (
+    <div className="border-b border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-5 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-[var(--color-brand)]" strokeWidth={1.8} aria-hidden="true" />
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--color-text-tertiary)]">
+              {t('science.evidence.title')}
+            </h3>
+          </div>
+          <p className="mt-1.5 text-[10px] leading-relaxed text-[var(--color-text-secondary)]">
+            {t('science.evidence.separateFromRun')}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="rounded-full border border-[var(--color-brand)]/25 bg-[var(--color-brand)]/8 px-2 py-0.5 text-[9px] font-semibold text-[var(--color-brand)]">
+            {t(`science.evidence.level.${evidence.level}`)}
+          </span>
+          <span className={`rounded-full border px-2 py-0.5 text-[9px] font-semibold ${verdictTone}`}>
+            {t(`science.evidence.verdict.${evidence.verdict}`)}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-[var(--color-border)] bg-[var(--color-border)]">
+        <RunMetric
+          label={t('science.evidence.contract')}
+          value={`${contract.id}@${contract.version}`}
+          mono
+        />
+        <RunMetric
+          label={t('science.evidence.criteria')}
+          value={t('science.evidence.criteriaCount', { passed: passedCount, total: evidence.metrics.length })}
+        />
+      </div>
+
+      <div className="mt-3 grid gap-2 2xl:grid-cols-2">
+        <ClaimBoundaryList
+          title={t('science.evidence.canClaim')}
+          claims={evidence.claimBoundary.canClaim}
+          tone="success"
+        />
+        <ClaimBoundaryList
+          title={t('science.evidence.cannotClaim')}
+          claims={evidence.claimBoundary.cannotClaim}
+          tone="warning"
+        />
+      </div>
+    </div>
+  )
+}
+
+function ClaimBoundaryList({
+  title,
+  claims,
+  tone,
+}: {
+  title: string
+  claims: ScienceClaimCode[]
+  tone: 'success' | 'warning'
+}) {
+  const t = useTranslation()
+  const iconClass = tone === 'success' ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'
+  return (
+    <div className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5">
+      <div className="text-[9px] font-semibold text-[var(--color-text-secondary)]">{title}</div>
+      <ul className="mt-1.5 space-y-1">
+        {claims.map(claim => (
+          <li key={claim} className="flex items-start gap-1.5 text-[9px] leading-relaxed text-[var(--color-text-tertiary)]">
+            {tone === 'success'
+              ? <CheckCircle2 className={`mt-0.5 h-3 w-3 shrink-0 ${iconClass}`} aria-hidden="true" />
+              : <AlertTriangle className={`mt-0.5 h-3 w-3 shrink-0 ${iconClass}`} aria-hidden="true" />}
+            <span>{scienceClaimLabel(claim, t)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -1074,6 +1170,19 @@ function doseResponseWarningLabel(
   if (code === 'weak-model-fit') return t('science.warning.weakModelFit')
   if (code === 'relative-ic50-outside-tested-range') return t('science.warning.ic50OutsideRange')
   return t('science.warning.implausibleAsymptote')
+}
+
+function scienceClaimLabel(
+  claim: ScienceClaimCode,
+  t: ReturnType<typeof useTranslation>,
+): string {
+  if (claim === 'deterministic-fit-evaluated') return t('science.evidence.claim.deterministicFitEvaluated')
+  if (claim === 'technical-criteria-met') return t('science.evidence.claim.technicalCriteriaMet')
+  if (claim === 'relative-ic50-within-tested-range') return t('science.evidence.claim.ic50WithinRange')
+  if (claim === 'statistical-significance') return t('science.evidence.claim.noStatisticalSignificance')
+  if (claim === 'biological-replication') return t('science.evidence.claim.noBiologicalReplication')
+  if (claim === 'external-verification') return t('science.evidence.claim.noExternalVerification')
+  return t('science.evidence.claim.noClinicalEfficacyOrSafety')
 }
 
 function formatScientific(value: number): string {
@@ -1513,6 +1622,9 @@ function eventSummary(event: ScienceRunEvent): string {
   }
   if (event.type === 'artifact.created') {
     return `${String(data.kind ?? 'artifact')} · ${String(data.relativePath ?? '')}`
+  }
+  if (event.type === 'run.evaluated') {
+    return `${String(data.evidenceLevel ?? '')} · ${String(data.verdict ?? '')} · ${String(data.contractId ?? '')}`
   }
   if (event.type === 'run.completed') {
     return `exit ${String(data.exitCode ?? 0)} · ${String(data.reproducibilityStatus ?? '')}`
