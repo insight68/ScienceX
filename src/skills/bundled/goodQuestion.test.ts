@@ -9,13 +9,18 @@ import { registerGoodQuestionSkill } from './goodQuestion.js'
 import { initBundledSkills } from './index.js'
 
 describe('Good Question bundled skill', () => {
+  let originalMacro: unknown
   beforeEach(() => {
+    originalMacro = Reflect.get(globalThis, 'MACRO')
+    Reflect.set(globalThis, 'MACRO', { VERSION: 'test' })
     clearBundledSkills()
     registerGoodQuestionSkill()
   })
 
   afterEach(() => {
     clearBundledSkills()
+    if (originalMacro === undefined) Reflect.deleteProperty(globalThis, 'MACRO')
+    else Reflect.set(globalThis, 'MACRO', originalMacro)
   })
 
   it('registers a user-invocable skill with displayable upstream content', () => {

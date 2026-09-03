@@ -9,13 +9,18 @@ import { initBundledSkills } from './index.js'
 import { registerScanSciPdfSkill } from './scansciPdf.js'
 
 describe('ScanSci PDF bundled skill', () => {
+  let originalMacro: unknown
   beforeEach(() => {
+    originalMacro = Reflect.get(globalThis, 'MACRO')
+    Reflect.set(globalThis, 'MACRO', { VERSION: 'test' })
     clearBundledSkills()
     registerScanSciPdfSkill()
   })
 
   afterEach(() => {
     clearBundledSkills()
+    if (originalMacro === undefined) Reflect.deleteProperty(globalThis, 'MACRO')
+    else Reflect.set(globalThis, 'MACRO', originalMacro)
   })
 
   it('registers a user-invocable skill with displayable upstream content', () => {

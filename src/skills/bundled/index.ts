@@ -1,5 +1,8 @@
 import { feature } from 'bun:bundle'
 import { shouldAutoEnableClaudeInChrome } from 'src/utils/claudeInChrome/setup.js'
+import { registerGoodQuestionSkill } from './goodQuestion.js'
+import { registerScanSciPdfSkill } from './scansciPdf.js'
+import { registerTashanResearchSkills } from './tashanResearchSkills.js'
 
 /**
  * Initialize all bundled skills.
@@ -22,8 +25,9 @@ export function initBundledSkills(): void {
   require('./simplify.js').registerSimplifySkill()
   require('./batch.js').registerBatchSkill()
   require('./stuck.js').registerStuckSkill()
-  require('./scansciPdf.js').registerScanSciPdfSkill()
-  require('./goodQuestion.js').registerGoodQuestionSkill()
+  registerScanSciPdfSkill()
+  registerGoodQuestionSkill()
+  registerTashanResearchSkills()
   if (feature('KAIROS') || feature('KAIROS_DREAM')) {
     const { registerDreamSkill } = require('./dream.js')
     registerDreamSkill()

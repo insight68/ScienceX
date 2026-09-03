@@ -5,6 +5,8 @@ import * as path from 'node:path'
 import { getCwdState, setCwdState } from '../../bootstrap/state.js'
 import { registerGoodQuestionSkill } from '../../skills/bundled/goodQuestion.js'
 import { registerScanSciPdfSkill } from '../../skills/bundled/scansciPdf.js'
+import { initBundledSkills } from '../../skills/bundled/index.js'
+import tashanProvenance from '../../skills/bundled/tashan/UPSTREAM.json'
 import { clearBundledSkills } from '../../skills/bundledSkills.js'
 import { clearInstalledPluginsCache } from '../../utils/plugins/installedPluginsManager.js'
 import { clearPluginCache } from '../../utils/plugins/pluginLoader.js'
@@ -222,6 +224,36 @@ describe('Skills API', () => {
         body: expect.stringContaining('## Information sufficiency gate'),
       }),
     )
+  })
+
+  it('exposes all 18 research workflows alongside the two existing installed skills', async () => {
+    const originalMacro = Reflect.get(globalThis, 'MACRO')
+    Reflect.set(globalThis, 'MACRO', { VERSION: 'test' })
+    try {
+      clearBundledSkills()
+      initBundledSkills()
+      const listRequest = makeRequest('/api/skills')
+      const response = await handleSkillsApi(listRequest.req, listRequest.url, listRequest.segments)
+      expect(response.status).toBe(200)
+      const body = await response.json() as { skills: Array<{ name: string; source: string; hasDirectory: boolean }> }
+      const requestedNames = [...tashanProvenance.skills, 'scansci-pdf', 'good-question']
+      const installed = body.skills.filter(skill => skill.source === 'bundled')
+      expect(new Set(installed.map(skill => skill.name)).size).toBe(installed.length)
+      for (const name of requestedNames) {
+        expect(installed).toContainEqual(expect.objectContaining({ name, hasDirectory: true }))
+        const detailRequest = makeRequest(`/api/skills/detail?source=bundled&name=${name}`)
+        const detailResponse = await handleSkillsApi(detailRequest.req, detailRequest.url, detailRequest.segments)
+        expect(detailResponse.status).toBe(200)
+        const detail = await detailResponse.json() as { detail: { files: Array<{ path: string; frontmatter?: { name: string } }> } }
+        expect(detail.detail.files).toContainEqual(expect.objectContaining({
+          path: 'SKILL.md',
+          frontmatter: expect.objectContaining({ name }),
+        }))
+      }
+    } finally {
+      if (originalMacro === undefined) Reflect.deleteProperty(globalThis, 'MACRO')
+      else Reflect.set(globalThis, 'MACRO', originalMacro)
+    }
   })
 
   it('builds a nested file tree for bundled skill resources', () => {
