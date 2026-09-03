@@ -57,6 +57,9 @@ const bundledSkillFiles = new Map<string, Record<string, string>>()
  * They follow the same pattern as registerPostSamplingHook() for internal features.
  */
 export function registerBundledSkill(definition: BundledSkillDefinition): void {
+  // Re-entering CLI/server startup must retain one command and extraction cache.
+  if (bundledSkills.some(command => command.name === definition.name)) return
+
   const { files } = definition
 
   if (definition.skillMarkdown) {
@@ -66,11 +69,10 @@ export function registerBundledSkill(definition: BundledSkillDefinition): void {
     })
   }
 
-  let skillRoot: string | undefined
+  const hasFiles = files !== undefined && Object.keys(files).length > 0
   let getPromptForCommand = definition.getPromptForCommand
 
-  if (files && Object.keys(files).length > 0) {
-    skillRoot = getBundledSkillExtractDir(definition.name)
+  if (hasFiles) {
     // Closure-local memoization: extract once per process.
     // Memoize the promise (not the result) so concurrent callers await
     // the same extraction instead of racing into separate writes.
@@ -101,7 +103,11 @@ export function registerBundledSkill(definition: BundledSkillDefinition): void {
     source: 'bundled',
     loadedFrom: 'bundled',
     hooks: definition.hooks,
-    skillRoot,
+    // Listing installed skills does not require CLI version/bootstrap state.
+    // Resolve the versioned extraction root only when a caller needs it.
+    get skillRoot() {
+      return hasFiles ? getBundledSkillExtractDir(definition.name) : undefined
+    },
     context: definition.context,
     agent: definition.agent,
     isEnabled: definition.isEnabled,

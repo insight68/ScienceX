@@ -5,6 +5,13 @@ import { scienceAnalysisService } from '../services/scienceAnalysisService.js'
 import { scienceExperimentService } from '../services/scienceExperimentService.js'
 import { scienceWorkspaceService } from '../services/scienceWorkspaceService.js'
 import { isAllowedFilesystemPath } from './filesystem.js'
+import { listScienceExamples, materializeScienceExample, scienceExampleReport } from '../services/scienceExampleService.js'
+
+const MaterializeExampleSchema = z.object({
+  parentDir: z.string().trim().min(1).max(4096),
+  locale: z.string().max(20).optional(),
+  includeChallenges: z.boolean().optional(),
+})
 
 const CreateProjectSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -113,9 +120,26 @@ export async function handleScienceApi(
 ): Promise<Response> {
   try {
     const resource = segments[1]
+    if (resource === 'science-examples') {
+      if (!segments[2] && request.method === 'GET') {
+        return Response.json({ examples: listScienceExamples(url.searchParams.get('locale') ?? undefined) })
+      }
+      if (segments[2] && segments[3] === 'materialize' && segments.length === 4) {
+        if (request.method !== 'POST') throw methodNotAllowed(request)
+        const parsed = MaterializeExampleSchema.safeParse(await parseJsonBody(request))
+        if (!parsed.success) throw ApiError.badRequest(parsed.error.issues.map(issue => issue.message).join('; '))
+        return Response.json(await materializeScienceExample({ exampleId: segments[2], ...parsed.data }), { status: 201 })
+      }
+      throw ApiError.notFound('Unknown example endpoint')
+    }
     if (resource === 'research-projects') {
       const projectId = segments[2]
       const childResource = segments[3]
+
+      if (projectId && childResource === 'example-report' && segments.length === 4) {
+        if (request.method !== 'GET') throw methodNotAllowed(request)
+        return Response.json(await scienceExampleReport(projectId, url.searchParams.get('locale') ?? undefined))
+      }
 
       if (!projectId) {
         if (request.method === 'GET') {

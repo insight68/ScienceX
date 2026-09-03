@@ -8,6 +8,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 import { getScienceXProjectRegistryDir } from '../../utils/envUtils.js'
 import { ApiError } from '../middleware/errorHandler.js'
 import { ScienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
+import { readScienceExampleMetadata, type ScienceExampleMetadata } from './scienceExampleMetadata.js'
 
 const SCIENCE_PROJECT_SCHEMA_VERSION = 6
 const SCIENCE_REGISTRY_SCHEMA_VERSION = 1
@@ -29,6 +30,7 @@ export type ScienceProject = {
   createdAt: string
   updatedAt: string
   rootAvailable: boolean
+  example?: ScienceExampleMetadata | null
 }
 
 export type ScienceDatasetVersion = {
@@ -709,7 +711,8 @@ async function readLocalProject(rootDir: string): Promise<ScienceProject | null>
     if (manifestVersion < SCIENCE_PROJECT_SCHEMA_VERSION) {
       await writeProjectManifest(project, project.updatedAt)
     }
-    return project
+    const example = await readScienceExampleMetadata(rootDir)
+    return { ...project, example: example?.projectId === project.id ? example : null }
   } finally {
     database.close()
   }
@@ -927,6 +930,15 @@ export class ScienceWorkspaceService {
       projects.push(project ?? unavailableProject(entry))
     }
     return projects
+  }
+
+  async unregisterFailedExample(projectId: string, rootDir: string): Promise<void> {
+    const registry = await openRegistryDatabase()
+    try {
+      registry.query('DELETE FROM projects WHERE id = ? AND root_dir = ?').run(projectId, rootDir)
+    } finally {
+      registry.close()
+    }
   }
 
   async getProject(projectId: string): Promise<ScienceProject> {

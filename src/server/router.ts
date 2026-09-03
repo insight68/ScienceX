@@ -135,6 +135,7 @@ export async function handleApiRequest(req: Request, url: URL): Promise<Response
     case 'traces':
       return handleTracesApi(req, url, segments)
 
+    case 'science-examples':
     case 'research-projects':
     case 'datasets':
     case 'runs':

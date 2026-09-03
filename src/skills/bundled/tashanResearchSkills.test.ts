@@ -110,6 +110,20 @@ describe('Tashan research bundled skills', () => {
     expect(TASHAN_RESEARCH_SKILL_FILES.papercheck!['assets/paperchecker-rules/scripts/deploy_cite.sh']).toBeUndefined()
   })
 
+  it('keeps one command per name when CLI and desktop initialization repeat', () => {
+    initBundledSkills()
+    const firstCommands = getBundledSkills()
+    initBundledSkills()
+    const repeatedCommands = getBundledSkills()
+    expect(repeatedCommands).toHaveLength(firstCommands.length)
+    for (const command of firstCommands) {
+      expect(repeatedCommands.find(candidate => candidate.name === command.name)).toBe(command)
+    }
+    clearBundledSkills()
+    initBundledSkills()
+    expect(getBundledSkills().map(command => command.name)).toEqual(firstCommands.map(command => command.name))
+  })
+
   it('extracts every workflow with its supporting files only when invoked', async () => {
     initBundledSkills()
     expect(await fs.readdir(temporaryRoot)).toEqual([])
