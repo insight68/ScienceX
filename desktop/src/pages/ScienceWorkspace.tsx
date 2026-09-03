@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { Button } from '../components/shared/Button'
 import { CellViabilityExperimentPanel } from '../components/science/CellViabilityExperimentPanel'
+import { ScienceExampleLauncher, ScienceExamplePanel } from '../components/science/ScienceExampleGuide'
 import { DirectoryPicker } from '../components/shared/DirectoryPicker'
 import { Input } from '../components/shared/Input'
 import { Modal } from '../components/shared/Modal'
@@ -143,14 +144,14 @@ export function ScienceWorkspace() {
     }
   }
 
-  const openResearchThread = async () => {
+  const openResearchThread = async (prompt?: string) => {
     if (!selectedProject || openingResearchThread) return
     setOpeningResearchThread(true)
     try {
       const sessionId = await createSession(selectedProject.rootDir)
       connectToSession(sessionId)
       queueComposerPrefill(sessionId, {
-        text: t('science.researchThreadPrompt', {
+        text: prompt ?? t('science.researchThreadPrompt', {
           project: selectedProject.name,
           question: selectedProject.question || t('science.noResearchQuestion'),
         }),
@@ -171,6 +172,14 @@ export function ScienceWorkspace() {
     } finally {
       setOpeningResearchThread(false)
     }
+  }
+
+  const exampleCreated = async (result: { project: ScienceProject; dataset: ScienceDataset; experiment: ScienceExperiment }) => {
+    await loadProjects()
+    await selectProject(result.project.id)
+    await selectDataset(result.dataset.id)
+    selectExperiment(result.experiment.id)
+    setCanvasTab('experiments')
   }
 
   const closeProjectModal = () => {
@@ -201,6 +210,7 @@ export function ScienceWorkspace() {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {projects.length > 0 && <ScienceExampleLauncher onCreated={exampleCreated} />}
             <Button
               size="sm"
               variant="secondary"
@@ -235,6 +245,30 @@ export function ScienceWorkspace() {
         )}
       </header>
 
+      {selectedProject?.example && <ScienceExamplePanel
+        key={selectedProject.id}
+        project={selectedProject}
+        runCount={runs.length}
+        onRefresh={async () => {
+          if (useScienceStore.getState().selectedProjectId !== selectedProject.id) return
+          await selectProject(selectedProject.id)
+          const scenario = selectedProject.example!.scenarios[0]
+          if (!scenario) return
+          await selectDataset(scenario.datasetId)
+          selectExperiment(scenario.experimentId)
+          setCanvasTab('runs')
+        }}
+        onSelect={async (scenarioId, runId) => {
+          const scenario = selectedProject.example!.scenarios.find(item => item.id === scenarioId)
+          if (!scenario) return
+          await selectDataset(scenario.datasetId)
+          selectExperiment(scenario.experimentId)
+          if (runId) await selectRun(runId)
+          setCanvasTab(runId ? 'runs' : 'experiments')
+        }}
+        onOpenReview={openResearchThread}
+      />}
+
       {error && (
         <div role="alert" className="mx-5 mt-4 flex shrink-0 items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/5 px-3 py-2.5 text-xs text-[var(--color-error)]">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
@@ -246,7 +280,7 @@ export function ScienceWorkspace() {
         {projectsState === 'loading' && projects.length === 0 ? (
           <LoadingPanel label={t('science.loadingProjects')} />
         ) : projects.length === 0 ? (
-          <EmptyProjects onCreate={() => setCreateProjectOpen(true)} />
+          <EmptyProjects onCreate={() => setCreateProjectOpen(true)} onExampleCreated={exampleCreated} />
         ) : (
           <>
             <ProjectRail
@@ -815,6 +849,7 @@ function RunsPanel({
                 variant="secondary"
                 onClick={() => void onReplay(selectedRun.id).catch(() => undefined)}
                 loading={runActionState === 'loading'}
+                disabled={selectedRun.status !== 'completed' || !selectedRun.summary}
                 icon={<RotateCcw className="h-3.5 w-3.5" />}
               >
                 {t('science.replayRun')}
@@ -1484,7 +1519,10 @@ function Meta({ label, value, icon, mono = false }: { label: string; value: stri
   )
 }
 
-function EmptyProjects({ onCreate }: { onCreate: () => void }) {
+function EmptyProjects({ onCreate, onExampleCreated }: {
+  onCreate: () => void
+  onExampleCreated: (result: { project: ScienceProject; dataset: ScienceDataset; experiment: ScienceExperiment }) => Promise<void>
+}) {
   const t = useTranslation()
   return (
     <main className="flex min-w-0 flex-1 items-center justify-center bg-[radial-gradient(circle_at_50%_38%,var(--color-surface-container-low)_0%,var(--color-surface)_58%)] p-8 text-center">
@@ -1494,7 +1532,10 @@ function EmptyProjects({ onCreate }: { onCreate: () => void }) {
         </div>
         <h2 className="mt-5 text-base font-semibold text-[var(--color-text-primary)]">{t('science.noProjectsTitle')}</h2>
         <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">{t('science.noProjectsBody')}</p>
-        <Button className="mt-5" onClick={onCreate} icon={<Plus className="h-4 w-4" />}>{t('science.newProject')}</Button>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <ScienceExampleLauncher onCreated={onExampleCreated} />
+          <Button variant="secondary" onClick={onCreate} icon={<Plus className="h-4 w-4" />}>{t('science.newProject')}</Button>
+        </div>
       </div>
     </main>
   )

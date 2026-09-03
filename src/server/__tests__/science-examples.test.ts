@@ -104,6 +104,8 @@ describe('ScienceX complete example', () => {
     const projectId = created.body.project.id
     const marker = created.body.project.example
     expect(marker.scenarios).toHaveLength(4)
+    const datasets = (await api(`/api/research-projects/${projectId}/datasets`)).body.datasets
+    expect(datasets.find((item: any) => item.versionCount === 2).name).toBe('数据更新与旧版本重放')
     const before = await api(`/api/research-projects/${projectId}/example-report?locale=zh`)
     expect(before.body.checks.every((check: any) => check.status === 'not-run' && !check.passed)).toBe(true)
     for (const scenario of marker.scenarios) {
@@ -154,5 +156,21 @@ describe('ScienceX complete example', () => {
     await fs.writeFile(markerPath, JSON.stringify({ ...marker, schemaVersion: 99 }))
     expect((await scienceWorkspaceService.getProject(created.body.project.id)).example).toBeNull()
     expect(JSON.parse(await fs.readFile(markerPath, 'utf8')).schemaVersion).toBe(99)
+  })
+
+  it('saves reports in the selected project without overwriting and rejects report-directory symlinks', async () => {
+    const { body } = await materialize()
+    const endpoint = `/api/research-projects/${body.project.id}/example-report?locale=zh`
+    const first = await api(endpoint, {})
+    const second = await api(endpoint, {})
+    expect(first.status).toBe(201)
+    expect(second.status).toBe(201)
+    expect(first.body.savedPath).not.toBe(second.body.savedPath)
+    expect(await fs.readFile(first.body.savedPath, 'utf8')).toBe(first.body.markdown)
+    expect(first.body.markdown).toContain('not-run')
+    const reportsDir = path.join(body.project.rootDir, 'sciencex-demo-reports')
+    await fs.rename(reportsDir, `${reportsDir}-original`)
+    await fs.symlink(root, reportsDir)
+    expect((await api(endpoint, {})).status).toBe(409)
   })
 })

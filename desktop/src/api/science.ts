@@ -7,10 +7,32 @@ import type {
   ScienceExperiment,
   ScienceProject,
   ScienceRunEvent,
+  ScienceExampleDescriptor,
+  ScienceExampleReport,
 } from '../types/science'
 import { api } from './client'
 
 export const scienceApi = {
+  async listExamples(locale: string): Promise<ScienceExampleDescriptor[]> {
+    const response = await api.get<{ examples: ScienceExampleDescriptor[] }>(`/api/science-examples?locale=${encodeURIComponent(locale)}`)
+    return response.examples
+  },
+
+  async materializeExample(input: { exampleId: string; parentDir: string; locale: string; includeChallenges: boolean }) {
+    return api.post<{ project: ScienceProject; dataset: ScienceDataset; experiment: ScienceExperiment }>(
+      `/api/science-examples/${encodeURIComponent(input.exampleId)}/materialize`,
+      { parentDir: input.parentDir, locale: input.locale, includeChallenges: input.includeChallenges },
+    )
+  },
+
+  async exampleReport(projectId: string, locale: string): Promise<ScienceExampleReport> {
+    return api.get<ScienceExampleReport>(`/api/research-projects/${encodeURIComponent(projectId)}/example-report?locale=${encodeURIComponent(locale)}`)
+  },
+
+  async saveExampleReport(projectId: string, locale: string): Promise<ScienceExampleReport & { savedPath: string }> {
+    return api.post<ScienceExampleReport & { savedPath: string }>(`/api/research-projects/${encodeURIComponent(projectId)}/example-report?locale=${encodeURIComponent(locale)}`, {})
+  },
+
   async listProjects(): Promise<ScienceProject[]> {
     const response = await api.get<{ projects: ScienceProject[] }>('/api/research-projects')
     return response.projects

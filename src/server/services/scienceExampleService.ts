@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import { randomUUID } from 'node:crypto'
 import { isAllowedFilesystemPath } from '../api/filesystem.js'
 import { ApiError } from '../middleware/errorHandler.js'
 import { scienceAnalysisService } from './scienceAnalysisService.js'
@@ -106,7 +107,7 @@ export async function materializeScienceExample(input: {
         // Only this newly created scenario's source is changed. The experiment
         // keeps V1, while re-registration preserves both immutable snapshots.
         await fs.writeFile(filePath, generateCellViabilityExampleCsv('version-change'))
-        await scienceWorkspaceService.registerDataset({ projectId, filePath })
+        await scienceWorkspaceService.registerDataset({ projectId, filePath, name: titles[locale][id] })
       }
     }
     const example: ScienceExampleMetadata = {
@@ -224,4 +225,22 @@ export async function scienceExampleReport(projectId: string, requestedLocale?: 
     '| not measured | — | ScienceX | — | — | — |', '',
   ].join('\n')
   return { checks, markdown, aiPrompt, fileName: `sciencex-demo-${project.id}.md` }
+}
+
+export async function saveScienceExampleReport(projectId: string, locale?: string) {
+  const report = await scienceExampleReport(projectId, locale)
+  const project = await scienceWorkspaceService.getProject(projectId)
+  const rootDir = await fs.realpath(project.rootDir)
+  if (!isAllowedFilesystemPath(rootDir)) throw new ApiError(403, 'Project is outside allowed directories')
+  const directory = path.join(rootDir, 'sciencex-demo-reports')
+  await fs.mkdir(directory, { mode: 0o700 }).catch(error => {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
+  })
+  if (!(await fs.lstat(directory)).isDirectory() || await fs.realpath(directory) !== directory) {
+    throw ApiError.conflict('The demonstration report directory must not be a symbolic link')
+  }
+  const fileName = `demonstration-${randomUUID()}.md`
+  const savedPath = path.join(directory, fileName)
+  await fs.writeFile(savedPath, report.markdown, { flag: 'wx', mode: 0o600 })
+  return { ...report, fileName, savedPath }
 }

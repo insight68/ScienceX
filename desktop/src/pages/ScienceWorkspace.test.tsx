@@ -18,11 +18,18 @@ import type {
   ScienceRunEvent,
 } from '../types/science'
 import { ScienceWorkspace } from './ScienceWorkspace'
+import { runScienceExampleDemo } from '../lib/scienceExampleDemo'
+
+vi.mock('../lib/scienceExampleDemo', () => ({ runScienceExampleDemo: vi.fn() }))
 
 const dialogOpen = vi.fn()
 
 vi.mock('../api/science', () => ({
   scienceApi: {
+    listExamples: vi.fn(),
+    materializeExample: vi.fn(),
+    exampleReport: vi.fn(),
+    saveExampleReport: vi.fn(),
     listProjects: vi.fn(),
     createProject: vi.fn(),
     listDatasets: vi.fn(),
@@ -324,6 +331,62 @@ afterEach(() => {
 })
 
 describe('ScienceWorkspace', () => {
+  it('creates a real example from the empty state and waits for explicit analysis', async () => {
+    const createSession = vi.fn().mockResolvedValue('example-review-session')
+    const prefill = vi.fn()
+    useSessionStore.setState({ createSession })
+    useChatStore.setState({ connectToSession: vi.fn(), queueComposerPrefill: prefill })
+    const exampleProject: ScienceProject = { ...project, example: {
+      schemaVersion: 1, exampleId: 'cell-viability-dose-response-v1', templateVersion: 1, simulatedData: true,
+      projectId: project.id, locale: 'en', materializedAt: project.createdAt,
+      scenarios: [{ id: 'success', datasetId: dataset.id, datasetVersionId: dataset.currentVersion.id, experimentId: experiment.id }],
+    } }
+    vi.mocked(scienceApi.listProjects).mockResolvedValueOnce([]).mockResolvedValue([exampleProject])
+    vi.mocked(scienceApi.listExamples).mockResolvedValue([{ id: 'cell-viability-dose-response-v1', title: 'HepG2 (simulated)', summary: 'Offline', estimatedMinutes: 3, localOnly: true, simulatedData: true }])
+    vi.mocked(scienceApi.materializeExample).mockResolvedValue({ project: exampleProject, dataset, experiment })
+    vi.mocked(scienceApi.listExperiments).mockResolvedValue([experiment])
+    vi.mocked(scienceApi.exampleReport).mockResolvedValue({ checks: [], markdown: '', aiPrompt: 'Review cited evidence', fileName: 'demo.md' })
+    render(<ScienceWorkspace />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Try a complete experiment' }))
+    await screen.findByText('HepG2 (simulated)')
+    fireEvent.change(screen.getByLabelText('Parent folder'), { target: { value: '/tmp/defense' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create example copy' }))
+    await screen.findByRole('button', { name: 'Run complete demonstration' })
+    expect(scienceApi.materializeExample).toHaveBeenCalledWith({
+      exampleId: 'cell-viability-dose-response-v1', parentDir: '/tmp/defense', locale: 'en', includeChallenges: true,
+    })
+    expect(useScienceStore.getState().selectedDatasetId).toBe(dataset.id)
+    expect(useScienceStore.getState().selectedExperimentId).toBe(experiment.id)
+    expect(scienceApi.createDoseResponseRun).not.toHaveBeenCalled()
+    expect(scienceApi.replayRun).not.toHaveBeenCalled()
+
+    const report = { checks: [{ id: 'success' as const, title: 'Success', passed: true, runId: doseRun.id, replayRunId: null,
+      status: 'completed', verdict: 'supported', datasetVersionId: dataset.currentVersion.id, inputCurrentness: 'current',
+      relativeIc50: 1, relativeIc50AbsoluteError: 0, durationMs: 10, artifactCount: 3, errorMessage: null }],
+      markdown: '# measured', aiPrompt: 'Review cited evidence', fileName: 'demo.md' }
+    vi.mocked(runScienceExampleDemo).mockResolvedValue(report)
+    vi.mocked(scienceApi.exampleReport).mockResolvedValue(report)
+    vi.mocked(scienceApi.listRuns).mockResolvedValue([doseRun])
+    fireEvent.click(screen.getByRole('button', { name: 'Run complete demonstration' }))
+    await waitFor(() => expect(screen.getByRole('tab', { name: 'Runs 1' })).toHaveAttribute('aria-selected', 'true'))
+    fireEvent.click(screen.getByRole('button', { name: /01 Verified Analysis and replay/ }))
+    await screen.findByRole('button', { name: 'Show demonstration steps' })
+    expect(useScienceStore.getState().selectedRunId).toBe(doseRun.id)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI evidence review' }))
+    await waitFor(() => expect(prefill).toHaveBeenCalledWith('example-review-session', { text: report.aiPrompt, mode: 'replace' }))
+    expect(createSession).toHaveBeenCalledWith(project.rootDir)
+  })
+
+  it('keeps a rejected input visible and prevents replaying its failed run', async () => {
+    vi.mocked(scienceApi.listRuns).mockResolvedValue([{ ...doseRun, status: 'failed', summary: null, errorMessage: 'Linked table is missing 1 assigned wells: A4' }])
+    render(<ScienceWorkspace />)
+    await screen.findByText('control')
+    fireEvent.click(screen.getByRole('tab', { name: 'Runs 1' }))
+    expect(await screen.findByText('Linked table is missing 1 assigned wells: A4')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Replay as new run' })).toBeDisabled()
+  })
+
   it('renders the project, column profiles, sample rows, and explicit model boundary', async () => {
     render(<ScienceWorkspace />)
 

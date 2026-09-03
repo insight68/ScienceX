@@ -5,7 +5,7 @@ import { scienceAnalysisService } from '../services/scienceAnalysisService.js'
 import { scienceExperimentService } from '../services/scienceExperimentService.js'
 import { scienceWorkspaceService } from '../services/scienceWorkspaceService.js'
 import { isAllowedFilesystemPath } from './filesystem.js'
-import { listScienceExamples, materializeScienceExample, scienceExampleReport } from '../services/scienceExampleService.js'
+import { listScienceExamples, materializeScienceExample, scienceExampleReport, saveScienceExampleReport } from '../services/scienceExampleService.js'
 
 const MaterializeExampleSchema = z.object({
   parentDir: z.string().trim().min(1).max(4096),
@@ -137,8 +137,10 @@ export async function handleScienceApi(
       const childResource = segments[3]
 
       if (projectId && childResource === 'example-report' && segments.length === 4) {
-        if (request.method !== 'GET') throw methodNotAllowed(request)
-        return Response.json(await scienceExampleReport(projectId, url.searchParams.get('locale') ?? undefined))
+        const locale = url.searchParams.get('locale') ?? undefined
+        if (request.method === 'GET') return Response.json(await scienceExampleReport(projectId, locale))
+        if (request.method === 'POST') return Response.json(await saveScienceExampleReport(projectId, locale), { status: 201 })
+        throw methodNotAllowed(request)
       }
 
       if (!projectId) {

@@ -7,6 +7,56 @@ export type ScienceProject = {
   createdAt: string
   updatedAt: string
   rootAvailable: boolean
+  example?: ScienceExampleMetadata | null
+}
+
+export type ScienceExampleScenarioId = 'success' | 'version-change' | 'missing-well' | 'weak-response'
+
+export type ScienceExampleMetadata = {
+  schemaVersion: 1
+  exampleId: string
+  templateVersion: number
+  simulatedData: true
+  locale: 'zh' | 'en'
+  materializedAt: string
+  projectId: string
+  scenarios: Array<{
+    id: ScienceExampleScenarioId
+    datasetId: string
+    datasetVersionId: string
+    experimentId: string
+  }>
+}
+
+export type ScienceExampleDescriptor = {
+  id: string
+  title: string
+  summary: string
+  localOnly: true
+  simulatedData: true
+  estimatedMinutes: number
+}
+
+export type ScienceExampleReport = {
+  checks: Array<{
+    id: ScienceExampleScenarioId
+    title: string
+    passed: boolean
+    runId: string | null
+    replayRunId: string | null
+    status: string
+    verdict: string | null
+    datasetVersionId: string | null
+    inputCurrentness: string | null
+    relativeIc50: number | null
+    relativeIc50AbsoluteError: number | null
+    durationMs: number | null
+    artifactCount: number
+    errorMessage: string | null
+  }>
+  markdown: string
+  aiPrompt: string
+  fileName: string
 }
 
 export type ScienceDatasetVersion = {
