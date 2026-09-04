@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData, withBase } from 'vitepress'
-import CapabilityMap from './home/CapabilityMap.vue'
 import { HOME_COPY } from './home/homeContent'
+import ProductProof from './home/ProductProof.vue'
 import ResearchLoopDiagram from './home/ResearchLoopDiagram.vue'
+import ResearchSkills from './home/ResearchSkills.vue'
 import RuntimeMechanism from './home/RuntimeMechanism.vue'
 
 const REPO_PAGE = 'https://github.com/insight68/ScienceX'
@@ -109,25 +110,39 @@ const demoGuidePath = computed(() => localPath(
           <div class="attention-board">
             <div class="attention-cards">
               <article v-for="(signal, index) in copy.realitySignals" :key="signal.title">
-                <span>0{{ index + 1 }}</span>
+                <div class="attention-card-head"><span>0{{ index + 1 }}</span><small>{{ copy.scenarioOutputLabel }}</small></div>
                 <h3>{{ signal.title }}</h3>
                 <p>{{ signal.body }}</p>
+                <dl>
+                  <div><dt>{{ copy.scenarioOutputLabel }}</dt><dd>{{ signal.output }}</dd></div>
+                  <div><dt>{{ copy.scenarioOwnerLabel }}</dt><dd>{{ signal.owner }}</dd></div>
+                </dl>
+                <blockquote><small>{{ copy.scenarioPromptLabel }}</small>{{ signal.prompt }}</blockquote>
               </article>
-            </div>
-            <div class="fragment-panel">
-              <small>FRAGMENTED RESEARCH</small>
-              <h3>{{ copy.fragmentTitle }}</h3>
-              <div class="fragment-sources">
-                <span v-for="source in copy.fragmentSources" :key="source">{{ source }}</span>
-              </div>
-              <div class="fragment-flow">
-                <strong>{{ copy.fragmentResearcher }}</strong>
-                <i aria-hidden="true">→</i>
-                <p>{{ copy.fragmentGap }}</p>
-              </div>
             </div>
           </div>
           <p class="reality-thesis"><span aria-hidden="true"></span>{{ copy.realityThesis }}</p>
+        </div>
+      </section>
+
+      <section id="product-proof" class="product-proof-section section-pad">
+        <div class="home-shell">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker"><span>{{ copy.productNumber }}</span><p>{{ copy.productLabel }}</p></div>
+              <h2 class="section-title-lines"><span v-for="line in copy.productTitle" :key="line">{{ line }}</span></h2>
+            </div>
+            <p>{{ copy.productBody }}</p>
+          </div>
+          <ProductProof
+            :frames="copy.productFrames"
+            :skill-label="copy.productSkillLabel"
+            :skill-title="copy.productSkillTitle"
+            :skill-body="copy.productSkillBody"
+            :skill-preview="copy.productSkillPreview"
+            :skill-count="copy.productSkillCount"
+            :note="copy.productProofNote"
+          />
         </div>
       </section>
 
@@ -230,15 +245,15 @@ const demoGuidePath = computed(() => localPath(
             </div>
             <p>{{ copy.capabilitiesBody }}</p>
           </div>
-          <CapabilityMap
-            :skills-title="copy.skillsTitle"
-            :skills-body="copy.skillsBody"
-            :skills="copy.skills"
-            :tools-title="copy.toolsTitle"
-            :tools-body="copy.toolsBody"
-            :tools="copy.tools"
-            :center-title="copy.capabilityCenter"
-            :boundary="copy.capabilityBoundary"
+          <ResearchSkills
+            :count="copy.skillCount"
+            :count-label="copy.skillCountLabel"
+            :groups="copy.skillGroups"
+            :environments-label="copy.environmentsLabel"
+            :environments="copy.environments"
+            :boundary="copy.skillsBoundary"
+            :guide-label="copy.skillsGuide"
+            :guide-href="localPath('/skills/01-usage-guide')"
           />
         </div>
       </section>
@@ -267,20 +282,30 @@ const demoGuidePath = computed(() => localPath(
             <span>{{ copy.operatingModel }}</span>
             <strong>{{ copy.operatingModelBody }}</strong>
           </div>
+          <ul class="guardrail-grid" :aria-label="copy.guardrailsLabel">
+            <li v-for="(guardrail, index) in copy.guardrails" :key="guardrail"><span>0{{ index + 1 }}</span>{{ guardrail }}</li>
+          </ul>
         </div>
       </section>
 
       <section id="start" class="final-section">
         <div class="home-shell final-layout">
           <div>
-            <p><span>{{ copy.finalNumber }}</span> SCIENCEX / RESEARCH WORKBENCH</p>
+            <p><span>{{ copy.finalNumber }}</span> ScienceX / RESEARCH WORKBENCH</p>
             <h2>{{ copy.finalTitle }}</h2>
             <strong>{{ copy.finalBody }}</strong>
+            <ol class="start-steps">
+              <li v-for="(step, index) in copy.startSteps" :key="step"><span>0{{ index + 1 }}</span>{{ step }}</li>
+            </ol>
           </div>
-          <div class="final-actions">
-            <a class="primary-action" :href="localPath('/download')">{{ copy.download }}</a>
-            <a class="secondary-action light" :href="demoGuidePath">{{ copy.demo }}</a>
-            <a class="source-link" :href="REPO_PAGE" target="_blank" rel="noopener noreferrer">{{ copy.source }} ↗</a>
+          <div class="starter-panel">
+            <small>{{ copy.starterPromptLabel }}</small>
+            <blockquote>{{ copy.starterPrompt }}</blockquote>
+            <div class="final-actions">
+              <a class="primary-action" :href="localPath('/download')">{{ copy.download }}</a>
+              <a class="secondary-action light" :href="demoGuidePath">{{ copy.demo }}</a>
+              <a class="source-link" :href="REPO_PAGE" target="_blank" rel="noopener noreferrer">{{ copy.source }} ↗</a>
+            </div>
           </div>
         </div>
       </section>
@@ -473,21 +498,21 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .section-nav a:hover { color: var(--sx-green); background: color-mix(in srgb, var(--sx-green-soft) 62%, transparent); }
 
 .reality-section, .maturity-section, .mechanism-section { background: var(--sx-section); }
-.attention-board { display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(430px, .96fr); gap: 22px; }
-.attention-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--sx-line); border-left: 1px solid var(--sx-line); }
-.attention-cards article { min-height: 190px; padding: 22px; border-right: 1px solid var(--sx-line); border-bottom: 1px solid var(--sx-line); background: color-mix(in srgb, var(--sx-panel) 84%, transparent); }
+.product-proof-section { background: var(--sx-paper); }
+.attention-board { display: grid; gap: 22px; }
+.attention-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--sx-line); border-left: 1px solid var(--sx-line); }
+.attention-cards article { display: flex; min-height: 390px; flex-direction: column; padding: 22px; border-right: 1px solid var(--sx-line); border-bottom: 1px solid var(--sx-line); background: color-mix(in srgb, var(--sx-panel) 84%, transparent); }
+.attention-card-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
 .attention-cards span { color: var(--sx-green); font-family: var(--sx-mono); font-size: 9px; font-weight: 800; }
-.attention-cards h3 { margin: 50px 0 10px; color: var(--sx-ink); font-size: 16px; }
+.attention-card-head small { color: var(--sx-muted); font-family: var(--sx-mono); font-size: 7px; font-weight: 800; letter-spacing: .09em; }
+.attention-cards h3 { margin: 34px 0 10px; color: var(--sx-ink); font-family: var(--sx-display); font-size: 24px; }
 .attention-cards p { margin: 0; color: var(--sx-muted); font-size: 11px; line-height: 1.65; }
-.fragment-panel { padding: 28px; border: 1px solid var(--sx-line); border-radius: 14px; background: var(--sx-panel); box-shadow: 0 22px 50px rgba(8, 46, 42, .06); }
-.fragment-panel > small { color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; font-weight: 800; letter-spacing: .12em; }
-.fragment-panel h3 { max-width: 390px; margin: 10px 0 23px; color: var(--sx-ink); font-family: var(--sx-display); font-size: 27px; line-height: 1.2; }
-.fragment-sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-.fragment-sources span { padding: 10px 11px; border: 1px solid var(--sx-line); color: var(--sx-muted); background: color-mix(in srgb, var(--sx-paper) 75%, transparent); font-size: 9px; }
-.fragment-flow { display: grid; grid-template-columns: 1fr auto 1.2fr; gap: 12px; align-items: center; margin-top: 22px; padding-top: 21px; border-top: 1px solid var(--sx-line); }
-.fragment-flow strong { color: var(--sx-ink); font-size: 11px; }
-.fragment-flow i { color: var(--sx-green); font-style: normal; }
-.fragment-flow p { margin: 0; color: var(--sx-muted); font-size: 10px; line-height: 1.5; }
+.attention-cards dl { display: grid; gap: 13px; margin: 28px 0 0; }
+.attention-cards dl div { padding-top: 11px; border-top: 1px solid var(--sx-line); }
+.attention-cards dt { color: var(--sx-green); font-family: var(--sx-mono); font-size: 7px; font-weight: 800; letter-spacing: .08em; }
+.attention-cards dd { margin: 5px 0 0; color: var(--sx-ink); font-size: 10px; line-height: 1.5; }
+.attention-cards blockquote { margin: auto 0 0; padding: 14px 0 0 13px; border: 0; border-left: 2px solid var(--sx-green); color: var(--sx-muted); font-size: 9px; line-height: 1.55; }
+.attention-cards blockquote small { display: block; margin-bottom: 5px; color: var(--sx-green); font-family: var(--sx-mono); font-size: 7px; font-weight: 800; letter-spacing: .08em; }
 .reality-thesis { display: flex; align-items: center; gap: 13px; margin: 22px 0 0; padding: 19px 22px; border-radius: 9px; color: #e8f8f1; background: var(--sx-navy); font-size: 13px; font-weight: 700; line-height: 1.55; }
 .reality-thesis span { width: 9px; height: 9px; border-radius: 50%; background: var(--sx-green); box-shadow: 0 0 0 6px rgba(22, 191, 114, .12); }
 
@@ -496,12 +521,12 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .maturity-section { border-bottom: 1px solid var(--sx-line); }
 .compact-heading { margin-bottom: 42px; }
 .stage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-.stage-grid article { position: relative; display: flex; min-height: 292px; flex-direction: column; padding: 27px; border: 1px solid var(--sx-line); border-radius: 14px; background: color-mix(in srgb, var(--sx-panel) 88%, transparent); }
+.stage-grid article { position: relative; display: flex; min-height: 240px; flex-direction: column; padding: 27px; border: 1px solid var(--sx-line); border-radius: 14px; background: color-mix(in srgb, var(--sx-panel) 88%, transparent); }
 .stage-grid article.current { border-color: color-mix(in srgb, var(--sx-green) 70%, var(--sx-line)); background: color-mix(in srgb, var(--sx-green-soft) 56%, var(--sx-panel)); box-shadow: inset 0 3px 0 var(--sx-green); }
 .stage-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
 .stage-head > span { color: var(--sx-green); font-family: var(--sx-mono); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .stage-head small { padding: 5px 8px; border: 1px solid var(--sx-line); color: var(--sx-muted); font-size: 8px; }
-.stage-grid h3 { margin: 61px 0 15px; color: var(--sx-ink); font-family: var(--sx-display); font-size: 27px; }
+.stage-grid h3 { margin: 39px 0 15px; color: var(--sx-ink); font-family: var(--sx-display); font-size: 27px; }
 .stage-grid p { margin: 0; color: var(--sx-muted); font-size: 11px; line-height: 1.72; }
 .stage-grid article > strong { margin-top: auto; padding-top: 24px; color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; letter-spacing: .04em; }
 .stage-grid article > i { position: absolute; z-index: 2; top: 48%; right: -23px; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--sx-line); border-radius: 50%; color: var(--sx-green); background: var(--sx-panel); font-style: normal; }
@@ -541,12 +566,42 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .operating-model span { color: #5d9d87; font-family: var(--sx-mono); font-size: 8px; font-weight: 800; letter-spacing: .12em; }
 .operating-model strong { color: #b9d2c8; font-size: 11px; line-height: 1.6; }
 
+.guardrail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 19px 0 0;
+  padding: 1px;
+  list-style: none;
+  background: rgba(146, 208, 185, .19);
+}
+
+.guardrail-grid li {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  min-height: 66px;
+  padding: 14px 16px;
+  color: #c7dcd4;
+  background: #07352e;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.guardrail-grid span { color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; font-weight: 800; }
+
 .final-section { padding: 74px 0; color: #fff; background: #071d1a; scroll-margin-top: calc(var(--vp-nav-height) + 48px); }
-.final-layout { display: grid; grid-template-columns: 1fr auto; gap: 60px; align-items: center; }
+.final-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(420px, 1.1fr); gap: 60px; align-items: center; }
 .final-layout > div > p { display: flex; align-items: center; gap: 10px; margin: 0 0 13px; color: #5ca98e; font-family: var(--sx-mono); font-size: 9px; font-weight: 800; letter-spacing: .13em; }
 .final-layout > div > p span { display: grid; width: 29px; height: 22px; place-items: center; border-radius: 4px; color: #fff; background: #087147; }
 .final-layout h2 { margin: 0; color: #fff; font-size: clamp(34px, 4vw, 52px); }
 .final-layout > div > strong { display: block; max-width: 650px; margin-top: 17px; color: #90aaa1; font-size: 13px; font-weight: 500; line-height: 1.7; }
+.start-steps { display: grid; gap: 9px; margin: 25px 0 0; padding: 0; list-style: none; }
+.start-steps li { display: flex; gap: 12px; align-items: center; color: #b7ccc4; font-size: 10px; }
+.start-steps span { color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; font-weight: 800; }
+.starter-panel { padding: 25px; border: 1px solid rgba(132, 198, 174, .25); background: rgba(255, 255, 255, .035); }
+.starter-panel > small { color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; font-weight: 800; letter-spacing: .11em; }
+.starter-panel blockquote { margin: 14px 0 22px; padding: 0 0 0 16px; border: 0; border-left: 2px solid var(--sx-green); color: #d3e3dd; font-size: 11px; line-height: 1.7; }
 .final-actions { display: grid; grid-template-columns: auto auto; gap: 11px; align-items: center; }
 .secondary-action.light { color: #dcebe5; }
 .source-link { grid-column: 1 / -1; justify-self: end; color: #6ea48f; font-size: 11px; text-decoration: none; }
@@ -560,7 +615,7 @@ a:focus-visible { outline: 3px solid color-mix(in srgb, var(--sx-green) 72%, #ff
   .proof-window { max-width: 720px; }
   .section-heading { grid-template-columns: 1fr; gap: 22px; align-items: start; }
   .section-heading > p { max-width: 760px; }
-  .attention-board { grid-template-columns: 1fr; }
+  .attention-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .case-grid { grid-template-columns: 1fr; }
   .final-layout { grid-template-columns: 1fr; }
   .final-actions { justify-self: start; }
@@ -581,11 +636,8 @@ a:focus-visible { outline: 3px solid color-mix(in srgb, var(--sx-green) 72%, #ff
   .proof-pipeline b { display: none; }
   .section-nav a { padding: 13px 18px; }
   .attention-cards { grid-template-columns: 1fr; }
-  .attention-cards article { min-height: 150px; }
-  .attention-cards h3 { margin-top: 32px; }
-  .fragment-panel { padding: 22px; }
-  .fragment-flow { grid-template-columns: 1fr; }
-  .fragment-flow i { transform: rotate(90deg); }
+  .attention-cards article { min-height: 360px; }
+  .attention-cards h3 { margin-top: 28px; }
   .stage-grid { grid-template-columns: 1fr; }
   .stage-grid article { min-height: 245px; }
   .stage-grid article > i { top: auto; right: 25px; bottom: -23px; transform: rotate(90deg); }
@@ -597,6 +649,7 @@ a:focus-visible { outline: 3px solid color-mix(in srgb, var(--sx-green) 72%, #ff
   .role-grid article { min-height: 270px; }
   .role-grid ul { margin-top: 50px; }
   .operating-model { grid-template-columns: 1fr; gap: 8px; margin: 18px 0 0; }
+  .guardrail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .final-actions { grid-template-columns: 1fr; width: 100%; }
   .final-actions a { width: 100%; }
   .source-link { grid-column: auto; justify-self: start; width: auto !important; }
@@ -607,8 +660,10 @@ a:focus-visible { outline: 3px solid color-mix(in srgb, var(--sx-green) 72%, #ff
   .hero-actions { align-items: stretch; flex-direction: column; }
   .hero-actions a { width: 100%; }
   .proof-foot { align-items: flex-start; flex-direction: column; }
-  .fragment-sources { grid-template-columns: 1fr; }
+  .attention-cards { grid-template-columns: 1fr; }
+  .attention-cards article { min-height: 340px; }
   .case-facts { grid-template-columns: 1fr; }
+  .guardrail-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
