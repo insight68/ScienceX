@@ -1,21 +1,27 @@
-# Using Third-Party Models (OpenAI / DeepSeek / Local Models)
+# Connect a Third-Party Model
 
-This project communicates with LLMs via the Anthropic protocol. By using a protocol translation proxy, you can use any model including OpenAI, DeepSeek, Ollama, etc.
+ScienceX currently uses the Anthropic Messages API as its model-runtime interface. Connect directly when a provider implements that interface. When a provider exposes only an OpenAI-compatible API, use a gateway such as LiteLLM to translate the protocol.
 
-## How It Works
+A text response alone does not prove compatibility. Reliable use also depends on streaming, tool calling, context length, and handling of parameters such as `thinking` and `cache_control`. Follow the provider's current documentation and verify the actual workflow.
 
+> **Data and credential boundary:** A remote model or proxy receives the prompt, context, and tool results required to complete the request. It also uses the API key you configure. Review the service's retention, logging, and credential-handling policies before connecting it. A local Ollama deployment and a remote service do not have the same data boundary.
+
+## Choose a connection pattern
+
+| Provider capability | Connection pattern |
+| --- | --- |
+| Exposes an Anthropic-compatible `/v1/messages` endpoint | Configure `ANTHROPIC_BASE_URL` directly |
+| Exposes only an OpenAI-compatible endpoint | Use LiteLLM or another gateway for Anthropic → OpenAI translation |
+| Runs locally through Ollama or a similar runtime | Expose an Anthropic-compatible endpoint through a local gateway |
+
+```text
+ScienceX ── Anthropic Messages ──▶ Compatible service
+         └─ Anthropic Messages ──▶ Protocol gateway ── OpenAI-compatible ──▶ Target model
 ```
-ScienceX ──Anthropic protocol──▶ LiteLLM Proxy ──OpenAI protocol──▶ Target Model API
-                                          (translation)
-```
 
-This project sends Anthropic Messages API requests. The LiteLLM proxy automatically translates them to OpenAI Chat Completions API format and forwards them to the target model.
+## Option 1: Connect through LiteLLM
 
----
-
-## Option 1: LiteLLM Proxy (Recommended)
-
-[LiteLLM](https://github.com/BerriAI/litellm) is a unified proxy gateway supporting 100+ LLMs (41k+ GitHub Stars), with native support for receiving Anthropic protocol requests.
+[LiteLLM](https://docs.litellm.ai/docs/proxy/quick_start) can receive Anthropic Messages requests and route them to different model services. Every model name below is a placeholder example; replace it with a model ID supported by the provider today.
 
 ### 1. Install LiteLLM
 
@@ -23,28 +29,27 @@ This project sends Anthropic Messages API requests. The LiteLLM proxy automatica
 pip install 'litellm[proxy]'
 ```
 
-### 2. Create Configuration File
+### 2. Create a configuration file
 
 Create `litellm_config.yaml`:
 
-#### Using OpenAI Models
-
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: sciencex-main
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/your-model-id
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
-  drop_params: true  # Drop Anthropic-specific params (thinking, etc.)
+  # Drop Anthropic-specific parameters that the target interface does not support
+  drop_params: true
 ```
 
-#### Using DeepSeek Models
+For DeepSeek, replace the model and credential fields:
 
 ```yaml
 model_list:
-  - model_name: deepseek-chat
+  - model_name: sciencex-main
     litellm_params:
       model: deepseek/deepseek-chat
       api_key: os.environ/DEEPSEEK_API_KEY
@@ -54,212 +59,121 @@ litellm_settings:
   drop_params: true
 ```
 
-#### Using Ollama Local Models
+For local Ollama, configure a local model:
 
 ```yaml
 model_list:
-  - model_name: llama3
+  - model_name: sciencex-main
     litellm_params:
-      model: ollama/llama3
-      api_base: http://localhost:11434
+      model: ollama/your-local-model
+      api_base: http://127.0.0.1:11434
 
 litellm_settings:
   drop_params: true
 ```
 
-#### Using Multiple Models (switchable after startup)
-
-```yaml
-model_list:
-  - model_name: gpt-4o
-    litellm_params:
-      model: openai/gpt-4o
-      api_key: os.environ/OPENAI_API_KEY
-
-  - model_name: deepseek-chat
-    litellm_params:
-      model: deepseek/deepseek-chat
-      api_key: os.environ/DEEPSEEK_API_KEY
-      api_base: https://api.deepseek.com
-
-  - model_name: llama3
-    litellm_params:
-      model: ollama/llama3
-      api_base: http://localhost:11434
-
-litellm_settings:
-  drop_params: true
-```
-
-### 3. Start the Proxy
+### 3. Start the proxy
 
 ```bash
-# Set your target model's API key
-export OPENAI_API_KEY=sk-xxx
-# or
-export DEEPSEEK_API_KEY=sk-xxx
+# Set the credential required by your target service
+export OPENAI_API_KEY=your_api_key_here
 
-# Start the proxy
 litellm --config litellm_config.yaml --port 4000
 ```
 
-The proxy will listen on `http://localhost:4000` and expose an Anthropic-compatible `/v1/messages` endpoint.
+The proxy listens on `http://127.0.0.1:4000` and exposes an Anthropic-compatible interface to ScienceX.
 
-### 4. Configure This Project
+### 4. Configure ScienceX
 
-Choose one of two configuration methods:
-
-#### Method A: Via `.env` File
+Add the following to the project `.env`:
 
 ```bash
-ANTHROPIC_AUTH_TOKEN=sk-anything
-ANTHROPIC_BASE_URL=http://localhost:4000
-ANTHROPIC_MODEL=gpt-4o
-ANTHROPIC_DEFAULT_SONNET_MODEL=gpt-4o
-ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-4o
-ANTHROPIC_DEFAULT_OPUS_MODEL=gpt-4o
-API_TIMEOUT_MS=3000000
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+ANTHROPIC_AUTH_TOKEN=local-proxy-token
+ANTHROPIC_BASE_URL=http://127.0.0.1:4000
+ANTHROPIC_MODEL=sciencex-main
+ANTHROPIC_DEFAULT_SONNET_MODEL=sciencex-main
+ANTHROPIC_DEFAULT_HAIKU_MODEL=sciencex-main
+ANTHROPIC_DEFAULT_OPUS_MODEL=sciencex-main
 ```
 
-#### Method B: Via `~/.sciencex/claude/settings.json`
+If local LiteLLM has no `master_key`, `ANTHROPIC_AUTH_TOKEN` only satisfies the client authentication field. The proxy uses the provider credential from `litellm_config.yaml` when forwarding the request. Never commit a real provider key to a public repository.
 
-```json
-{
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "sk-anything",
-    "ANTHROPIC_BASE_URL": "http://localhost:4000",
-    "ANTHROPIC_MODEL": "gpt-4o",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-4o",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-4o",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "gpt-4o",
-    "API_TIMEOUT_MS": "3000000",
-    "DISABLE_TELEMETRY": "1",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
-  }
-}
-```
-
-> **Note**: The `ANTHROPIC_AUTH_TOKEN` value can be any string when using the LiteLLM proxy (LiteLLM uses its own configured key for forwarding), unless you've set a `master_key` on the LiteLLM side.
-
-### 5. Start and Verify
+### 5. Verify text and tool calling
 
 ```bash
 ./bin/sciencex
 ```
 
-If everything is configured correctly, you should see the normal chat interface, with your configured target model handling the requests.
+First send a simple message that does not call a tool to verify authentication, the model ID, and streaming. Then run one read-only tool call. Both steps must succeed before the model can be considered compatible with the basic ScienceX workflow.
 
----
-
-## Option 2: Direct Connection to Anthropic-Compatible Services
-
-Some third-party services directly support the Anthropic Messages API, no proxy needed:
+## Option 2: Connect directly to an Anthropic-compatible service
 
 ### OpenRouter
 
+OpenRouter currently documents `https://openrouter.ai/api` as the Anthropic SDK base URL; the SDK appends `/v1/messages`. Copy a current model ID from the [OpenRouter integration guide](https://openrouter.ai/docs/guides/coding-agents/claude-code-integration).
+
 ```bash
-ANTHROPIC_AUTH_TOKEN=sk-or-v1-xxx
-ANTHROPIC_BASE_URL=https://openrouter.ai/api/v1
-ANTHROPIC_MODEL=openai/gpt-4o
-ANTHROPIC_DEFAULT_SONNET_MODEL=openai/gpt-4o
-ANTHROPIC_DEFAULT_HAIKU_MODEL=openai/gpt-4o-mini
-ANTHROPIC_DEFAULT_OPUS_MODEL=openai/gpt-4o
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+ANTHROPIC_AUTH_TOKEN=your_openrouter_api_key
+ANTHROPIC_BASE_URL=https://openrouter.ai/api
+ANTHROPIC_MODEL=provider/model-id
+ANTHROPIC_DEFAULT_SONNET_MODEL=provider/model-id
+ANTHROPIC_DEFAULT_HAIKU_MODEL=provider/model-id
+ANTHROPIC_DEFAULT_OPUS_MODEL=provider/model-id
 ```
 
-### MiniMax (pre-configured in .env.example)
+### MiniMax
 
-MiniMax provides an Anthropic-compatible API endpoint and can be connected directly without any proxy. Available models:
-
-| Model | Description |
-|-------|-------------|
-| `MiniMax-M3` | Default recommended, latest generation with excellent overall performance and 1M context |
-| `MiniMax-M2.7` | Previous stable release |
-| `MiniMax-M2.7-highspeed` | Faster responses, suitable for latency-sensitive use cases |
+MiniMax exposes an Anthropic-compatible endpoint. The field structure below matches the repository's `.env.example`, but model availability and names may change. Check the current [MiniMax compatibility documentation](https://platform.minimax.io/docs/api-reference/text-anthropic-api) before use.
 
 ```bash
-ANTHROPIC_AUTH_TOKEN=your_minimax_api_key_here
-# International users: api.minimax.io; China users may use api.minimaxi.com
+ANTHROPIC_API_KEY=your_minimax_api_key
 ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic
-ANTHROPIC_MODEL=MiniMax-M3
-ANTHROPIC_DEFAULT_SONNET_MODEL=MiniMax-M3
+ANTHROPIC_MODEL=MiniMax-M2.7
+ANTHROPIC_DEFAULT_SONNET_MODEL=MiniMax-M2.7
 ANTHROPIC_DEFAULT_HAIKU_MODEL=MiniMax-M2.7-highspeed
-ANTHROPIC_DEFAULT_OPUS_MODEL=MiniMax-M3
-API_TIMEOUT_MS=3000000
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+ANTHROPIC_DEFAULT_OPUS_MODEL=MiniMax-M2.7
 ```
 
-> **Get API Key**: Visit [MiniMax Open Platform](https://platform.minimax.io) to register and obtain an API key.
+## Checklist for any other proxy
 
----
+ScienceX does not maintain or implicitly trust third-party community proxies. Before connecting one, confirm that it:
 
-## Option 3: Other Proxy Tools
+1. Has reviewable source code, version history, and an active maintenance status.
+2. Clearly documents whether it logs request bodies, tool results, or API keys.
+3. Correctly handles Anthropic `/v1/messages`, streaming events, and `tool_use`.
+4. Returns structured errors instead of HTML pages or truncated responses.
+5. Passes text-response and read-only tool-call checks with non-sensitive data.
 
-The community has built several proxy tools specifically for ScienceX:
+## Compatibility notes
 
-| Tool | Description | Link |
-|------|-------------|------|
-| **a2o** | Anthropic → OpenAI single binary, zero dependencies | [Twitter](https://x.com/mantou543/status/2018846154855940200) |
-| **Empero Proxy** | Full Anthropic Messages API to OpenAI translation | [Twitter](https://x.com/EmperoAI/status/2036840854065762551) |
-| **Alma** | Client with built-in OpenAI → Anthropic proxy | [Twitter](https://x.com/yetone/status/2003508782127833332) |
-| **Chutes** | Docker container supporting 60+ open-source models | [Twitter](https://x.com/chutes_ai/status/2027039742915662232) |
+### `thinking` and prompt caching
 
----
+A directly connected Anthropic-compatible service may support these capabilities. A route translated through an OpenAI-compatible interface may drop or degrade them. Do not assume that every third-party model supports them—or that none do. Verify the selected service and model independently.
 
-## Known Limitations
+### Tool calling
 
-### 1. `drop_params: true` Is Essential
+Core ScienceX workflows depend on `tool_use`. The model must reliably produce structured tool arguments and consume tool results. Parameter count or brand alone does not prove compatibility; use an actual task check.
 
-This project sends Anthropic-specific parameters (e.g., `thinking`, `cache_control`) that don't exist in the OpenAI API. You must set `drop_params: true` in the LiteLLM config, otherwise requests will fail.
+### Request timeout
 
-### 2. Extended Thinking Unavailable
+Long contexts and repeated tool calls can require more time. Increase `API_TIMEOUT_MS` only after confirming that the request is still progressing. A timeout can also indicate an incorrect endpoint, a network failure, or an upstream rejection and should not always be solved by waiting longer.
 
-Anthropic's Extended Thinking is a proprietary feature not supported by other models. It is automatically disabled when using third-party models.
+## Troubleshooting
 
-### 3. Prompt Caching Unavailable
+### LiteLLM reports that `/v1/responses` is missing
 
-`cache_control` is an Anthropic-specific feature. Prompt caching won't work with third-party models (but won't cause errors — it's silently ignored by `drop_params`).
-
-### 4. Tool Calling Compatibility
-
-This project heavily uses tool calling (tool_use). LiteLLM automatically translates Anthropic's tool_use format to OpenAI's function_calling format. This works in most cases, but some complex tool calls may have compatibility issues. If you encounter problems, try using a more capable model (e.g., GPT-4o).
-
-### 5. Telemetry and Non-Essential Requests
-
-Configure these environment variables to avoid unnecessary network requests:
-```
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
-```
-
----
-
-## FAQ
-
-### Q: LiteLLM proxy returns `/v1/responses` not found?
-
-Some OpenAI-compatible services only support `/v1/chat/completions`. Add this to your LiteLLM config:
+Some OpenAI-compatible services expose only `/v1/chat/completions`. You can try this LiteLLM setting:
 
 ```yaml
 litellm_settings:
   use_chat_completions_url_for_anthropic_messages: true
 ```
 
-### Q: What's the difference between `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`?
+This is LiteLLM behavior. Recheck its official documentation after upgrading LiteLLM.
 
-- `ANTHROPIC_API_KEY` → Sent via `x-api-key` header
-- `ANTHROPIC_AUTH_TOKEN` → Sent via `Authorization: Bearer` header
+### What is the difference between `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN`?
 
-LiteLLM proxy accepts Bearer Token format by default, so `ANTHROPIC_AUTH_TOKEN` is recommended.
+- `ANTHROPIC_API_KEY` is sent through the `x-api-key` header.
+- `ANTHROPIC_AUTH_TOKEN` is sent through the `Authorization: Bearer` header.
 
-### Q: Can I configure multiple models?
-
-Yes. Define multiple `model_name` entries in `litellm_config.yaml`, then switch by changing the `ANTHROPIC_MODEL` value.
-
-### Q: Local Ollama models don't work well?
-
-This project's system prompts and tool calls require strong model capabilities. Use larger models (e.g., Llama 3 70B+, Qwen 72B+). Smaller models may fail to handle tool calling correctly.
+Choose the method required by the provider instead of inferring it only from the key prefix.

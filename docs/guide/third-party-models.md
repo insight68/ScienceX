@@ -1,21 +1,27 @@
-# 使用第三方模型（OpenAI / DeepSeek / 本地模型）
+# 接入第三方模型
 
-本项目基于 Anthropic 协议与 LLM 通信。通过协议转换代理，可以使用 OpenAI、DeepSeek、Ollama 等任意模型。
+ScienceX 当前以 Anthropic Messages API 作为模型运行时接口。提供商直接支持该接口时可以直连；只提供 OpenAI 兼容接口时，需要通过 LiteLLM 等网关转换协议。
 
-## 原理
+能否稳定使用不只取决于“能否返回文字”，还取决于流式输出、工具调用、上下文长度以及 `thinking`、`cache_control` 等参数的兼容性。请以提供商当前文档和实际验证结果为准。
 
+> **数据与凭据边界**：远程模型和远程代理会接收完成请求所需的提示词、上下文和工具结果。API Key 也会交给你配置的服务或本地代理使用。接入前请检查服务的数据保留、日志和凭据处理政策。本地 Ollama 与远程服务的数据边界不同，不要混为一谈。
+
+## 先选择接入方式
+
+| 提供商能力 | 接入方式 |
+| --- | --- |
+| 提供 Anthropic 兼容的 `/v1/messages` 接口 | 直接配置 `ANTHROPIC_BASE_URL` |
+| 只提供 OpenAI 兼容接口 | 使用 LiteLLM 等代理执行 Anthropic → OpenAI 转换 |
+| 本机运行 Ollama 等模型 | 通过本地代理暴露 Anthropic 兼容接口 |
+
+```text
+ScienceX ── Anthropic Messages ──▶ 兼容服务
+         └─ Anthropic Messages ──▶ 协议代理 ── OpenAI-compatible ──▶ 目标模型
 ```
-ScienceX ──Anthropic协议──▶ LiteLLM Proxy ──OpenAI协议──▶ 目标模型 API
-                                      (协议转换)
-```
 
-本项目发出 Anthropic Messages API 请求，LiteLLM 代理将其自动转换为 OpenAI Chat Completions API 格式并转发给目标模型。
+## 方式一：通过 LiteLLM 接入
 
----
-
-## 方式一：LiteLLM 代理（推荐）
-
-[LiteLLM](https://github.com/BerriAI/litellm) 是一个支持 100+ LLM 的统一代理网关（41k+ GitHub Stars），原生支持接收 Anthropic 协议请求。
+[LiteLLM](https://docs.litellm.ai/docs/proxy/quick_start) 可以接收 Anthropic Messages 请求，并将请求转发到不同模型服务。下面的模型名称都是占位示例，使用前必须替换为提供商当前支持的模型 ID。
 
 ### 1. 安装 LiteLLM
 
@@ -27,24 +33,23 @@ pip install 'litellm[proxy]'
 
 新建 `litellm_config.yaml`：
 
-#### 使用 OpenAI 模型
-
 ```yaml
 model_list:
-  - model_name: gpt-4o
+  - model_name: sciencex-main
     litellm_params:
-      model: openai/gpt-4o
+      model: openai/your-model-id
       api_key: os.environ/OPENAI_API_KEY
 
 litellm_settings:
-  drop_params: true  # 丢弃 Anthropic 专有参数（thinking 等）
+  # 丢弃目标接口不支持的 Anthropic 专有参数
+  drop_params: true
 ```
 
-#### 使用 DeepSeek 模型
+使用 DeepSeek 时，将 `model` 和凭据替换为对应配置：
 
 ```yaml
 model_list:
-  - model_name: deepseek-chat
+  - model_name: sciencex-main
     litellm_params:
       model: deepseek/deepseek-chat
       api_key: os.environ/DEEPSEEK_API_KEY
@@ -54,38 +59,14 @@ litellm_settings:
   drop_params: true
 ```
 
-#### 使用 Ollama 本地模型
+使用本机 Ollama 时，可配置本地模型：
 
 ```yaml
 model_list:
-  - model_name: llama3
+  - model_name: sciencex-main
     litellm_params:
-      model: ollama/llama3
-      api_base: http://localhost:11434
-
-litellm_settings:
-  drop_params: true
-```
-
-#### 使用多个模型（可在启动后切换）
-
-```yaml
-model_list:
-  - model_name: gpt-4o
-    litellm_params:
-      model: openai/gpt-4o
-      api_key: os.environ/OPENAI_API_KEY
-
-  - model_name: deepseek-chat
-    litellm_params:
-      model: deepseek/deepseek-chat
-      api_key: os.environ/DEEPSEEK_API_KEY
-      api_base: https://api.deepseek.com
-
-  - model_name: llama3
-    litellm_params:
-      model: ollama/llama3
-      api_base: http://localhost:11434
+      model: ollama/your-local-model
+      api_base: http://127.0.0.1:11434
 
 litellm_settings:
   drop_params: true
@@ -94,172 +75,105 @@ litellm_settings:
 ### 3. 启动代理
 
 ```bash
-# 设置目标模型的 API Key
-export OPENAI_API_KEY=sk-xxx
-# 或
-export DEEPSEEK_API_KEY=sk-xxx
+# 按配置设置目标服务的凭据
+export OPENAI_API_KEY=your_api_key_here
 
-# 启动代理
 litellm --config litellm_config.yaml --port 4000
 ```
 
-代理启动后会在 `http://localhost:4000` 监听，并暴露 Anthropic 兼容的 `/v1/messages` 端点。
+代理启动后监听 `http://127.0.0.1:4000`，并向 ScienceX 提供 Anthropic 兼容接口。
 
-### 4. 配置本项目
+### 4. 配置 ScienceX
 
-有两种配置方式，任选其一：
-
-#### 方式 A：通过 `.env` 文件
+在项目 `.env` 中添加：
 
 ```bash
-ANTHROPIC_AUTH_TOKEN=sk-anything
-ANTHROPIC_BASE_URL=http://localhost:4000
-ANTHROPIC_MODEL=gpt-4o
-ANTHROPIC_DEFAULT_SONNET_MODEL=gpt-4o
-ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-4o
-ANTHROPIC_DEFAULT_OPUS_MODEL=gpt-4o
-API_TIMEOUT_MS=3000000
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+ANTHROPIC_AUTH_TOKEN=local-proxy-token
+ANTHROPIC_BASE_URL=http://127.0.0.1:4000
+ANTHROPIC_MODEL=sciencex-main
+ANTHROPIC_DEFAULT_SONNET_MODEL=sciencex-main
+ANTHROPIC_DEFAULT_HAIKU_MODEL=sciencex-main
+ANTHROPIC_DEFAULT_OPUS_MODEL=sciencex-main
 ```
 
-#### 方式 B：通过 `~/.sciencex/claude/settings.json`
+本地 LiteLLM 未配置 `master_key` 时，`ANTHROPIC_AUTH_TOKEN` 只是满足客户端认证字段；代理真正转发请求时使用 `litellm_config.yaml` 中配置的提供商凭据。不要把真实提供商 Key 写进公开仓库。
 
-```json
-{
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "sk-anything",
-    "ANTHROPIC_BASE_URL": "http://localhost:4000",
-    "ANTHROPIC_MODEL": "gpt-4o",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "gpt-4o",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "gpt-4o",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "gpt-4o",
-    "API_TIMEOUT_MS": "3000000",
-    "DISABLE_TELEMETRY": "1",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
-  }
-}
-```
-
-> **说明**：`ANTHROPIC_AUTH_TOKEN` 的值在使用 LiteLLM 代理时可以是任意字符串（LiteLLM 会用自己配置的 key 转发），除非你在 LiteLLM 端设置了 `master_key` 校验。
-
-### 5. 启动并验证
+### 5. 验证文字与工具调用
 
 ```bash
 ./bin/sciencex
 ```
 
-如果一切正常，你应该能看到正常的对话界面，实际调用的是你配置的目标模型。
+先发送一条不调用工具的简单消息，确认认证、模型 ID 和流式输出正常；再执行一次只读工具调用。只有两步都成功，才能说明该模型适合 ScienceX 的基本工作流。
 
----
-
-## 方式二：直连兼容 Anthropic 协议的第三方服务
-
-部分第三方服务直接兼容 Anthropic Messages API，无需额外代理：
+## 方式二：直连 Anthropic 兼容服务
 
 ### OpenRouter
 
+OpenRouter 当前为 Anthropic SDK 提供的基础地址是 `https://openrouter.ai/api`；SDK 会在后面追加 `/v1/messages`。模型 ID 请从 [OpenRouter 当前文档](https://openrouter.ai/docs/guides/coding-agents/claude-code-integration)复制。
+
 ```bash
-ANTHROPIC_AUTH_TOKEN=sk-or-v1-xxx
-ANTHROPIC_BASE_URL=https://openrouter.ai/api/v1
-ANTHROPIC_MODEL=openai/gpt-4o
-ANTHROPIC_DEFAULT_SONNET_MODEL=openai/gpt-4o
-ANTHROPIC_DEFAULT_HAIKU_MODEL=openai/gpt-4o-mini
-ANTHROPIC_DEFAULT_OPUS_MODEL=openai/gpt-4o
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+ANTHROPIC_AUTH_TOKEN=your_openrouter_api_key
+ANTHROPIC_BASE_URL=https://openrouter.ai/api
+ANTHROPIC_MODEL=provider/model-id
+ANTHROPIC_DEFAULT_SONNET_MODEL=provider/model-id
+ANTHROPIC_DEFAULT_HAIKU_MODEL=provider/model-id
+ANTHROPIC_DEFAULT_OPUS_MODEL=provider/model-id
 ```
 
-### MiniMax（已在 .env.example 中配置）
+### MiniMax
 
-MiniMax 提供 Anthropic 兼容接口，支持直接接入，无需代理。可用模型：
-
-| 模型 | 说明 |
-|------|------|
-| `MiniMax-M3` | 默认推荐，最新一代综合性能优秀，支持 1M 上下文 |
-| `MiniMax-M2.7` | 上一代稳定版本 |
-| `MiniMax-M2.7-highspeed` | 响应更快，适合对速度有要求的场景 |
+MiniMax 提供 Anthropic 兼容端点。以下字段结构与仓库 `.env.example` 一致，但模型可用性和名称可能调整，请在使用前核对 [MiniMax 官方兼容接口文档](https://platform.minimax.io/docs/api-reference/text-anthropic-api)。
 
 ```bash
-ANTHROPIC_AUTH_TOKEN=your_minimax_api_key_here
-# 海外用户使用 api.minimax.io，国内用户可改为 api.minimaxi.com
+ANTHROPIC_API_KEY=your_minimax_api_key
 ANTHROPIC_BASE_URL=https://api.minimax.io/anthropic
-ANTHROPIC_MODEL=MiniMax-M3
-ANTHROPIC_DEFAULT_SONNET_MODEL=MiniMax-M3
+ANTHROPIC_MODEL=MiniMax-M2.7
+ANTHROPIC_DEFAULT_SONNET_MODEL=MiniMax-M2.7
 ANTHROPIC_DEFAULT_HAIKU_MODEL=MiniMax-M2.7-highspeed
-ANTHROPIC_DEFAULT_OPUS_MODEL=MiniMax-M3
-API_TIMEOUT_MS=3000000
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+ANTHROPIC_DEFAULT_OPUS_MODEL=MiniMax-M2.7
 ```
 
-> **获取 API Key**：访问 [MiniMax 开放平台](https://platform.minimax.io) 注册并获取 API Key。
+## 使用其他代理前的检查清单
 
----
+ScienceX 不维护也不默认信任第三方社区代理。接入前至少确认：
 
-## 方式三：其他代理工具
+1. 有可审查的源码、版本记录和维护状态。
+2. 明确是否记录请求正文、工具结果或 API Key。
+3. 能正确处理 Anthropic `/v1/messages`、流式事件和 `tool_use`。
+4. 失败时返回结构化错误，而不是 HTML 页面或被截断的响应。
+5. 已用非敏感数据完成文字回复和只读工具调用验证。
 
-社区还有一些专门为 ScienceX 做的代理工具：
+## 兼容性说明
 
-| 工具 | 说明 | 链接 |
-|------|------|------|
-| **a2o** | Anthropic → OpenAI 单二进制文件，零依赖 | [Twitter](https://x.com/mantou543/status/2018846154855940200) |
-| **Empero Proxy** | 完整的 Anthropic Messages API 转 OpenAI 代理 | [Twitter](https://x.com/EmperoAI/status/2036840854065762551) |
-| **Alma** | 内置 OpenAI → Anthropic 转换代理的客户端 | [Twitter](https://x.com/yetone/status/2003508782127833332) |
-| **Chutes** | Docker 容器，支持 60+ 开源模型 | [Twitter](https://x.com/chutes_ai/status/2027039742915662232) |
+### `thinking` 与提示词缓存
 
----
+直连的 Anthropic 兼容服务可能支持这些能力；经过 OpenAI 兼容接口转换时，也可能被代理丢弃或降级。不要笼统假设“第三方模型一定支持”或“一定不支持”，应分别验证所选服务和模型。
 
-## 注意事项与已知限制
+### 工具调用
 
-### 1. `drop_params: true` 很重要
+ScienceX 的核心工作流依赖 `tool_use`。模型需要稳定地产生结构化工具参数，并正确处理工具结果。参数量或模型品牌不能单独证明兼容性，以实际任务验证为准。
 
-本项目会发送 Anthropic 专有参数（如 `thinking`、`cache_control`），这些参数在 OpenAI API 中不存在。LiteLLM 配置中必须设置 `drop_params: true`，否则请求会报错。
+### 请求超时
 
-### 2. Extended Thinking 不可用
+长上下文或多次工具调用可能需要更长时间。只有确认请求确实在持续运行时才调大 `API_TIMEOUT_MS`；超时也可能来自错误端点、网络失败或上游拒绝，不应一律通过延长时间解决。
 
-Anthropic 的 Extended Thinking 功能是专有特性，其他模型不支持。使用第三方模型时此功能自动失效。
+## 常见问题
 
-### 3. Prompt Caching 不可用
+### LiteLLM 报错 `/v1/responses` 找不到
 
-`cache_control` 是 Anthropic 专有功能。使用第三方模型时，prompt caching 不会生效（但不会导致报错，会被 `drop_params` 忽略）。
-
-### 4. 工具调用兼容性
-
-本项目大量使用工具调用（tool_use），LiteLLM 会自动转换 Anthropic tool_use 格式到 OpenAI function_calling 格式。大部分情况下可以正常工作，但某些复杂工具调用可能存在兼容性问题。如遇问题，建议使用能力较强的模型（如 GPT-4o）。
-
-### 5. 遥测和非必要网络请求
-
-建议配置以下环境变量以避免不必要的网络请求：
-```
-DISABLE_TELEMETRY=1
-CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
-```
-
----
-
-## FAQ
-
-### Q: LiteLLM 代理报错 `/v1/responses` 找不到？
-
-部分 OpenAI 兼容服务只支持 `/v1/chat/completions`。在 LiteLLM 配置中添加：
+部分 OpenAI 兼容服务只支持 `/v1/chat/completions`。可以在 LiteLLM 配置中尝试：
 
 ```yaml
 litellm_settings:
   use_chat_completions_url_for_anthropic_messages: true
 ```
 
-### Q: `ANTHROPIC_API_KEY` 和 `ANTHROPIC_AUTH_TOKEN` 有什么区别？
+该设置属于 LiteLLM 行为，升级 LiteLLM 后请重新核对其官方文档。
 
-- `ANTHROPIC_API_KEY` → 通过 `x-api-key` 请求头发送
-- `ANTHROPIC_AUTH_TOKEN` → 通过 `Authorization: Bearer` 请求头发送
+### `ANTHROPIC_API_KEY` 和 `ANTHROPIC_AUTH_TOKEN` 有什么区别
 
-LiteLLM 代理默认接受 Bearer Token 格式，建议使用 `ANTHROPIC_AUTH_TOKEN`。
+- `ANTHROPIC_API_KEY` 通过 `x-api-key` 请求头发送。
+- `ANTHROPIC_AUTH_TOKEN` 通过 `Authorization: Bearer` 请求头发送。
 
-### Q: 可以同时配置多个模型吗？
-
-可以。在 `litellm_config.yaml` 中配置多个 `model_name`，然后通过修改 `ANTHROPIC_MODEL` 切换。
-
-### Q: 本地 Ollama 模型效果不好怎么办？
-
-本项目的系统提示和工具调用对模型能力要求较高。建议使用参数量较大的模型（如 Llama 3 70B+, Qwen 72B+），小模型可能无法正确处理工具调用。
+请按提供商要求选择，不要仅凭 Key 的字符串前缀判断。

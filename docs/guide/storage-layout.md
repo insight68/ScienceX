@@ -2,11 +2,13 @@
 
 ScienceX 默认使用 `~/.sciencex` 保存应用数据。项目级配置使用项目根目录下的 `.sciencex/`。旧版 `.claude/` 路径仅作为兼容读取来源，不再是新配置的默认写入位置。
 
+普通使用不需要手动修改这些目录。优先通过 ScienceX 设置界面管理模型提供商和桌面选项；排障、迁移或团队共享配置时，再按本页说明检查文件。`credentials/` 和包含真实 Key 的本地设置属于敏感数据，请勿提交或分享。
+
 ## 用户级目录
 
 ```text
 ~/.sciencex/
-├── config/          # Provider、桌面设置、IM 适配器配置
+├── config/          # 模型提供商、桌面设置和消息适配器配置
 ├── credentials/     # OAuth 与其他凭据
 ├── state/           # 窗口、终端、定时任务和会话映射状态
 ├── data/            # 索引、追踪、下载与 Science 项目注册表
@@ -37,7 +39,7 @@ ScienceX 默认使用 `~/.sciencex` 保存应用数据。项目级配置使用�
 └── worktrees/
 ```
 
-`settings.local.json`、`scheduled_tasks.json`、`worktrees/` 和 SQLite 临时文件默认不应提交到版本库。团队共享的 `settings.json`、技能、Agent 和规则可以按项目需要提交。
+`settings.local.json`、`scheduled_tasks.json`、`worktrees/` 和 SQLite 临时文件默认不应提交到版本库。团队共享的 `settings.json`、技能、Agent 和规则只有在确认不含凭据、个人路径或其他敏感数据后，才可以按项目需要提交。
 
 ## 环境变量
 
@@ -45,7 +47,7 @@ ScienceX 默认使用 `~/.sciencex` 保存应用数据。项目级配置使用�
 |------|------|
 | `SCIENCEX_HOME` | 覆盖用户级 ScienceX 根目录；默认是 `~/.sciencex` |
 | `CLAUDE_CONFIG_DIR` | 仅覆盖内嵌 Claude 兼容运行时目录；旧启动方式仍可使用 |
-| `SCIENCEX_LEGACY_CONFIG_DIR` | 指定一次性迁移读取的旧目录；通常无需设置 |
+| `SCIENCEX_LEGACY_CONFIG_DIR` | 仅在首次迁移时指定旧配置目录；通常无需设置 |
 
 桌面端选择自定义数据目录时，相当于设置 `SCIENCEX_HOME`；兼容运行时自动放在所选目录的 `claude/` 下。
 
@@ -59,5 +61,4 @@ ScienceX 默认使用 `~/.sciencex` 保存应用数据。项目级配置使用�
 4. 不删除、不重命名、也不修改旧 `.claude` 内容。
 5. 项目配置按类别回退：对应的 `.sciencex` 文件或目录不存在时，才读取 `.claude` 版本；后续写入落到 `.sciencex`。
 
-建议先运行一段时间并确认 Provider、会话、技能、Agent 和定时任务正常，再手动归档旧目录。ScienceX 不会自动删除用户数据。
-
+建议先运行一段时间并确认模型提供商、会话、技能、Agent 和定时任务正常，再手动归档旧目录。归档前保留备份；ScienceX 不会自动删除用户数据。

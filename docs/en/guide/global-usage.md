@@ -1,18 +1,21 @@
-# Global Usage (Run from Any Directory)
+# Run the ScienceX CLI from Any Directory
 
+This page applies only to the terminal app running from source. After setup, you can invoke `sciencex` from any project directory, and ScienceX treats the launch location as the current working directory.
 
-If you want to run `sciencex` directly from any project directory, set up one of the following. Once configured, `sciencex` will automatically recognize your current working directory.
+> Confirm that you are in the intended project directory before starting. Once authorized, ScienceX may read or modify files in that directory.
 
 ## macOS / Linux
 
 Add to `~/.bashrc` or `~/.zshrc`:
 
+Replace `/absolute/path/to/ScienceX` with the actual absolute path of your checkout first:
+
 ```bash
 # Option 1: Add to PATH (recommended)
-export PATH="$HOME/path/to/ScienceX/bin:$PATH"
+export PATH="/absolute/path/to/ScienceX/bin:$PATH"
 
 # Option 2: Alias
-alias sciencex="$HOME/path/to/ScienceX/bin/sciencex"
+alias sciencex="/absolute/path/to/ScienceX/bin/sciencex"
 ```
 
 Then reload the config:
@@ -26,10 +29,12 @@ source ~/.bashrc  # or source ~/.zshrc
 Add to `~/.bashrc`:
 
 ```bash
-export PATH="$HOME/path/to/ScienceX/bin:$PATH"
+export PATH="/absolute/path/to/ScienceX/bin:$PATH"
 ```
 
-### Windows + WSL Toolchains
+Replace the placeholder with the actual checkout path that Git Bash can access.
+
+### Troubleshoot Windows and WSL toolchains
 
 If `sciencex` runs on Windows / Git Bash but tools such as Node, Python, uv, or bun are installed inside WSL, call them through WSL explicitly:
 
@@ -56,3 +61,5 @@ cd ~/your-other-project
 sciencex
 # Ask "What is the current directory?" — it should show ~/your-other-project
 ```
+
+If the reported directory is not the one you expected, exit, enter the correct project directory, and start again. Do not test from a parent directory that contains unrelated or sensitive files.

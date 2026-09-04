@@ -17,15 +17,15 @@ function slugify(str: string): string {
 
 const zhSidebar = [
   {
-    text: '快速开始',
+    text: '开始使用',
     items: [
-      { text: '安装与启动', link: '/guide/quick-start' },
-      { text: '环境变量', link: '/guide/env-vars' },
+      { text: '指南首页', link: '/guide/' },
+      { text: '从源码启动 CLI', link: '/guide/quick-start' },
+      { text: '配置模型提供商', link: '/guide/env-vars' },
       { text: '配置与数据目录', link: '/guide/storage-layout' },
-      { text: '第三方模型', link: '/guide/third-party-models' },
-      { text: '全局使用', link: '/guide/global-usage' },
-      { text: '常见问题', link: '/guide/faq' },
-      { text: '贡献与质量门禁', link: '/guide/contributing' },
+      { text: '接入第三方模型', link: '/guide/third-party-models' },
+      { text: '在任意目录运行 CLI', link: '/guide/global-usage' },
+      { text: '安装与接入排障', link: '/guide/faq' },
     ],
   },
   {
@@ -39,24 +39,24 @@ const zhSidebar = [
     ],
   },
   {
-    text: 'Science 工作台',
+    text: 'Science 科研工作台',
     collapsed: false,
     items: [
       { text: '部署与实验执行', link: '/science/01-deployment-and-workflow' },
     ],
   },
   {
-    text: '多 Agent 系统',
+    text: '多智能体（Agent）',
     collapsed: false,
     items: [
       { text: '概览', link: '/agent/' },
       { text: '使用指南', link: '/agent/01-usage-guide' },
       { text: '实现原理', link: '/agent/02-implementation' },
-      { text: 'Agent 框架解析', link: '/agent/03-agent-framework' },
+      { text: '框架解析', link: '/agent/03-agent-framework' },
     ],
   },
   {
-    text: 'Skills 系统',
+    text: '技能（Skills）',
     collapsed: false,
     items: [
       { text: '使用指南', link: '/skills/01-usage-guide' },
@@ -64,7 +64,7 @@ const zhSidebar = [
     ],
   },
   {
-    text: 'IM 接入',
+    text: '即时通信接入',
     collapsed: false,
     items: [
       { text: '总览', link: '/im/' },
@@ -75,7 +75,7 @@ const zhSidebar = [
     ],
   },
   {
-    text: 'Channel 源码研究',
+    text: '消息通道架构',
     collapsed: false,
     items: [
       { text: '概览', link: '/channel/' },
@@ -83,7 +83,7 @@ const zhSidebar = [
     ],
   },
   {
-    text: 'Computer Use',
+    text: '桌面操作（Computer Use）',
     collapsed: false,
     items: [
       { text: '功能指南', link: '/features/computer-use' },
@@ -107,6 +107,13 @@ const zhSidebar = [
     ],
   },
   {
+    text: '开发者文档',
+    collapsed: true,
+    items: [
+      { text: '贡献与质量门禁', link: '/guide/contributing' },
+    ],
+  },
+  {
     text: '参考',
     collapsed: true,
     items: [
@@ -120,13 +127,13 @@ const enSidebar = [
   {
     text: 'Getting Started',
     items: [
-      { text: 'Quick Start', link: '/en/guide/quick-start' },
-      { text: 'Environment Variables', link: '/en/guide/env-vars' },
+      { text: 'Guide Home', link: '/en/guide/' },
+      { text: 'Run the CLI from Source', link: '/en/guide/quick-start' },
+      { text: 'Configure a Model Provider', link: '/en/guide/env-vars' },
       { text: 'Configuration & Data', link: '/en/guide/storage-layout' },
-      { text: 'Third-Party Models', link: '/en/guide/third-party-models' },
-      { text: 'Global Usage', link: '/en/guide/global-usage' },
-      { text: 'FAQ', link: '/en/guide/faq' },
-      { text: 'Contributing', link: '/en/guide/contributing' },
+      { text: 'Connect a Third-Party Model', link: '/en/guide/third-party-models' },
+      { text: 'Run the CLI from Any Directory', link: '/en/guide/global-usage' },
+      { text: 'Installation & Provider Troubleshooting', link: '/en/guide/faq' },
     ],
   },
   {
@@ -192,6 +199,13 @@ const enSidebar = [
     ],
   },
   {
+    text: 'Developer Documentation',
+    collapsed: true,
+    items: [
+      { text: 'Contributing & Quality Gates', link: '/en/guide/contributing' },
+    ],
+  },
+  {
     text: 'Reference',
     collapsed: true,
     items: [
@@ -234,15 +248,21 @@ export default withMermaid(defineConfig({
         nav: [
           { text: '首页', link: '/' },
           { text: '下载', link: '/download' },
-          { text: '快速开始', link: '/guide/quick-start' },
+          { text: '开始使用', link: '/guide/' },
         ],
         sidebar: zhSidebar,
         outline: { label: '页面导航' },
         returnToTopLabel: '返回顶部',
         sidebarMenuLabel: '菜单',
         darkModeSwitchLabel: '主题',
+        langMenuLabel: '切换语言',
+        skipToContentLabel: '跳转到正文',
         lastUpdated: { text: '最后更新于' },
         docFooter: { prev: '上一页', next: '下一页' },
+        footer: {
+          message: '基于 MIT 许可证发布。',
+          copyright: 'Copyright 2026 ScienceX Contributors',
+        },
       },
     },
     en: {
@@ -257,9 +277,13 @@ export default withMermaid(defineConfig({
         nav: [
           { text: 'Home', link: '/en/' },
           { text: 'Download', link: '/en/download' },
-          { text: 'Quick Start', link: '/en/guide/quick-start' },
+          { text: 'Get Started', link: '/en/guide/' },
         ],
         sidebar: enSidebar,
+        footer: {
+          message: 'Released under the MIT License.',
+          copyright: 'Copyright 2026 ScienceX Contributors',
+        },
       },
     },
   },
@@ -271,6 +295,24 @@ export default withMermaid(defineConfig({
     },
     search: {
       provider: 'local',
+      options: {
+        translations: {
+          button: {
+            buttonText: '搜索',
+            buttonAriaLabel: '搜索文档',
+          },
+        },
+        locales: {
+          en: {
+            translations: {
+              button: {
+                buttonText: 'Search',
+                buttonAriaLabel: 'Search documentation',
+              },
+            },
+          },
+        },
+      },
     },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/insight68/ScienceX' },

@@ -1,6 +1,15 @@
-# Quick Start
+# Run the ScienceX CLI from Source
 
-## 1. Install Bun
+This page is for users who want to run the terminal version of ScienceX from source. If you only want the desktop research workbench, [download the desktop app](../download.md) instead. Local experiment analysis in the desktop app does not require model credentials.
+
+By the end of this guide, you will be able to start the terminal interface from the repository and verify that your model configuration works.
+
+## 1. Prepare the environment
+
+- [Git](https://git-scm.com/downloads)
+- [Bun](https://bun.sh/) 1.3.x; the repository currently pins `bun@1.3.12`
+
+Install Bun:
 
 ```bash
 # macOS / Linux
@@ -13,52 +22,65 @@ brew install bun
 powershell -c "irm bun.sh/install.ps1 | iex"
 ```
 
-> On minimal Linux images, if you see `unzip is required`, run `apt update && apt install -y unzip` first.
+> On minimal Linux images, install `unzip` first if the Bun installer reports `unzip is required`, then run the installer again.
 
-## 2. Install Dependencies and Configure
+## 2. Get the source and install dependencies
 
 ```bash
+git clone https://github.com/insight68/ScienceX.git
+cd ScienceX
 bun install
-cp .env.example .env
-# Edit .env with your API key
 ```
 
-See [Environment Variables](./env-vars.md) for the full reference.
+If you already have a checkout, enter its repository root before running `bun install`.
 
-## 3. Start
+## 3. Configure a model provider
+
+AI chat in the terminal app requires at least one valid model authentication method:
+
+```bash
+cp .env.example .env
+# Edit .env and set either an API key or an auth token as required by your provider
+```
+
+Do not leave both placeholder credentials enabled. See [Configure a model provider](./env-vars.md) for variable definitions, precedence, and data-transmission boundaries.
+
+## 4. Start and verify
 
 ### macOS / Linux
 
 ```bash
-./bin/sciencex                          # Interactive TUI mode
-./bin/sciencex -p "your prompt here"    # Headless mode
+./bin/sciencex                          # Interactive terminal interface (TUI)
+./bin/sciencex -p "your prompt here"    # One-shot mode without the interactive UI
 ./bin/sciencex --help                   # Show all options
 ```
 
 ### Windows
 
-> **Prerequisite**: [Git for Windows](https://git-scm.com/download/win) must be installed.
+Start through Bun in PowerShell or cmd:
 
 ```powershell
-# PowerShell / cmd — call Bun directly
 bun --env-file=.env ./src/entrypoints/cli.tsx
+```
 
-# Or run inside Git Bash
+Alternatively, run this in Git Bash:
+
+```bash
 ./bin/sciencex
 ```
 
-## 4. Global Usage (Optional)
+Run `--help` first to confirm that the CLI loads, then send a simple message to verify the model connection. If ordinary messages work but tool calls fail, check whether the selected model supports streaming and tool calling.
 
-Add `bin/` to your PATH to run from any directory. See [Global Usage Guide](./global-usage.md):
+## 5. Run from any directory (optional)
 
-```bash
-export PATH="$HOME/path/to/ScienceX/bin:$PATH"
-```
+To use another project directory as the current working directory, see [Run the CLI from any directory](./global-usage.md). Replace every example path with the absolute ScienceX path on your machine before updating PATH.
 
-## 5. Recovery Mode
+## 6. If the terminal interface does not render correctly
 
-If the Ink TUI has issues, use the fallback Recovery CLI mode:
+Use the basic command-line interface to isolate terminal compatibility problems:
 
 ```bash
 CLAUDE_CODE_FORCE_RECOVERY_CLI=1 ./bin/sciencex
 ```
+
+This mode helps diagnose terminal rendering. It does not fix model-endpoint or authentication errors; see [Installation and provider troubleshooting](./faq.md) for those problems.
