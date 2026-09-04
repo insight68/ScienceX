@@ -831,7 +831,7 @@ export const jp: Record<TranslationKey, string> = {
   'settings.skills.redirectDescription': 'スキルは統合されたスキルセンターで管理されます。マーケットとインストール済みスキルを同じ場所で扱えます。',
   'settings.skills.browserTitle': 'インストール済みスキルを閲覧',
   'settings.skills.browserEyebrow': 'スキルブラウザ',
-  'settings.skills.browserDescription': 'バンドル、プロジェクト、ユーザーのスキルを確認し、スコープを比較し、各スキルフォルダを開いてドキュメントやソースファイルを読みます。',
+  'settings.skills.browserDescription': '研究、プロジェクト、ユーザーのスキルを確認し、スコープを比較し、各スキルフォルダを開いてドキュメントやソースファイルを読みます。',
   'settings.skills.searchLabel': 'スキルを検索',
   'settings.skills.searchPlaceholder': '名前、説明、ソースでスキルを検索...',
   'settings.skills.searchResultCount': '{total} 件中 {count} 件のスキルが一致',
@@ -866,7 +866,7 @@ export const jp: Record<TranslationKey, string> = {
   'settings.skills.source.project': 'プロジェクト',
   'settings.skills.source.plugin': 'プラグイン',
   'settings.skills.source.mcp': 'MCP',
-  'settings.skills.source.bundled': '組み込み',
+  'settings.skills.source.bundled': '研究',
 
   // Settings > Memory
   'settings.tab.memory': 'メモリ',

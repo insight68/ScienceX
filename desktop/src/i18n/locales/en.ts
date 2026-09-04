@@ -829,7 +829,7 @@ export const en = {
   'settings.skills.redirectDescription': 'Skills now live in the unified Skill Center, where marketplace and installed skills are managed together.',
   'settings.skills.browserTitle': 'Browse installed skills',
   'settings.skills.browserEyebrow': 'Skill Browser',
-  'settings.skills.browserDescription': 'Inspect bundled, project, and user skills, compare their scope, and open each skill folder to read its docs and source files.',
+  'settings.skills.browserDescription': 'Inspect research, project, and user skills, compare their scope, and open each skill folder to read its docs and source files.',
   'settings.skills.searchLabel': 'Search skills',
   'settings.skills.searchPlaceholder': 'Search skills by name, description, or source...',
   'settings.skills.searchResultCount': '{count} of {total} skills match',
@@ -864,7 +864,7 @@ export const en = {
   'settings.skills.source.project': 'Project',
   'settings.skills.source.plugin': 'Plugin',
   'settings.skills.source.mcp': 'MCP',
-  'settings.skills.source.bundled': 'Built-in',
+  'settings.skills.source.bundled': 'Research',
 
   // Settings > Memory
   'settings.tab.memory': 'Memory',

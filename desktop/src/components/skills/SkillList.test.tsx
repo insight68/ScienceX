@@ -133,4 +133,43 @@ describe('SkillList', () => {
 
     expect(fetchSkills).toHaveBeenCalledWith('/workspace/project')
   })
+
+  it.each([
+    ['zh', '科研'],
+    ['zh-TW', '科研'],
+    ['en', 'Research'],
+    ['jp', '研究'],
+    ['kr', '연구'],
+  ] as const)('labels and filters bundled skills as research in %s', (locale, label) => {
+    useSettingsStore.setState({ locale })
+    useSkillStore.setState({
+      skills: [
+        {
+          name: 'scansci-pdf',
+          description: 'Literature search workflow',
+          source: 'bundled',
+          userInvocable: true,
+          contentLength: 400,
+          hasDirectory: true,
+        },
+        {
+          name: 'alpha',
+          description: 'General user workflow',
+          source: 'user',
+          userInvocable: true,
+          contentLength: 200,
+          hasDirectory: true,
+        },
+      ],
+    })
+
+    render(<SkillList />)
+
+    expect(screen.getByRole('heading', { name: label })).toBeInTheDocument()
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: label } })
+    expect(screen.getByText('scansci-pdf')).toBeInTheDocument()
+    expect(screen.queryByText('alpha')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /scansci-pdf/ }))
+    expect(fetchSkillDetail).toHaveBeenCalledWith('bundled', 'scansci-pdf', '/workspace/project', 'skills')
+  })
 })

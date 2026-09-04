@@ -831,7 +831,7 @@ export const zh: Record<TranslationKey, string> = {
   'settings.skills.redirectDescription': '技能现在统一放在技能中心管理，市场和已安装技能会放在同一个入口里。',
   'settings.skills.browserTitle': '浏览已安装技能',
   'settings.skills.browserEyebrow': '技能浏览器',
-  'settings.skills.browserDescription': '查看内置、项目和用户技能，比较它们的来源与规模，并打开技能目录阅读文档和源码文件。',
+  'settings.skills.browserDescription': '查看科研、项目和用户技能，比较它们的来源与规模，并打开技能目录阅读文档和源码文件。',
   'settings.skills.searchLabel': '搜索技能',
   'settings.skills.searchPlaceholder': '搜索技能名称、描述或来源...',
   'settings.skills.searchResultCount': '匹配 {count} / {total} 个技能',
@@ -866,7 +866,7 @@ export const zh: Record<TranslationKey, string> = {
   'settings.skills.source.project': '项目',
   'settings.skills.source.plugin': '插件',
   'settings.skills.source.mcp': 'MCP',
-  'settings.skills.source.bundled': '内置',
+  'settings.skills.source.bundled': '科研',
 
   // Settings > Memory
   'settings.tab.memory': '记忆',

@@ -831,7 +831,7 @@ export const kr: Record<TranslationKey, string> = {
   'settings.skills.redirectDescription': '스킬은 이제 통합 스킬 센터에서 관리합니다. 마켓과 설치된 스킬을 한 곳에서 볼 수 있습니다.',
   'settings.skills.browserTitle': '설치된 스킬 살펴보기',
   'settings.skills.browserEyebrow': '스킬 브라우저',
-  'settings.skills.browserDescription': '번들, 프로젝트, 사용자 스킬을 확인하고 범위를 비교하며, 각 스킬 폴더를 열어 문서와 소스 파일을 읽습니다.',
+  'settings.skills.browserDescription': '연구, 프로젝트, 사용자 스킬을 확인하고 범위를 비교하며, 각 스킬 폴더를 열어 문서와 소스 파일을 읽습니다.',
   'settings.skills.searchLabel': '스킬 검색',
   'settings.skills.searchPlaceholder': '이름, 설명 또는 소스로 스킬 검색...',
   'settings.skills.searchResultCount': '{total}개 중 {count}개의 스킬이 일치',
@@ -866,7 +866,7 @@ export const kr: Record<TranslationKey, string> = {
   'settings.skills.source.project': '프로젝트',
   'settings.skills.source.plugin': '플러그인',
   'settings.skills.source.mcp': 'MCP',
-  'settings.skills.source.bundled': '기본 제공',
+  'settings.skills.source.bundled': '연구',
 
   // Settings > Memory
   'settings.tab.memory': '메모리',

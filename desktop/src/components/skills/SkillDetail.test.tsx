@@ -53,6 +53,35 @@ beforeEach(() => {
 })
 
 describe('SkillDetail markdown presentation', () => {
+  it.each([
+    ['zh', '科研'],
+    ['zh-TW', '科研'],
+    ['en', 'Research'],
+    ['jp', '研究'],
+    ['kr', '연구'],
+  ] as const)('uses the research source label in the badge and metadata in %s', (locale, label) => {
+    useSettingsStore.setState({ locale })
+    useSkillStore.setState({
+      selectedSkill: {
+        meta: {
+          name: 'scansci-pdf',
+          description: 'Literature workflow',
+          source: 'bundled',
+          userInvocable: true,
+          contentLength: 120,
+          hasDirectory: true,
+        },
+        tree: [{ name: 'SKILL.md', path: 'SKILL.md', type: 'file' }],
+        files: [{ path: 'SKILL.md', content: '# Literature', language: 'markdown', isEntry: true }],
+        skillRoot: 'bundled:scansci-pdf',
+      },
+    })
+
+    render(<SkillDetail />)
+
+    expect(screen.getAllByText(label)).toHaveLength(2)
+  })
+
   it('renders markdown files with the document variant and readable width', () => {
     useSkillStore.setState({
       selectedSkill: {
