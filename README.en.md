@@ -1,14 +1,14 @@
 [中文](README.md) | [English](README.en.md)
 
 # ScienceX
+
 <p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
 </p>
-<p align="center">
-  <img src="docs/images/desktop_ui/Sciencex.png" alt="ScienceX" width="800">
-</p>
 
-ScienceX is an open-source AI workbench for scientific research. It aims to be a local-first, self-hostable alternative to [Claude Science](https://www.anthropic.com/news/claude-science-ai-workbench), bringing experiment data, agent sessions, reproducible runs, provenance, and research artifacts into one macOS / Windows / Linux desktop environment. Researchers can choose their model provider, extend the system through Skills and MCP, and retain control over local files and computation.
+<p align="center"><strong>Keep research questions, evidence, and next steps connected</strong></p>
+
+ScienceX is an open-source, local-first AI workbench for research. It keeps research questions, versioned experiment designs, data, deterministic analyses, and research artifacts on one traceable path.
 
 > **Independent project:** ScienceX is not an Anthropic product and is not affiliated with or endorsed by Anthropic. The current release is building toward an open Claude Science-style workflow; it does not claim feature parity with Anthropic's product.
 
@@ -20,7 +20,7 @@ ScienceX is an open-source AI workbench for scientific research. It aims to be a
 
 ## Why ScienceX
 
-Anthropic describes Claude Science as a workbench that integrates scientific tools and packages, produces auditable artifacts, and provides flexible access to compute. ScienceX pursues the same class of workflow through open source, with five design principles:
+Research work is often split across chats, literature, code, data files, and reports. ScienceX provides an open local workbench for these connected activities, guided by five principles:
 
 - **Local first**: experiment tables, run records, and artifacts stay on infrastructure controlled by the researcher.
 - **Auditable and replayable**: input hashes, parameters, environments, state transitions, event logs, and artifact hashes form end-to-end provenance.

@@ -1,39 +1,42 @@
 ---
-layout: home
-
-hero:
-  name: ScienceX
-  text: Keep every step of your research traceable
-  tagline: An open-source, local-first AI workbench that brings research questions, experimental data, analysis runs, and artifacts together.
-  image:
-    src: /images/sicencex.png
-    alt: ScienceX research workbench
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /en/science/01-deployment-and-workflow
-    - theme: alt
-      text: Download
-      link: /en/download
-    - theme: alt
-      text: GitHub
-      link: https://github.com/insight68/ScienceX
-
-features:
-  - icon: "\U0001F4C1"
-    title: Give research data a clear home
-    details: Organize questions, data, and artifacts by project. Register a CSV or TSV to inspect field types, missing values, and sample data.
-    link: /en/science/01-deployment-and-workflow#register-an-experiment-table
-  - icon: "\U0001F9F5"
-    title: Keep context in a research thread
-    details: Open a dedicated thread around the project question and continue with the same local project context instead of starting from memory.
-    link: /en/science/01-deployment-and-workflow
-  - icon: "\U0001F9EC"
-    title: Make analysis easy to revisit
-    details: Record dataset versions, parameters, runtime environments, and artifacts, so the origin of a result stays clear months later.
-    link: /en/science/01-deployment-and-workflow#inspect-provenance-and-artifacts
-  - icon: "\U0001F512"
-    title: Keep data on your own device
-    details: Projects, tables, and run records stay local by default. Basic data checks need no model and do not send table contents to one.
-    link: /en/science/01-deployment-and-workflow#files-and-storage-locations
+layout: page
+description: ScienceX is an open-source, local-first AI research workbench that keeps questions, evidence, analysis runs, and next steps connected.
+sidebar: false
+aside: false
+editLink: false
+lastUpdated: false
+pageClass: sciencex-home-route
+head:
+  - - link
+    - rel: canonical
+      href: https://insight68.github.io/ScienceX/en/
+  - - meta
+    - property: og:type
+      content: website
+  - - meta
+    - property: og:title
+      content: ScienceX · Open-source, local-first AI research workbench
+  - - meta
+    - property: og:description
+      content: Keep research questions, evidence, and next steps connected.
+  - - meta
+    - property: og:url
+      content: https://insight68.github.io/ScienceX/en/
+  - - meta
+    - property: og:image
+      content: https://insight68.github.io/ScienceX/images/sciencex-social-card.png
+  - - meta
+    - name: twitter:card
+      content: summary_large_image
+  - - meta
+    - name: twitter:title
+      content: ScienceX · Open-source, local-first AI research workbench
+  - - meta
+    - name: twitter:description
+      content: Keep research questions, evidence, and next steps connected.
+  - - meta
+    - name: twitter:image
+      content: https://insight68.github.io/ScienceX/images/sciencex-social-card.png
 ---
+
+<HomePage />

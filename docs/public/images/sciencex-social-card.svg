@@ -1,0 +1,32 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" stroke="#68CDA7" stroke-opacity="0.09"/>
+    </pattern>
+    <linearGradient id="glow" x1="1100" y1="560" x2="680" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2468F2" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#16BF72" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#062F2A"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <circle cx="1080" cy="590" r="380" fill="url(#glow)"/>
+  <g transform="translate(78 78) scale(1.45)" fill="#5CE0A7" stroke="#5CE0A7" stroke-linecap="square" stroke-linejoin="bevel">
+    <path d="M24 37.1716 26.8284 40 40 26.8284 37.1716 24 24 37.1716Z" stroke="none"/>
+    <path d="M8 37.1716 10.8284 40 24 26.8284 21.1716 24 8 37.1716Z" stroke="none"/>
+    <path d="M24 21.1716 26.8284 24 40 10.8284 37.1716 8 24 21.1716Z" stroke="none"/>
+    <path d="M8 21.1716 10.8284 24 24 10.8284 21.1716 8 8 21.1716Z" stroke="none"/>
+    <circle cx="8" cy="8" r="4" stroke-width="4"/><circle cx="24" cy="8" r="4" stroke-width="4"/><circle cx="40" cy="8" r="4" stroke-width="4"/>
+    <circle cx="8" cy="24" r="4" stroke-width="4"/><circle cx="24" cy="24" r="4" stroke-width="4"/><circle cx="40" cy="24" r="4" stroke-width="4"/>
+    <circle cx="8" cy="40" r="4" stroke-width="4"/><circle cx="24" cy="40" r="4" stroke-width="4"/><circle cx="40" cy="40" r="4" stroke-width="4"/>
+  </g>
+  <text x="78" y="245" fill="#FFFFFF" font-family="Arial" font-size="92" font-weight="700">ScienceX</text>
+  <text x="82" y="326" fill="#BFD4CD" font-family="Arial" font-size="30">Keep research questions, evidence, and next steps connected.</text>
+  <line x1="82" y1="410" x2="1118" y2="410" stroke="#8ED4BA" stroke-opacity="0.28"/>
+  <text x="82" y="472" fill="#62DDA8" font-family="Arial" font-size="20" font-weight="700">OPEN SOURCE · LOCAL FIRST · TRACEABLE</text>
+  <g transform="translate(780 480)">
+    <rect width="338" height="72" rx="8" fill="#FFFFFF" fill-opacity="0.04" stroke="#8ED4BA" stroke-opacity="0.35"/>
+    <circle cx="34" cy="36" r="6" fill="#16BF72"/>
+    <text x="58" y="44" fill="#E6F5EF" font-family="Arial" font-size="18" font-weight="700">Research Loop · Memory · Evidence</text>
+  </g>
+</svg>

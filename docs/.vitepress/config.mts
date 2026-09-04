@@ -220,6 +220,8 @@ export default withMermaid(defineConfig({
   },
 
   head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ScienceX/favicon.svg' }],
+    ['meta', { name: 'theme-color', content: '#062f2a' }],
     ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-D42DM82263' }],
     ['script', {}, `window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-D42DM82263');`],
   ],

@@ -118,6 +118,18 @@ bun run src/server/index.ts
 
 Do not bind an unauthenticated server to a public interface for convenience. Science APIs can read local files on the server host, and the current data model is not a multi-tenant isolation model. Remote access should use the existing H5 authentication flow with minimal filesystem permissions.
 
+## Try the built-in example in three minutes
+
+The desktop app includes a cell-viability teaching example generated entirely on the local machine. It demonstrates the complete path from a research question to evidence and replay without requiring an instrument file or model API key:
+
+1. Open **Science** from the left navigation and select **Try a complete experiment**.
+2. Choose an existing writable parent directory. ScienceX creates a separate example copy and does not overwrite existing files.
+3. Keep the optional defense challenges enabled to include changed-data, missing-well, and inconclusive-evidence scenarios.
+4. Inspect the research question, versioned assay blueprint, and simulated data, then select **Run complete demonstration**.
+5. Use the scenario cards, Runs, and Artifacts to review successful analysis, pinned-version replay, explicit failure, and inconclusive evidence.
+
+The standard scenario assigns 24 wells and is expected to produce a relative IC50 near 1 µM, R² > 0.99, and three hashed research artifacts. All inputs are deterministically generated teaching data. These values validate the product workflow; they do not establish real efficacy, wet-lab results, or a scientific conclusion. Every repeat creates new Runs and preserves earlier inputs and results.
+
 ## Run an experiment-table analysis
 
 ```mermaid

@@ -4,12 +4,14 @@ import { onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vitepress'
 import type { Theme } from 'vitepress'
 import DownloadPage from '../components/DownloadPage.vue'
+import HomePage from '../components/HomePage.vue'
 import './custom.css'
 
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.component('DownloadPage', DownloadPage)
+    app.component('HomePage', HomePage)
   },
   setup() {
     const route = useRoute()

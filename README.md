@@ -6,11 +6,9 @@
   <img src="docs/images/desktop_ui/Sciencex202607193.png" alt="ScienceX" width="800">
 </p>
 
-<div align="center">
-**Claude Science 的开源、本地优先替代方案**
-</div>
+<p align="center"><strong>让研究问题、证据与下一步始终相连</strong></p>
 
-.
+ScienceX 是开源、本地优先的 AI 科研工作台。它将研究问题、版本化实验设计、实验数据、确定性分析和研究产物保留在同一条可追溯的研究链路中。
 
 > **独立项目声明：** ScienceX 不是 Anthropic 产品，也不隶属于或代表 Anthropic。当前版本正在建设 Claude Science 式的开放科研工作流，不宣称与官方产品功能完全对等。
 
@@ -22,7 +20,7 @@
 
 ## 为什么选择 ScienceX
 
-官方将 Claude Science 描述为一个整合科研工具与软件包、生成可审计产物并连接灵活算力的科学家工作台。ScienceX 选择用开放源码实现同一类工作流，并强调五个原则：
+科研工作常被拆散在聊天、文献、代码、数据文件和报告之间。ScienceX 用一个开放的本地工作台承载这些环节，并强调五个原则：
 
 - **本地优先**：实验表格、运行记录和产物保存在研究者自己的机器或基础设施上。
 - **可审计、可重放**：输入哈希、参数、运行环境、状态转换、事件日志和产物哈希形成完整 Provenance。
