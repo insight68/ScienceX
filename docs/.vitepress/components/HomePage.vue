@@ -14,6 +14,7 @@ const REPO_PAGE = 'https://github.com/insight68/ScienceX'
 const { lang } = useData()
 const isEnglish = computed(() => lang.value.toLowerCase().startsWith('en'))
 const copy = computed(() => (isEnglish.value ? HOME_COPY.en : HOME_COPY.zh))
+const brandMarkPath = withBase('/images/sciencex-mark.svg')
 
 function localPath(path: string): string {
   return withBase(`${isEnglish.value ? '/en' : ''}${path}`)
@@ -32,7 +33,7 @@ const demoGuidePath = computed(() => localPath(
       <div class="hero-grid" aria-hidden="true"></div>
       <div class="home-shell hero-layout">
         <div class="hero-copy">
-          <p class="eyebrow"><span></span>{{ copy.eyebrow }}</p>
+          <p class="eyebrow"><img :src="brandMarkPath" alt="" aria-hidden="true">{{ copy.eyebrow }}</p>
           <h1 id="sciencex-home-title">
             <span>{{ copy.title[0] }}</span>
             <span class="title-accent">{{ copy.title[1] }}</span>
@@ -495,8 +496,8 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 }
 
 .hero-copy { animation: enter-up .58s ease-out both; }
-.eyebrow { display: flex; align-items: center; gap: 11px; margin-bottom: 24px; color: #9fe2c5; font-family: var(--sx-mono); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
-.eyebrow span { width: 8px; height: 8px; border-radius: 50%; background: var(--sx-green); box-shadow: 0 0 0 6px rgba(22, 191, 114, .12); }
+.eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; color: #9fe2c5; font-family: var(--sx-mono); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.eyebrow img { width: 34px; height: 34px; padding: 4px; border: 1px solid rgba(125, 207, 231, .24); border-radius: 8px; background: rgba(255, 255, 255, .94); box-shadow: 0 10px 28px rgba(1, 19, 42, .28); }
 .home-hero h1 { max-width: 760px; margin: 0; color: #fff; font-size: clamp(48px, 5.2vw, 72px); font-weight: 700; letter-spacing: -.055em; line-height: 1.08; }
 .home-hero h1 > span { display: block; }
 .title-accent { color: #67daa9; }

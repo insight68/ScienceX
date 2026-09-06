@@ -3,6 +3,10 @@
 # ScienceX
 
 <p align="center">
+  <img src="docs/images/app-icon.png" alt="ScienceX 分子连接标识" width="112">
+</p>
+
+<p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607193.png" alt="ScienceX" width="800">
 </p>
 

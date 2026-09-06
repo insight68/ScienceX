@@ -3,6 +3,10 @@
 # ScienceX
 
 <p align="center">
+  <img src="docs/images/app-icon.png" alt="ScienceX molecular connection mark" width="112">
+</p>
+
+<p align="center">
   <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
 </p>
 

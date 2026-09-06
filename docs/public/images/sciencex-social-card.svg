@@ -11,14 +11,11 @@
   <rect width="1200" height="630" fill="#062F2A"/>
   <rect width="1200" height="630" fill="url(#grid)"/>
   <circle cx="1080" cy="590" r="380" fill="url(#glow)"/>
-  <g transform="translate(78 78) scale(1.45)" fill="#5CE0A7" stroke="#5CE0A7" stroke-linecap="square" stroke-linejoin="bevel">
-    <path d="M24 37.1716 26.8284 40 40 26.8284 37.1716 24 24 37.1716Z" stroke="none"/>
-    <path d="M8 37.1716 10.8284 40 24 26.8284 21.1716 24 8 37.1716Z" stroke="none"/>
-    <path d="M24 21.1716 26.8284 24 40 10.8284 37.1716 8 24 21.1716Z" stroke="none"/>
-    <path d="M8 21.1716 10.8284 24 24 10.8284 21.1716 8 8 21.1716Z" stroke="none"/>
-    <circle cx="8" cy="8" r="4" stroke-width="4"/><circle cx="24" cy="8" r="4" stroke-width="4"/><circle cx="40" cy="8" r="4" stroke-width="4"/>
-    <circle cx="8" cy="24" r="4" stroke-width="4"/><circle cx="24" cy="24" r="4" stroke-width="4"/><circle cx="40" cy="24" r="4" stroke-width="4"/>
-    <circle cx="8" cy="40" r="4" stroke-width="4"/><circle cx="24" cy="40" r="4" stroke-width="4"/><circle cx="40" cy="40" r="4" stroke-width="4"/>
+  <g transform="translate(78 72) scale(1.5)">
+    <path d="M12 24L24 13M24 24L36 13M12 35L24 24M24 35L36 24" fill="none" stroke="#087CF8" stroke-width="3.8" stroke-linecap="round"/>
+    <circle cx="12" cy="13" r="4.8" fill="#0B65F5"/><circle cx="24" cy="13" r="4.8" fill="#0783F8"/><circle cx="36" cy="13" r="4.8" fill="#16BDE9"/>
+    <circle cx="12" cy="24" r="4.8" fill="#095AF5"/><circle cx="24" cy="24" r="4.8" fill="#0879F8"/><circle cx="36" cy="24" r="4.8" fill="#0A91F5"/>
+    <circle cx="12" cy="35" r="4.8" fill="#1020EE"/><circle cx="24" cy="35" r="4.8" fill="#075EF8"/><circle cx="36" cy="35" r="4.8" fill="#0780F5"/>
   </g>
   <text x="78" y="228" fill="#FFFFFF" font-family="Arial" font-size="86" font-weight="700">ScienceX</text>
   <text x="82" y="308" fill="#72DDB0" font-family="STSong" font-size="45" font-weight="700">科研孪生实验台</text>

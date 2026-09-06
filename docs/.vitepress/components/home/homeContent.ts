@@ -198,7 +198,7 @@ export const HOME_COPY = {
     maturityBoundary: '当前不包含通用实验设备控制、无人值守湿实验或模型权重自动更新；MCP 只提供扩展接入口。',
     caseNumber: '02',
     caseLabel: 'CURRENT TWIN UNIT',
-    caseTitle: '不是概念图：一个可以运行、失败和重放的实验孪生',
+    caseTitle: '一个可以运行、失败和重放的实验孪生',
     caseBody: 'HepG2 × SX-101 教学案例在本地生成模拟数据，完成版本化实验设计、确定性 4PL 分析、技术证据评估和结果重放。它同时保留失败与证据不足。',
     caseFacts: [
       ['03 MIN', '本地教学案例'],

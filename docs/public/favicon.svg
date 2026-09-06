@@ -1,18 +1,20 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="48" height="48" rx="11" fill="#F6F8F6"/>
-  <g fill="#0B2FEB" stroke="#0B2FEB" stroke-linecap="square" stroke-linejoin="bevel">
-    <path d="M24 37.1716 26.8284 40 40 26.8284 37.1716 24 24 37.1716Z" stroke="none"/>
-    <path d="M8 37.1716 10.8284 40 24 26.8284 21.1716 24 8 37.1716Z" stroke="none"/>
-    <path d="M24 21.1716 26.8284 24 40 10.8284 37.1716 8 24 21.1716Z" stroke="none"/>
-    <path d="M8 21.1716 10.8284 24 24 10.8284 21.1716 8 8 21.1716Z" stroke="none"/>
-    <circle cx="8" cy="8" r="4" stroke-width="4"/>
-    <circle cx="24" cy="8" r="4" stroke-width="4"/>
-    <circle cx="40" cy="8" r="4" stroke-width="4"/>
-    <circle cx="8" cy="24" r="4" stroke-width="4"/>
-    <circle cx="24" cy="24" r="4" stroke-width="4"/>
-    <circle cx="40" cy="24" r="4" stroke-width="4"/>
-    <circle cx="8" cy="40" r="4" stroke-width="4"/>
-    <circle cx="24" cy="40" r="4" stroke-width="4"/>
-    <circle cx="40" cy="40" r="4" stroke-width="4"/>
-  </g>
+  <defs>
+    <linearGradient id="sciencex-mark-gradient" x1="8" y1="41" x2="40" y2="7" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1020EE"/>
+      <stop offset="0.54" stop-color="#075EF8"/>
+      <stop offset="1" stop-color="#25D5E7"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="11" fill="#F8FAFC"/>
+  <path d="M12 24L24 13M24 24L36 13M12 35L24 24M24 35L36 24" fill="none" stroke="url(#sciencex-mark-gradient)" stroke-width="3.8" stroke-linecap="round"/>
+  <circle cx="12" cy="13" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="24" cy="13" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="36" cy="13" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="12" cy="24" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="24" cy="24" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="36" cy="24" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="12" cy="35" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="24" cy="35" r="4.8" fill="url(#sciencex-mark-gradient)"/>
+  <circle cx="36" cy="35" r="4.8" fill="url(#sciencex-mark-gradient)"/>
 </svg>

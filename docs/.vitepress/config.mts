@@ -291,6 +291,7 @@ export default withMermaid(defineConfig({
   },
 
   themeConfig: {
+    logo: { src: '/images/sciencex-mark.svg', alt: 'ScienceX' },
     editLink: {
       pattern: 'https://github.com/insight68/ScienceX/edit/main/docs/:path',
       text: '在 GitHub 上编辑此页',
