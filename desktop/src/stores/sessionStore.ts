@@ -19,6 +19,7 @@ type CreateSessionOptions = {
   temporary?: boolean
   repository?: CreateSessionRepositoryOptions
   permissionMode?: PermissionMode
+  prePlanMode?: PermissionMode
 }
 
 type BranchSessionResult = Pick<BranchSessionResponse, 'sessionId' | 'title' | 'workDir'>
@@ -106,6 +107,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       ...(options?.temporary ? { temporary: true } : {}),
       ...(options?.repository ? { repository: options.repository } : {}),
       ...(requestedPermissionMode ? { permissionMode: requestedPermissionMode } : {}),
+      ...(options?.prePlanMode ? { prePlanMode: options.prePlanMode } : {}),
     })
     invalidateRecentProjectsCache()
     const now = new Date().toISOString()

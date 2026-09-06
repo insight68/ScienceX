@@ -152,6 +152,7 @@ export type SessionDetail = SessionListItem & {
 }
 
 export type SessionLaunchInfo = {
+  prePlanMode?: string
   filePath: string
   projectDir: string
   workDir: string
@@ -1289,14 +1290,15 @@ export class SessionService {
     return undefined
   }
 
-  private resolvePermissionModeFromEntries(entries: RawEntry[]): string | undefined {
+  private resolvePermissionModeFromEntries(entries: RawEntry[], executionOnly = false): string | undefined {
     for (let i = entries.length - 1; i >= 0; i--) {
       const entry = entries[i]
       if (entry?.type !== 'session-meta') continue
       const permissionMode = entry.permissionMode
       if (
         typeof permissionMode === 'string' &&
-        VALID_SESSION_PERMISSION_MODES.has(permissionMode)
+        VALID_SESSION_PERMISSION_MODES.has(permissionMode) &&
+        (!executionOnly || permissionMode !== 'plan')
       ) {
         return permissionMode
       }
@@ -3432,6 +3434,7 @@ export class SessionService {
     repositoryOptions?: CreateSessionRepositoryOptions,
     permissionMode?: string,
     temporary = false,
+    prePlanMode?: string,
   ): Promise<{ sessionId: string; workDir: string }> {
     const sessionId = crypto.randomUUID()
     const temporaryWorkDir = path.join(this.getConfigDir(), 'temporary-workspaces', sessionId)
@@ -3502,7 +3505,10 @@ export class SessionService {
         timestamp: now,
       }
 
-      await fs.writeFile(filePath, JSON.stringify(initialEntry) + '\n' + JSON.stringify(metaEntry) + '\n', 'utf-8')
+      const history = permissionMode === 'plan' && prePlanMode && prePlanMode !== 'plan' && VALID_SESSION_PERMISSION_MODES.has(prePlanMode)
+        ? [{ ...metaEntry, permissionMode: prePlanMode }, metaEntry]
+        : [metaEntry]
+      await fs.writeFile(filePath, [initialEntry, ...history].map(entry => JSON.stringify(entry)).join('\n') + '\n', 'utf-8')
     } catch (error) {
       if (temporary) await fs.rm(temporaryWorkDir, { recursive: true, force: true })
       throw error
@@ -3659,6 +3665,7 @@ export class SessionService {
     const repository = this.resolveRepositoryFromEntries(entries)
     const worktreeSession = this.resolveWorktreeSessionFromEntries(entries)
     const permissionMode = this.resolvePermissionModeFromEntries(entries)
+    const prePlanMode = permissionMode === 'plan' ? this.resolvePermissionModeFromEntries(entries, true) ?? 'default' : undefined
     let customTitle: string | null = null
     let runtimeProviderId: string | null | undefined
     let runtimeModelId: string | undefined
@@ -3695,6 +3702,7 @@ export class SessionService {
       transcriptMessageCount,
       customTitle,
       permissionMode,
+      ...(prePlanMode ? { prePlanMode } : {}),
       ...(runtimeProviderId !== undefined ? { runtimeProviderId } : {}),
       ...(runtimeModelId ? { runtimeModelId } : {}),
       ...(effortLevel ? { effortLevel } : {}),
@@ -3759,11 +3767,9 @@ export class SessionService {
       timestamp: now,
     }
 
-    await fs.writeFile(
-      found.filePath,
-      `${JSON.stringify(initialEntry)}\n${JSON.stringify(metaEntry)}\n`,
-      'utf-8',
-    )
+    const prePlanMode = permissionMode === 'plan' ? this.resolvePermissionModeFromEntries(entries, true) ?? 'default' : undefined
+    const history = prePlanMode ? [{ ...metaEntry, permissionMode: prePlanMode }, metaEntry] : [metaEntry]
+    await fs.writeFile(found.filePath, [initialEntry, ...history].map(entry => JSON.stringify(entry)).join('\n') + '\n', 'utf-8')
     this.invalidateSessionListCache()
   }
 

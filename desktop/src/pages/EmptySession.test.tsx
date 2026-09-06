@@ -104,6 +104,7 @@ vi.mock('../components/shared/DirectoryPicker', () => ({
 
 vi.mock('../components/controls/PermissionModeSelector', () => ({
   PermissionModeSelector: ({ compact, value, onChange }: { compact?: boolean; value?: string; onChange?: (mode: string) => void }) => (
+    <>
     <button
       type="button"
       data-testid="permission-mode-selector"
@@ -113,6 +114,8 @@ vi.mock('../components/controls/PermissionModeSelector', () => ({
     >
       {value ?? 'default'}
     </button>
+    <button type="button" onClick={() => onChange?.('plan')}>Plan first</button>
+    </>
   ),
 }))
 
@@ -532,6 +535,28 @@ describe('EmptySession', () => {
         permissionMode: 'auto',
       })
     })
+  })
+
+  it('loads a saved default into an untouched draft without replacing a user selection', () => {
+    render(<EmptySession />)
+    act(() => useSettingsStore.setState({ permissionMode: 'bypassPermissions' }))
+    expect(screen.getByTestId('permission-mode-selector')).toHaveTextContent('bypassPermissions')
+    fireEvent.click(screen.getByTestId('permission-mode-selector'))
+    act(() => useSettingsStore.setState({ permissionMode: 'default' }))
+    expect(screen.getByTestId('permission-mode-selector')).toHaveTextContent('auto')
+  })
+
+  it('preserves automatic approval when starting a session in plan mode', async () => {
+    useSettingsStore.setState({ permissionMode: 'auto' })
+    render(<EmptySession />)
+    fireEvent.click(screen.getByRole('button', { name: 'Plan first' }))
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'prepare a plan' } })
+    fireEvent.click(screen.getByRole('button', { name: /Run/i }))
+    await waitFor(() => expect(mocks.createSession).toHaveBeenCalledWith({
+      workDir: '/workspace/project',
+      permissionMode: 'plan',
+      prePlanMode: 'auto',
+    }))
   })
 
   it('materializes the active provider runtime before the first draft message', async () => {

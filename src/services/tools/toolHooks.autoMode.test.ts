@@ -29,6 +29,12 @@ function context(mode: 'auto' | 'plan' = 'auto'): ToolUseContext {
 }
 
 describe('PreToolUse decisions in auto mode', () => {
+  test('checks plan restrictions even when the auto classifier is inactive', async () => {
+    const canUseTool = mock(async () => ({ behavior: 'deny' as const, message: 'Planning blocks writes', decisionReason: { type: 'mode' as const, mode: 'plan' as const } }))
+    const result = await resolveHookPermissionDecision({ behavior: 'allow' }, fakeTool, {}, context('plan'), canUseTool, {} as never, 'plan-hook')
+    expect(canUseTool).toHaveBeenCalledTimes(1)
+    expect(result.decision.behavior).toBe('deny')
+  })
   afterEach(() => {
     _resetForTesting()
   })

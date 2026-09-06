@@ -1,4 +1,5 @@
 import { feature } from 'bun:bundle'
+import { checkModeRestrictions } from './modeRestrictions.js'
 import { APIUserAbortError } from '@anthropic-ai/sdk'
 import type { CanUseToolFn } from '../../hooks/useCanUseTool.js'
 import {
@@ -231,11 +232,7 @@ export function getAskRules(context: ToolPermissionContext): PermissionRule[] {
 function shouldBypassToolPermissions(
   toolPermissionContext: ToolPermissionContext,
 ): boolean {
-  return (
-    toolPermissionContext.mode === 'bypassPermissions' ||
-    (toolPermissionContext.mode === 'plan' &&
-      toolPermissionContext.isBypassPermissionsModeAvailable)
-  )
+  return toolPermissionContext.mode === 'bypassPermissions'
 }
 
 /**
@@ -486,6 +483,9 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
   toolUseID,
 ): Promise<PermissionDecision> => {
   let result = await hasPermissionsToUseToolInner(tool, input, context)
+  if (result.behavior === 'deny') return result
+  const restriction = await checkModeRestrictions(tool, getUpdatedInputOrFallback(result, input), context)
+  if (restriction) return restriction
   const currentPermissionContext =
     context.getAppState().toolPermissionContext
   let autoModeActive = false
@@ -852,6 +852,14 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
       }
 
       if (classifierResult.shouldBlock) {
+        if (!appState.toolPermissionContext.shouldAvoidPermissionPrompts && !classifierResult.unavailable && !classifierResult.transcriptTooLong) {
+          return {
+            ...result,
+            behavior: 'ask',
+            updatedInput: classifierInput,
+            decisionReason: { type: 'classifier', classifier: 'auto-mode', reason: classifierResult.reason },
+          }
+        }
         // Transcript exceeded the classifier's context window — deterministic
         // error, won't recover on retry. Skip iron_gate and fall back to
         // normal prompting so the user can approve/deny manually.

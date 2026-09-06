@@ -3245,7 +3245,7 @@ describe('MessageList nested tool calls', () => {
 
     await waitForProgrammaticScrollReset()
     fireEvent.scroll(scroller)
-    const allowButton = await screen.findByRole('button', { name: 'Allow: /tmp/MEMORY.md' })
+    const allowButton = await screen.findByRole('button', { name: 'Allow once: /tmp/MEMORY.md' })
 
     const contentObserver = observers.find(({ targets }) => targets.includes(scrollContent))
     expect(contentObserver).toBeTruthy()

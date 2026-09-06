@@ -85,6 +85,7 @@ type PendingComputerUsePermission = {
 type PendingComputerUsePermissions = Record<string, PendingComputerUsePermission>
 
 export type PerSessionState = {
+  prePlanPermissionMode?: PermissionMode
   messages: UIMessage[]
   chatState: ChatState
   connectionState: ConnectionState
@@ -1902,6 +1903,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         )
         break
 
+      case 'plan_execution_mode': {
+        if (['default', 'acceptEdits', 'auto', 'bypassPermissions', 'dontAsk'].includes(msg.mode)) {
+          update(() => ({ prePlanPermissionMode: msg.mode }))
+        }
+        break
+      }
+
       case 'permission_mode_changed': {
         // CLI 是权限模式的真相来源。这里把它恢复/切换后的权威值校正到本地镜像。
         // 注意：只更新本地状态，**不要**走 setSessionPermissionMode —— 那会把
@@ -1909,6 +1917,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         // 选择器拿到无法渲染的值。
         const KNOWN_MODES: PermissionMode[] = ['default', 'acceptEdits', 'auto', 'plan', 'bypassPermissions', 'dontAsk']
         if (KNOWN_MODES.includes(msg.mode)) {
+          const previous = useSessionStore.getState().sessions.find(item => item.id === sessionId)?.permissionMode
+          if (msg.mode === 'plan' && previous && previous !== 'plan' && KNOWN_MODES.includes(previous as PermissionMode)) {
+            update(() => ({ prePlanPermissionMode: previous as PermissionMode }))
+          } else if (msg.mode !== 'plan') {
+            update(() => ({ prePlanPermissionMode: undefined }))
+          }
           useSessionStore.getState().updateSessionPermissionMode(sessionId, msg.mode)
         }
         break

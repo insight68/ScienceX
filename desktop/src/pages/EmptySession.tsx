@@ -121,7 +121,15 @@ export function EmptySession() {
   const defaultPermissionMode = useSettingsStore((state) => state.permissionMode)
   const providers = useProviderStore((state) => state.providers)
   const activeProviderId = useProviderStore((state) => state.activeId)
+  const draftPermissionTouched = useRef(false)
+  const [draftPrePlanMode, setDraftPrePlanMode] = useState<PermissionMode>(defaultPermissionMode === 'plan' ? 'default' : defaultPermissionMode)
   const [draftPermissionMode, setDraftPermissionMode] = useState<PermissionMode>(defaultPermissionMode)
+  useEffect(() => {
+    if (!draftPermissionTouched.current) {
+      setDraftPermissionMode(defaultPermissionMode)
+      setDraftPrePlanMode(defaultPermissionMode === 'plan' ? 'default' : defaultPermissionMode)
+    }
+  }, [defaultPermissionMode])
   const lastPluginReloadSummary = usePluginStore((state) => state.lastReloadSummary)
   const activeProject = useProjectContextStore((state) => state.activeProject)
   const projectDraftMode = useProjectContextStore((state) => state.draftMode)
@@ -349,6 +357,7 @@ export function EmptySession() {
         {
           ...(projectDraftMode === 'temporary' ? { temporary: true } : {}),
           permissionMode: draftPermissionMode,
+          ...(draftPermissionMode === 'plan' ? { prePlanMode: draftPrePlanMode } : {}),
         },
       )
       if (runtimeSelection) {
@@ -879,10 +888,16 @@ export function EmptySession() {
                   </div>
 
                   <PermissionModeSelector
+                    showPlanControl
                     workDir={projectWorkDir}
                     compact={isMobileComposer}
                     value={draftPermissionMode}
-                    onChange={setDraftPermissionMode}
+                    prePlanMode={draftPrePlanMode}
+                    onChange={(mode) => {
+                      draftPermissionTouched.current = true
+                      if (mode === 'plan' && draftPermissionMode !== 'plan') setDraftPrePlanMode(draftPermissionMode)
+                      setDraftPermissionMode(mode)
+                    }}
                   />
                 </div>
 

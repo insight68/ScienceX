@@ -1,11 +1,12 @@
 # 开始使用 ScienceX
 
-第一次使用，建议先安装桌面版，并通过 3 分钟教学案例完成一次从研究问题、数据版本到分析产物和重放验证的完整流程。
+ScienceX 是开源、本地优先的科研孪生实验台。第一次使用，建议先了解[科研孪生的产品定位与能力边界](./research-twin-workbench.md)，再通过 3 分钟教学案例完成一次从研究对象、数据版本到分析产物和重放验证的数字实验孪生流程。
 
 ## 选择适合你的路径
 
 | 你的目标 | 建议从这里开始 |
 | --- | --- |
+| 理解 ScienceX 的品牌定位 | [科研孪生实验台](./research-twin-workbench.md) |
 | 直接使用 ScienceX | [下载桌面版](../download.md) |
 | 了解科研工作流 | [体验 3 分钟教学案例](../science/01-deployment-and-workflow.md#先用-3-分钟体验内置案例) |
 | 从源码运行终端版 | [从源码启动 ScienceX CLI](./quick-start.md) |
@@ -26,6 +27,6 @@
 ## 接下来可以了解
 
 - [Science 工作台：部署与实验执行](../science/01-deployment-and-workflow.md)：从模拟案例到表格分析、产物和重放。
+- [科研孪生实验台](./research-twin-workbench.md)：了解产品定义、五层结构、当前证据和现实反馈边界。
 - [配置与数据目录](./storage-layout.md)：了解用户数据、项目配置和迁移规则。
 - [安装与模型接入排障](./faq.md)：处理常见启动和协议配置问题。
-

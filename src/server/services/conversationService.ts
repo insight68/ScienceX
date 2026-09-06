@@ -360,6 +360,11 @@ export class ConversationService {
       networkSettings,
       networkRuntimeMetadata,
     )
+    if (options?.permissionMode === 'plan') {
+      childEnv.SCIX_PLAN_EXECUTION_MODE = launchInfo?.prePlanMode || 'default'
+    } else {
+      delete childEnv.SCIX_PLAN_EXECUTION_MODE
+    }
     const usesOfficialOAuth = this.shouldMarkManagedOAuth(options?.providerId)
 
     let proc: ReturnType<typeof Bun.spawn>

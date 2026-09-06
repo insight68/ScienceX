@@ -6,17 +6,27 @@
   <img src="docs/images/desktop_ui/Sciencex202607192.png" alt="ScienceX" width="800">
 </p>
 
-<p align="center"><strong>Keep research questions, evidence, and next steps connected</strong></p>
+<p align="center"><strong>Reproduce research digitally. Move the next cycle forward as evidence returns.</strong></p>
 
-ScienceX is an open-source, local-first AI workbench for research. It keeps research questions, versioned experiment designs, data, deterministic analyses, and research artifacts on one traceable path.
+ScienceX is an open-source, local-first **research twin workbench**. It maps research objects, experimental conditions, and evidence into digital experiments that can run, replay, and be compared while keeping versioned designs, data, analyses, artifacts, and next steps on one traceable path.
 
 > **Independent project:** ScienceX is not an Anthropic product and is not affiliated with or endorsed by Anthropic. The current release is building toward an open Claude Science-style workflow; it does not claim feature parity with Anthropic's product.
 
 <p align="center">
-  <a href="#why-sciencex">Why ScienceX</a> · <a href="#current-capabilities">Current Capabilities</a> · <a href="#quick-start">Quick Start</a> · <a href="#roadmap">Roadmap</a> · <a href="#documentation">Docs</a>
+  <a href="#product-position">Product Position</a> · <a href="#current-capabilities">Current Capabilities</a> · <a href="#quick-start">Quick Start</a> · <a href="#roadmap">Roadmap</a> · <a href="#documentation">Docs</a>
 </p>
 
 ---
+
+## Product position
+
+For a focused research object, ScienceX organizes the question, data, experiment, execution, evidence, and research decisions into a continuously corresponding digital state. A minimum viable research twin combines:
+
+> **Object model + versioned experiment + replayable run + evidence return + human decision**
+
+What is validated today is a digital experiment twin: a versioned cell-viability design, pinned simulated data, deterministic 4PL analysis, technical evidence, Artifacts, and Replay. Returning data from a real instrument, ELN, LIMS, or observation requires dedicated connections, protocol adaptation, data validation, and calibration; an MCP extension seam does not mean an instrument is connected.
+
+See [Research Twin Workbench](docs/en/guide/research-twin-workbench.md) for the complete product definition, messaging, and capability boundaries.
 
 ## Why ScienceX
 
@@ -28,7 +38,7 @@ Research work is often split across chats, literature, code, data files, and rep
 - **Openly extensible**: connect existing tools through Skills, MCP, SubAgents, terminals, and Computer Use.
 - **Cross-platform and self-hostable**: run the desktop app on macOS, Windows, or Linux while controlling the server and storage locations.
 
-ScienceX is not a single-purpose chat box. It combines a research layer for projects, dataset versions, runs, and artifacts with a general agent layer for model routing, multi-session execution, permission review, and desktop automation.
+ScienceX is not a single-purpose chat box. It combines a research-twin layer for objects, experiment versions, runs, evidence, and decision state with a general agent layer for model routing, multi-session execution, permission review, and desktop automation.
 
 <p align="center">
   <a href="docs/en/science/01-deployment-and-workflow.md"><img src="https://img.shields.io/badge/Get_Started-Science_Workbench-3D7A57?style=for-the-badge" alt="Science Deployment and Workflow"></a>

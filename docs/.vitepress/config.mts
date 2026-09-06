@@ -20,6 +20,7 @@ const zhSidebar = [
     text: '开始使用',
     items: [
       { text: '指南首页', link: '/guide/' },
+      { text: '科研孪生实验台', link: '/guide/research-twin-workbench' },
       { text: '从源码启动 CLI', link: '/guide/quick-start' },
       { text: '配置模型提供商', link: '/guide/env-vars' },
       { text: '配置与数据目录', link: '/guide/storage-layout' },
@@ -39,7 +40,7 @@ const zhSidebar = [
     ],
   },
   {
-    text: 'Science 科研工作台',
+    text: 'Science 科研孪生实验台',
     collapsed: false,
     items: [
       { text: '部署与实验执行', link: '/science/01-deployment-and-workflow' },
@@ -128,6 +129,7 @@ const enSidebar = [
     text: 'Getting Started',
     items: [
       { text: 'Guide Home', link: '/en/guide/' },
+      { text: 'Research Twin Workbench', link: '/en/guide/research-twin-workbench' },
       { text: 'Run the CLI from Source', link: '/en/guide/quick-start' },
       { text: 'Configure a Model Provider', link: '/en/guide/env-vars' },
       { text: 'Configuration & Data', link: '/en/guide/storage-layout' },
@@ -147,7 +149,7 @@ const enSidebar = [
     ],
   },
   {
-    text: 'Science Workbench',
+    text: 'Science Research Twin Workbench',
     collapsed: false,
     items: [
       { text: 'Deployment & Workflow', link: '/en/science/01-deployment-and-workflow' },
@@ -217,7 +219,7 @@ const enSidebar = [
 
 export default withMermaid(defineConfig({
   title: 'ScienceX',
-  description: '开源、本地优先的 AI 科研工作台，让研究数据、分析过程与研究产物清晰可追溯。',
+  description: '开源、本地优先的科研孪生实验台，把研究对象、实验条件与证据映射成可运行、可重放、可比较的数字实验。',
   lastUpdated: true,
   base: '/ScienceX/',
 

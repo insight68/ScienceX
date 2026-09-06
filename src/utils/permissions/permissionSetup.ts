@@ -776,8 +776,17 @@ function isSymlinkTo({
 }
 
 /**
- * Safely convert CLI flags to a PermissionMode
+ * Restore the execution mode for a session launched directly into planning.
  */
+export function getInitialPlanExecutionMode(value: string | undefined): PermissionMode {
+  if (!value || value === 'plan') return 'default'
+  const mode = permissionModeFromString(value)
+  if (mode === 'bypassPermissions' && isBypassPermissionsModeDisabled()) return 'default'
+  if (mode === 'auto' && (!feature('TRANSCRIPT_CLASSIFIER') || !isAutoModeGateEnabled())) return 'default'
+  return mode
+}
+
+/** Safely convert CLI flags to a PermissionMode. */
 export function initialPermissionModeFromCLI({
   permissionModeCli,
   dangerouslySkipPermissions,
@@ -819,12 +828,14 @@ export function initialPermissionModeFromCLI({
   }
   if (permissionModeCli) {
     const parsedMode = permissionModeFromString(permissionModeCli)
-    if (feature('TRANSCRIPT_CLASSIFIER') && parsedMode === 'auto') {
-      if (autoModeCircuitBrokenSync) {
+    if (permissionModeCli === 'auto') {
+      if (!feature('TRANSCRIPT_CLASSIFIER') || autoModeCircuitBrokenSync || isAutoModeDisabledBySettings()) {
         logForDebugging(
-          'auto mode circuit breaker active (cached) — falling back to default',
+          'auto mode unavailable — falling back to request approval',
           { level: 'warn' },
         )
+        orderedModes.push('default')
+        notification = 'Automatic approval is unavailable. Switched to request approval.'
       } else {
         orderedModes.push('auto')
       }
@@ -850,12 +861,14 @@ export function initialPermissionModeFromCLI({
       })
     }
     // auto from settings requires the same gate check as from CLI
-    else if (feature('TRANSCRIPT_CLASSIFIER') && settingsMode === 'auto') {
-      if (autoModeCircuitBrokenSync) {
+    else if (settingsMode === 'auto') {
+      if (!feature('TRANSCRIPT_CLASSIFIER') || autoModeCircuitBrokenSync || isAutoModeDisabledBySettings()) {
         logForDebugging(
-          'auto mode circuit breaker active (cached) — falling back to default',
+          'auto mode unavailable — falling back to request approval',
           { level: 'warn' },
         )
+        orderedModes.push('default')
+        notification = 'Automatic approval is unavailable. Switched to request approval.'
       } else {
         orderedModes.push('auto')
       }
@@ -1070,6 +1083,7 @@ export async function initializeToolPermissionContext({
   let toolPermissionContext = applyPermissionRulesToPermissionContext(
     {
       mode: permissionMode,
+      ...(permissionMode === 'plan' ? { prePlanMode: getInitialPlanExecutionMode(process.env.SCIX_PLAN_EXECUTION_MODE) } : {}),
       additionalWorkingDirectories,
       alwaysAllowRules: { cliArg: parsedAllowedToolsCli },
       alwaysDenyRules: { cliArg: parsedDisallowedToolsCli },

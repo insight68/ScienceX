@@ -154,18 +154,18 @@ autoModeDescribe('auto mode classifier decisions', () => {
     })
   })
 
-  test('denies a classifier-blocked action', async () => {
+  test('requests human approval for a classifier-blocked action', async () => {
     classifierMode = 'block'
     expect(await decide()).toMatchObject({
-      behavior: 'deny',
+      behavior: 'ask',
       decisionReason: { type: 'classifier', reason: 'unsafe action' },
     })
   })
 
-  test('fails closed on an unparseable classifier response', async () => {
+  test('requests human approval for an unparseable classifier response', async () => {
     classifierMode = 'parse-failure'
     expect(await decide()).toMatchObject({
-      behavior: 'deny',
+      behavior: 'ask',
       decisionReason: { type: 'classifier' },
     })
   })
@@ -193,6 +193,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
     classifierMode = 'block'
     const shellTool = {
       name: 'Bash',
+      isReadOnly: () => true,
       inputSchema: { parse: (input: unknown) => input },
       toAutoClassifierInput: (input: unknown) => input,
       checkPermissions: async (_input: unknown, toolContext: ToolUseContext) =>
@@ -218,7 +219,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
         'toolu_shell',
       ),
     ).toMatchObject({
-      behavior: 'deny',
+      behavior: 'ask',
       decisionReason: { type: 'classifier', reason: 'unsafe action' },
     })
   })
@@ -232,6 +233,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
       classifierMode = 'block'
       const shellTool = {
         name: 'Bash',
+        isReadOnly: () => true,
         inputSchema: { parse: (input: unknown) => input },
         toAutoClassifierInput: (input: unknown) => input,
         checkPermissions: async () => ({ behavior: 'passthrough' as const }),
@@ -250,7 +252,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
           `toolu_shell_${source}`,
         ),
       ).toMatchObject({
-        behavior: 'deny',
+        behavior: 'ask',
         decisionReason: { type: 'classifier', reason: 'unsafe action' },
       })
     },
@@ -263,6 +265,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
     classifierMode = 'block'
     const shellTool = {
       name: 'Bash',
+      isReadOnly: () => true,
       inputSchema: { parse: (input: unknown) => input },
       toAutoClassifierInput: (input: unknown) => input,
       checkPermissions: async () => ({ behavior: 'allow' as const }),
@@ -277,7 +280,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
         'toolu_dynamic_shell',
       ),
     ).toMatchObject({
-      behavior: 'deny',
+      behavior: 'ask',
       decisionReason: { type: 'classifier', reason: 'unsafe action' },
     })
   })
@@ -290,6 +293,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
     classifierMode = 'block'
     const shellTool = {
       name: 'Bash',
+      isReadOnly: () => true,
       inputSchema: { parse: (input: unknown) => input },
       toAutoClassifierInput: (input: unknown) => input,
       checkPermissions: async () => ({ behavior: 'allow' as const }),
@@ -304,7 +308,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
         'toolu_plan_shell',
       ),
     ).toMatchObject({
-      behavior: 'deny',
+      behavior: 'ask',
       decisionReason: { type: 'classifier', reason: 'unsafe action' },
     })
   })
@@ -316,6 +320,7 @@ autoModeDescribe('auto mode classifier decisions', () => {
     classifierMode = 'block'
     const shellTool = {
       name: 'PowerShell',
+      isReadOnly: () => true,
       inputSchema: { parse: (input: unknown) => input },
       toAutoClassifierInput: (input: unknown) => input,
       checkPermissions: async () => ({
@@ -333,13 +338,18 @@ autoModeDescribe('auto mode classifier decisions', () => {
         'toolu_powershell',
       ),
     ).toMatchObject({
-      behavior: 'deny',
+      behavior: 'ask',
       decisionReason: { type: 'classifier', reason: 'unsafe action' },
     })
   })
 })
 
 autoModeDescribe('auto mode denial limits', () => {
+  test.each(['block', 'parse-failure'] as const)('still denies %s when human approval is unavailable', async mode => {
+    classifierMode = mode
+    expect(await decide(context({ headless: true }))).toMatchObject({ behavior: 'deny' })
+  })
+
   test('falls back to human review after three consecutive denials', async () => {
     classifierMode = 'block'
     expect(await decide(context({ consecutiveDenials: 2, totalDenials: 2 }))).toMatchObject({

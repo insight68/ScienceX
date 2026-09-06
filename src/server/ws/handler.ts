@@ -246,6 +246,14 @@ export const handleWebSocket = {
 
     const msg: ServerMessage = { type: 'connected', sessionId }
     ws.send(JSON.stringify(msg))
+    void sessionService.getSessionLaunchInfo(sessionId).then(info => {
+      const mode = conversationService.hasSession(sessionId)
+        ? conversationService.getSessionPermissionMode(sessionId)
+        : info?.permissionMode
+      if (mode === 'plan' && isPermissionMode(info?.prePlanMode) && info.prePlanMode !== 'plan') {
+        sendMessage(ws, { type: 'plan_execution_mode', mode: info.prePlanMode })
+      }
+    }).catch(() => {})
     const toolRequestIds = replayPendingPermissionRequests(ws, sessionId)
     const computerUseRequestIds = replayPendingComputerUsePermissionRequests(ws, sessionId)
     sendMessage(ws, {
@@ -1972,6 +1980,9 @@ export function translateCliMessage(cliMsg: any, sessionId: string): ServerMessa
           // Send model info as a system notification, not a status change
           { type: 'system_notification', subtype: 'init', message: `Model: ${cliMsg.model || 'unknown'}`, data: { model: cliMsg.model } },
         ]
+        if (isPermissionMode(cliMsg.permissionMode)) {
+          messages.push({ type: 'permission_mode_changed', mode: cliMsg.permissionMode })
+        }
         // Send slash commands to frontend
         const cmds = sessionSlashCommands.get(sessionId)
         if (cmds && cmds.length > 0) {
@@ -2691,7 +2702,7 @@ function bindClientSessionOutput(
 function getCliPermissionModeBroadcast(cliMsg: any): PermissionMode | null {
   if (
     cliMsg?.type === 'system' &&
-    cliMsg.subtype === 'status' &&
+    (cliMsg.subtype === 'status' || cliMsg.subtype === 'init') &&
     isPermissionMode(cliMsg.permissionMode)
   ) {
     return cliMsg.permissionMode

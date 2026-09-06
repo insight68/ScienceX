@@ -1,11 +1,12 @@
 # Get Started with ScienceX
 
-For a first visit, install the desktop app and run the three-minute teaching case. It walks through a complete path from a research question and versioned data to analysis artifacts and replay verification.
+ScienceX is an open-source, local-first research twin workbench. For a first visit, read the [product position and capability boundaries](./research-twin-workbench.md), then run the three-minute teaching case to complete a digital experiment twin path from a research object and versioned data to analysis artifacts and replay verification.
 
 ## Choose your path
 
 | Your goal | Start here |
 | --- | --- |
+| Understand the ScienceX product position | [Research Twin Workbench](./research-twin-workbench.md) |
 | Use ScienceX directly | [Download the desktop app](../download.md) |
 | Understand the research workflow | [Run the three-minute teaching case](../science/01-deployment-and-workflow.md#try-the-built-in-example-in-three-minutes) |
 | Run the terminal app from source | [Run the ScienceX CLI from source](./quick-start.md) |
@@ -26,5 +27,6 @@ For a first visit, install the desktop app and run the three-minute teaching cas
 ## Continue learning
 
 - [Science Workbench: deployment and experiment workflow](../science/01-deployment-and-workflow.md): move from the simulated case to table analysis, artifacts, and replay.
+- [Research Twin Workbench](./research-twin-workbench.md): understand the product definition, five layers, current evidence, and real-world feedback boundary.
 - [Configuration and data directories](./storage-layout.md): understand user data, project configuration, and migration rules.
 - [Installation and provider troubleshooting](./faq.md): resolve common startup and protocol-configuration problems.

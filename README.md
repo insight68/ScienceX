@@ -6,17 +6,27 @@
   <img src="docs/images/desktop_ui/Sciencex202607193.png" alt="ScienceX" width="800">
 </p>
 
-<p align="center"><strong>让研究问题、证据与下一步始终相连</strong></p>
+<p align="center"><strong>在数字空间复现研究，在证据回流中推进下一轮</strong></p>
 
-ScienceX 是开源、本地优先的 AI 科研工作台。它将研究问题、版本化实验设计、实验数据、确定性分析和研究产物保留在同一条可追溯的研究链路中。
+ScienceX 是开源、本地优先的**科研孪生实验台**。它把研究对象、实验条件与证据映射成可运行、可重放、可比较的数字实验，并将版本化设计、数据、分析、研究产物和下一步保留在同一条可追溯链路中。
 
 > **独立项目声明：** ScienceX 不是 Anthropic 产品，也不隶属于或代表 Anthropic。当前版本正在建设 Claude Science 式的开放科研工作流，不宣称与官方产品功能完全对等。
 
 <p align="center">
-  <a href="#为什么选择-sciencex">为什么选择</a> · <a href="#当前能力">当前能力</a> · <a href="#快速开始">快速开始</a> · <a href="#路线图">路线图</a> · <a href="#更多文档">文档</a>
+  <a href="#产品定位">产品定位</a> · <a href="#当前能力">当前能力</a> · <a href="#快速开始">快速开始</a> · <a href="#路线图">路线图</a> · <a href="#更多文档">文档</a>
 </p>
 
 ---
+
+## 产品定位
+
+ScienceX 围绕一个细分研究对象，把问题、数据、实验、执行、证据与研究决策组织成持续对应的数字研究状态。一个最小可用科研孪生包括：
+
+> **对象表示 + 版本化实验 + 可重放运行 + 证据回流 + 人工决策**
+
+当前已经验证的是数字实验孪生：版本化细胞活力实验设计、锁定的模拟数据、确定性 4PL 分析、技术证据、Artifacts 和 Replay。真实设备、ELN、LIMS 或观测数据回流需要专用连接、协议适配、数据校验和设备校准；MCP 扩展接口不代表设备已经接入。
+
+完整的产品定义、品牌口径和能力边界见[科研孪生实验台](docs/guide/research-twin-workbench.md)。
 
 ## 为什么选择 ScienceX
 
@@ -28,7 +38,7 @@ ScienceX 是开源、本地优先的 AI 科研工作台。它将研究问题、�
 - **开放扩展**：通过 Skills、MCP、SubAgent、终端和 Computer Use 接入研究者已有的工具。
 - **跨平台、自部署**：桌面端支持 macOS、Windows 和 Linux；服务端与数据目录都由用户控制。
 
-ScienceX 的基础不是一个单用途聊天框，而是两层协同的本地工作台：上层负责研究项目、数据版本、运行和产物；下层提供多会话 Agent、工具执行、权限审批、模型路由和桌面自动化。
+ScienceX 的基础不是一个单用途聊天框，而是两层协同的科研孪生实验台：上层管理研究对象、实验版本、运行、证据和决策状态；下层提供多会话 Agent、工具执行、权限审批、模型路由和桌面自动化。
 
 <p align="center">
   <a href="docs/science/01-deployment-and-workflow.md"><img src="https://img.shields.io/badge/开始使用-Science_工作台-3D7A57?style=for-the-badge" alt="Science 部署与实验执行"></a>

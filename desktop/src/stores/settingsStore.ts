@@ -173,7 +173,7 @@ const DEFAULT_TRACE_CAPTURE_SETTINGS: TraceCaptureSettings = {
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
-  permissionMode: 'default',
+  permissionMode: 'auto',
   currentModel: null,
   effortLevel: 'max',
   thinkingEnabled: true,

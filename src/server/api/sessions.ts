@@ -388,9 +388,9 @@ async function handleSessionWorkspaceRoute(
 }
 
 async function createSession(req: Request): Promise<Response> {
-  let body: { workDir?: string; temporary?: boolean; repository?: CreateSessionRepositoryOptions; permissionMode?: string }
+  let body: { workDir?: string; temporary?: boolean; repository?: CreateSessionRepositoryOptions; permissionMode?: string; prePlanMode?: string }
   try {
-    body = (await req.json()) as { workDir?: string; temporary?: boolean; repository?: CreateSessionRepositoryOptions; permissionMode?: string }
+    body = (await req.json()) as { workDir?: string; temporary?: boolean; repository?: CreateSessionRepositoryOptions; permissionMode?: string; prePlanMode?: string }
   } catch {
     throw ApiError.badRequest('Invalid JSON body')
   }
@@ -416,6 +416,10 @@ async function createSession(req: Request): Promise<Response> {
     throw ApiError.badRequest(`Invalid permission mode: "${body.permissionMode}"`)
   }
 
+  if (body.prePlanMode !== undefined && (!isValidPermissionMode(body.prePlanMode) || body.prePlanMode === 'plan' || body.permissionMode !== 'plan')) {
+    throw ApiError.badRequest('prePlanMode must be an execution permission mode for a planning session')
+  }
+
   if (body.repository !== undefined) {
     if (!body.repository || typeof body.repository !== 'object' || Array.isArray(body.repository)) {
       throw ApiError.badRequest('repository must be an object')
@@ -433,6 +437,7 @@ async function createSession(req: Request): Promise<Response> {
     body.repository,
     body.permissionMode,
     body.temporary === true,
+    body.prePlanMode,
   )
   recentProjectsCache = null
   return Response.json(result, { status: 201 })

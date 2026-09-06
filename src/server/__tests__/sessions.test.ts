@@ -2347,6 +2347,25 @@ describe('SessionService', () => {
     expect((await service.getSessionLaunchInfo(sessionId))?.permissionMode).toBe('auto')
   })
 
+  it('recovers execution permissions from existing mode history while planning', async () => {
+    const workDir = path.join(tmpDir, 'plan-permission-history')
+    await fs.mkdir(workDir, { recursive: true })
+    const { sessionId } = await service.createSession(workDir, undefined, 'plan', false, 'auto')
+    expect(await service.getSessionLaunchInfo(sessionId)).toMatchObject({ permissionMode: 'plan', prePlanMode: 'auto' })
+    await service.clearSessionTranscript(sessionId, workDir, 'plan')
+    expect(await service.getSessionLaunchInfo(sessionId)).toMatchObject({ permissionMode: 'plan', prePlanMode: 'auto' })
+    await service.appendSessionMetadata(sessionId, { workDir, permissionMode: 'default' })
+    await service.appendSessionMetadata(sessionId, { workDir, permissionMode: 'plan' })
+    expect(await service.getSessionLaunchInfo(sessionId)).toMatchObject({ permissionMode: 'plan', prePlanMode: 'default' })
+  })
+
+  it('keeps old planning sessions conservative when no execution history exists', async () => {
+    const workDir = path.join(tmpDir, 'legacy-plan-permission')
+    await fs.mkdir(workDir, { recursive: true })
+    const { sessionId } = await service.createSession(workDir, undefined, 'plan')
+    expect(await service.getSessionLaunchInfo(sessionId)).toMatchObject({ permissionMode: 'plan', prePlanMode: 'default' })
+  })
+
   it('should expose the latest runtime selection in the session list', async () => {
     const workDir = '/tmp/runtime-list-metadata'
     const sessionId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'

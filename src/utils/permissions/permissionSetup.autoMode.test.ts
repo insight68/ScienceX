@@ -7,11 +7,13 @@ import {
   findDangerousClassifierPermissions,
   getAutoModeEnabledState,
   initialPermissionModeFromCLI,
+  getInitialPlanExecutionMode,
   reconcileAutoModePermissionsAfterSettingsChange,
   restoreDangerousPermissions,
 } from './permissionSetup.js'
 import {
   resetSettingsCache,
+  setSessionSettingsCache,
   setCachedSettingsForSource,
 } from '../settings/settingsCache.js'
 import {
@@ -28,6 +30,17 @@ const autoModeDescribe = feature('TRANSCRIPT_CLASSIFIER')
   : describe.skip
 
 describe('auto mode feature guard', () => {
+  it('never inherits a wider saved default when requested Auto is disabled', () => {
+    setSessionSettingsCache({ settings: { permissions: { disableAutoMode: 'disable', defaultMode: 'bypassPermissions' } }, errors: [] } as never)
+    expect(initialPermissionModeFromCLI({ permissionModeCli: 'auto', dangerouslySkipPermissions: false })).toMatchObject({ mode: 'default' })
+  })
+
+  it('restores only valid execution modes after planning', () => {
+    expect(getInitialPlanExecutionMode('acceptEdits')).toBe('acceptEdits')
+    expect(getInitialPlanExecutionMode('plan')).toBe('default')
+    expect(getInitialPlanExecutionMode('unknown')).toBe('default')
+    expect(getInitialPlanExecutionMode(undefined)).toBe('default')
+  })
   const featureOffTest = feature('TRANSCRIPT_CLASSIFIER') ? it.skip : it
 
   featureOffTest('keeps Auto unavailable without the classifier feature', () => {

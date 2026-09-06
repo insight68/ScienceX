@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
+import { ShieldQuestion, ShieldCheck, ShieldAlert, ClipboardList, Check, ChevronDown, Folder } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useChatStore } from '../../stores/chatStore'
@@ -13,18 +14,20 @@ import { MobileBottomSheet } from '../shared/MobileBottomSheet'
 import { ActionDialog } from '../shared/ActionDialog'
 import { AutoModeOptInDialog } from './AutoModeOptInDialog'
 
-const MODE_ICONS: Record<PermissionMode, string> = {
-  default: 'verified_user',
-  acceptEdits: 'bolt',
-  auto: 'autoplay',
-  plan: 'architecture',
-  bypassPermissions: 'gavel',
-  dontAsk: 'gavel',
+const MODE_ICONS = {
+  default: ShieldQuestion,
+  acceptEdits: ShieldCheck,
+  auto: ShieldCheck,
+  plan: ClipboardList,
+  bypassPermissions: ShieldAlert,
+  dontAsk: ShieldQuestion,
 }
 
 type Props = {
   workDir?: string
   compact?: boolean
+  showPlanControl?: boolean
+  prePlanMode?: PermissionMode
   menuPlacement?: 'top' | 'bottom'
   /** Controlled mode: override current value */
   value?: PermissionMode
@@ -32,7 +35,7 @@ type Props = {
   onChange?: (mode: PermissionMode) => void
 }
 
-export function PermissionModeSelector({ workDir: workDirProp, compact = false, menuPlacement = 'top', value, onChange }: Props = {}) {
+export function PermissionModeSelector({ workDir: workDirProp, compact = false, showPlanControl = false, prePlanMode, menuPlacement = 'top', value, onChange }: Props = {}) {
   const t = useTranslation()
   const isMobile = useMobileViewport() && !isDesktopRuntime()
   const {
@@ -43,6 +46,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
   const setSessionPermissionMode = useChatStore((s) => s.setSessionPermissionMode)
   const activeTabId = useTabStore((s) => s.activeTabId)
   const sessions = useSessionStore((s) => s.sessions)
+  const sessionPrePlanMode = useChatStore((s) => activeTabId ? s.sessions[activeTabId]?.prePlanPermissionMode : undefined)
   const chatState = useChatStore((s) =>
     activeTabId ? s.sessions[activeTabId]?.chatState ?? 'idle' : 'idle',
   )
@@ -64,40 +68,27 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
     value: PermissionMode
     label: string
     description: string
-    icon: string
+    icon: typeof ShieldCheck
     color?: string
   }> = [
     {
       value: 'default',
       label: t('permMode.askPermissions'),
       description: t('permMode.askPermDesc'),
-      icon: 'verified_user',
-    },
-    {
-      value: 'acceptEdits',
-      label: t('permMode.autoAccept'),
-      description: t('permMode.autoAcceptDesc'),
-      icon: 'bolt',
+      icon: ShieldQuestion,
     },
     {
       value: 'auto',
       label: t('permMode.autoMode'),
       description: t('permMode.autoModeDesc'),
-      icon: 'autoplay',
+      icon: ShieldCheck,
       color: 'text-[var(--color-brand)]',
-    },
-    {
-      value: 'plan',
-      label: t('permMode.planMode'),
-      description: t('permMode.planModeDesc'),
-      icon: 'architecture',
-      color: 'text-[var(--color-text-tertiary)]',
     },
     {
       value: 'bypassPermissions',
       label: t('permMode.bypass'),
       description: t('permMode.bypassDesc'),
-      icon: 'gavel',
+      icon: ShieldAlert,
       color: 'text-[var(--color-error)]',
     },
   ]
@@ -118,15 +109,19 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
     ? value
     : (activeSession?.permissionMode as PermissionMode | undefined) || storeMode
   const workDir = workDirProp || activeSession?.workDir || '~'
-  const compactButtonClass = compact
-    ? isMobile
-      ? 'h-11 w-11 justify-center rounded-xl p-0'
-      : 'h-8 w-8 justify-center rounded-full p-0'
-    : 'gap-1.5 rounded-full px-2.5 py-1.5 text-xs'
+  const modeBeforePlan = useRef(new Map<string, PermissionMode>())
+  const contextKey = isControlled ? `draft:${workDir}` : activeTabId || 'default'
+  if (currentMode !== 'plan') modeBeforePlan.current.set(contextKey, currentMode)
+  const executionMode = currentMode === 'plan'
+    ? prePlanMode || sessionPrePlanMode || modeBeforePlan.current.get(contextKey) || 'default'
+    : currentMode
+  const CurrentIcon = MODE_ICONS[executionMode]
+  const isPlanning = currentMode === 'plan'
+  const compactButtonClass = `${isMobile ? 'min-h-11' : compact ? 'h-8' : ''} gap-1.5 rounded-full px-2.5 py-1.5 text-xs`
   const menuPlacementClass = menuPlacement === 'bottom'
     ? 'top-full mt-2'
     : 'bottom-full mb-2'
-  const menuId = 'permission-mode-menu'
+  const menuId = useId()
 
   useEffect(() => {
     if (isTurnActive) {
@@ -190,12 +185,12 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
               interactionTabIdRef.current = null
               return
             }
-            if (item.value === 'auto' && item.value !== currentMode) {
+            if (item.value === 'auto' && !autoModeOptInAccepted && item.value !== currentMode) {
               setOpen(false)
               setAutoDialog(true)
               return
             }
-            if (item.value === 'bypassPermissions') {
+            if (item.value === 'bypassPermissions' && currentMode !== 'bypassPermissions') {
               setOpen(false)
               setConfirmDialog(true)
               return
@@ -211,20 +206,16 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
           className={`
             flex w-full items-start gap-3 px-4 py-3 text-left transition-colors
             hover:bg-[var(--color-surface-hover)]
-            ${item.value === currentMode ? 'bg-[var(--color-surface-selected)]' : ''}
+            ${item.value === executionMode ? 'bg-[var(--color-surface-selected)]' : ''}
           `}
         >
-          <span className={`material-symbols-outlined mt-0.5 ${item.value === 'auto' ? 'text-[18px]' : 'text-[20px]'} ${item.color || 'text-[var(--color-text-secondary)]'}`}>
-            {item.icon}
-          </span>
+          <item.icon size={18} aria-hidden="true" className={`mt-0.5 shrink-0 ${item.color || 'text-[var(--color-text-secondary)]'}`} />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-[var(--color-text-primary)]">{item.label}</div>
             <div className="mt-0.5 text-xs text-[var(--color-text-tertiary)]">{item.description}</div>
           </div>
-          {item.value === currentMode && (
-            <span className="material-symbols-outlined mt-0.5 text-[16px] text-[var(--color-brand)]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              check_circle
-            </span>
+          {item.value === executionMode && (
+            <Check size={16} aria-hidden="true" className="mt-0.5 text-[var(--color-brand)]" />
           )}
         </button>
       ))}
@@ -236,16 +227,40 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
       <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
         {t('permMode.executionPermissions')}
       </div>
+      {currentMode === 'acceptEdits' || currentMode === 'dontAsk' ? (
+        <p className="mx-4 mb-2 text-xs leading-5 text-[var(--color-text-secondary)]" role="status">
+          {t('permMode.legacyModeHint')}
+        </p>
+      ) : null}
       {permissionOptions}
     </>
   )
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative flex items-center gap-1.5">
+      {showPlanControl && (
+        <button
+          type="button"
+          aria-pressed={isPlanning}
+          disabled={isTurnActive}
+          title={isPlanning ? t('permMode.exitPlanDesc', { mode: MODE_LABELS[executionMode] }) : t('permMode.planModeDesc')}
+          onClick={() => {
+            const tabId = useTabStore.getState().activeTabId
+            if (tabId !== activeTabId || isTurnActiveNow(tabId)) return
+            const nextMode = isPlanning ? executionMode : 'plan'
+            if (isControlled) onChange?.(nextMode)
+            else if (tabId) setSessionPermissionMode(tabId, nextMode)
+          }}
+          className={`flex items-center ${compactButtonClass} font-medium transition-colors ${isPlanning ? 'bg-[var(--color-surface-selected)] text-[var(--color-brand)]' : 'bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)]'} disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          <ClipboardList size={14} aria-hidden="true" />
+          <span>{t(isPlanning ? 'permMode.planning' : 'permMode.planMode')}</span>
+        </button>
+      )}
       <button
         onClick={() => {
           const actionTabId = useTabStore.getState().activeTabId
-          if (isTurnActiveNow(actionTabId)) return
+          if (isTurnActiveNow(actionTabId) || (isPlanning && showPlanControl)) return
           if (open) {
             setOpen(false)
             interactionTabIdRef.current = null
@@ -254,25 +269,19 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
           interactionTabIdRef.current = actionTabId
           setOpen(true)
         }}
-        disabled={isTurnActive}
-        aria-label={MODE_LABELS[currentMode]}
+        disabled={isTurnActive || (isPlanning && showPlanControl)}
+        aria-label={MODE_LABELS[executionMode]}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        title={isTurnActive ? t('permMode.disabledDuringTurn') : (compact ? MODE_LABELS[currentMode] : undefined)}
+        title={isTurnActive ? t('permMode.disabledDuringTurn') : isPlanning ? t('permMode.planPermissionsHint') : MODE_LABELS[executionMode]}
         className={`flex items-center bg-[var(--color-surface-container-low)] font-medium text-[var(--color-text-secondary)] transition-colors ${
-          isTurnActive ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--color-surface-hover)]'
-        } ${compactButtonClass}`}
+          isTurnActive || (isPlanning && showPlanControl) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--color-surface-hover)]'
+        } ${compactButtonClass} ${executionMode === 'bypassPermissions' ? '!text-[var(--color-error)] ring-1 ring-[var(--color-error)]/30' : ''}`}
       >
-        <span className={`material-symbols-outlined ${currentMode === 'auto' ? 'text-[12px]' : 'text-[14px]'}`}>
-          {MODE_ICONS[currentMode]}
-        </span>
-        {!compact && (
-          <>
-            <span>{MODE_LABELS[currentMode]}</span>
-            <span className="material-symbols-outlined text-[12px]">expand_more</span>
-          </>
-        )}
+        <CurrentIcon size={14} aria-hidden="true" />
+        <span>{MODE_LABELS[executionMode]}</span>
+        <ChevronDown size={12} aria-hidden="true" />
       </button>
 
       {open && (
@@ -285,10 +294,10 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
             ariaLabel={t('permMode.executionPermissions')}
             contentClassName="py-2"
           >
-            {permissionOptions}
+            {menuContent}
           </MobileBottomSheet>
         ) : (
-          <div id={menuId} ref={menuRef} role="menu" className={`absolute left-0 ${menuPlacementClass} w-[320px] rounded-xl bg-[var(--color-surface-container-lowest)] border border-[var(--color-border)] shadow-[var(--shadow-dropdown)] z-50 py-2`}>
+          <div className={`absolute left-0 ${menuPlacementClass} w-[320px] rounded-xl bg-[var(--color-surface-container-lowest)] border border-[var(--color-border)] shadow-[var(--shadow-dropdown)] z-50 py-2`}>
             {menuContent}
           </div>
         )
@@ -312,20 +321,20 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t('permMode.enableBypassBody')) }}
             />
             <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container)] px-3 py-2" title={workDir}>
-              <span className="material-symbols-outlined shrink-0 text-[16px] text-[var(--color-text-tertiary)]">folder</span>
+              <Folder size={16} aria-hidden="true" className="shrink-0 text-[var(--color-text-tertiary)]" />
               <code className="truncate text-xs font-[var(--font-mono)] text-[var(--color-text-primary)]">{workDir}</code>
             </div>
             <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
               <li className="flex items-start gap-2">
-                <span className="material-symbols-outlined mt-0.5 text-[14px] text-[var(--color-error)]">check</span>
+                <Check size={14} aria-hidden="true" className="mt-0.5 text-[var(--color-error)]" />
                 {t('permMode.permReadWrite')}
               </li>
               <li className="flex items-start gap-2">
-                <span className="material-symbols-outlined mt-0.5 text-[14px] text-[var(--color-error)]">check</span>
+                <Check size={14} aria-hidden="true" className="mt-0.5 text-[var(--color-error)]" />
                 {t('permMode.permShell')}
               </li>
               <li className="flex items-start gap-2">
-                <span className="material-symbols-outlined mt-0.5 text-[14px] text-[var(--color-error)]">check</span>
+                <Check size={14} aria-hidden="true" className="mt-0.5 text-[var(--color-error)]" />
                 {t('permMode.permPackages')}
               </li>
             </ul>

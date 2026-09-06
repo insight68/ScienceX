@@ -317,7 +317,15 @@ describe('SettingsService', () => {
   it('should get default permission mode', async () => {
     const svc = new SettingsService()
     const mode = await svc.getPermissionMode()
-    expect(mode).toBe('default')
+    expect(mode).toBe('auto')
+  })
+
+  it('preserves an explicitly saved legacy mode and unknown fields', async () => {
+    const fixture = { defaultMode: 'acceptEdits', customExtension: { enabled: true } }
+    await fs.writeFile(path.join(tmpDir, 'settings.json'), JSON.stringify(fixture))
+    const svc = new SettingsService()
+    expect(await svc.getPermissionMode()).toBe('acceptEdits')
+    expect(await svc.getUserSettings()).toEqual(fixture)
   })
 
   it('should ignore stale invalid permission modes from older installs', async () => {
@@ -573,13 +581,13 @@ describe('Settings API', () => {
     expect(body.availableInNewTerminals).toBe(true)
   })
 
-  it('GET /api/permissions/mode should return default mode', async () => {
+  it('GET /api/permissions/mode should return automatic approval when unset', async () => {
     const { req, url, segments } = makeRequest('GET', '/api/permissions/mode')
     const res = await handleSettingsApi(req, url, segments)
 
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body.mode).toBe('default')
+    expect(body.mode).toBe('auto')
   })
 
   it('PUT /api/permissions/mode should set mode', async () => {

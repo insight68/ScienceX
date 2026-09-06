@@ -2923,6 +2923,16 @@ describe('chatStore history mapping', () => {
     expect(sendMock).not.toHaveBeenCalled()
   })
 
+  it('restores plan execution metadata without changing or echoing permissions', () => {
+    useChatStore.setState({ sessions: { [TEST_SESSION_ID]: makeSession({ chatState: 'idle' }) } })
+    sendMock.mockReset()
+    updateSessionPermissionModeMock.mockReset()
+    useChatStore.getState().handleServerMessage(TEST_SESSION_ID, { type: 'plan_execution_mode', mode: 'auto' })
+    expect(useChatStore.getState().sessions[TEST_SESSION_ID]?.prePlanPermissionMode).toBe('auto')
+    expect(updateSessionPermissionModeMock).not.toHaveBeenCalled()
+    expect(sendMock).not.toHaveBeenCalled()
+  })
+
   it('stores terminal task notifications for agent tool cards', () => {
     useChatStore.setState({
       sessions: {

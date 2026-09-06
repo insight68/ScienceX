@@ -1,0 +1,354 @@
+{"kind":"deck","id":"pr/ivrqlh","name":"Deck"}
+{"kind":"layout","layoutId":"e9a2b3f5-fae5-4f8d-91f9-497b393831ce","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"5025ebf1-da67-49b1-89dc-945f337b221f","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/5lzgnz","slide":1,"title":"OPEN SOURCE · LOCAL FIRST · TRACEABLE","textShapes":10}
+{"kind":"shape","id":"sh/cnm98fud","slide":1,"bbox":[0,0,16,720]}
+{"kind":"textbox","id":"sh/bmdsfat8","slide":1,"text":"OPEN SOURCE · LOCAL FIRST · TRACEABLE","textPreview":"OPEN SOURCE · LOCAL FIRST · TRACEABLE","textChars":37,"textLines":1,"bbox":[72,66,520,24]}
+{"kind":"textbox","id":"sh/a1kr6pcn","slide":1,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[72,164,630,84]}
+{"kind":"textbox","id":"sh/p0bqdkb2","slide":1,"text":"科研工作台","textPreview":"科研工作台","textChars":5,"textLines":1,"bbox":[72,247,620,110]}
+{"kind":"textbox","id":"sh/oz294fuh","slide":1,"text":"让研究问题、证据与下一步\n进入同一条可追溯链路","textPreview":"让研究问题、证据与下一步 | 进入同一条可追溯链路","textChars":23,"textLines":2,"bbox":[76,393,620,92]}
+{"kind":"textbox","id":"sh/nyt8batw","slide":1,"text":"X","textPreview":"X","textChars":1,"textLines":1,"bbox":[865,116,310,355]}
+{"kind":"shape","id":"sh/2xkr25cb","slide":1,"bbox":[910,103,250,250]}
+{"kind":"shape","id":"sh/1wbq90bq","slide":1,"bbox":[1015,300,155,155]}
+{"kind":"textbox","id":"sh/0v290vul","slide":1,"text":"本地数据","textPreview":"本地数据","textChars":4,"textLines":1,"bbox":[72,566,128,36]}
+{"kind":"textbox","id":"sh/ix0fel0n","slide":1,"text":"开放源码","textPreview":"开放源码","textChars":4,"textLines":1,"bbox":[226,566,128,36]}
+{"kind":"textbox","id":"sh/jy9g7qhs","slide":1,"text":"跨平台桌面端","textPreview":"跨平台桌面端","textChars":6,"textLines":1,"bbox":[380,566,145,36]}
+{"kind":"textbox","id":"sh/kzixgvid","slide":1,"text":"SCIENCEX · BRAND STORY","textPreview":"SCIENCEX · BRAND STORY","textChars":22,"textLines":1,"bbox":[72,665,260,18]}
+{"kind":"textbox","id":"sh/50ry90zy","slide":1,"text":"01 / 12","textPreview":"01 / 12","textChars":7,"textLines":1,"bbox":[1120,665,90,18]}
+{"kind":"notes","id":"nt/5lzgnz","slide":1,"text":"开场先给出一句话定位：ScienceX 是开源、本地优先、可追溯的 AI 科研工作台。\n强调“工作台”三个字。它不是只回答问题的聊天框，而是承载研究项目、研究线程、工具调用、数据版本和研究产物的桌面环境。\n这一页只建立共同语言：我们要解决的不是让 AI 说得更多，而是让研究过程更连续、更可核对。"}
+{"kind":"slide","id":"sl/4xhz8x","slide":2,"title":"02","textShapes":26}
+{"kind":"textbox","id":"sh/cfuhw3at","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/rel03yt8","slide":2,"text":"DAILY RESEARCH","textPreview":"DAILY RESEARCH","textChars":14,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/qdczutsn","slide":2,"text":"四件重复工作交给 ScienceX","textPreview":"四件重复工作交给 ScienceX","textChars":17,"textLines":1,"bbox":[58,86,730,64]}
+{"kind":"textbox","id":"sh/pcji1ob2","slide":2,"text":"科研最稀缺的不是信息，而是研究者的注意力。可重复、可检查的工作交给系统，关键判断留给研究者。","textPreview":"科研最稀缺的不是信息，而是研究者的注意力。可重复、可检查的工作交给系统，关键判断留给研究者。","textChars":46,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/4bahsjax","slide":2,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"textbox","id":"sh/3a10zetc","slide":2,"text":"重复工作","textPreview":"重复工作","textChars":4,"textLines":1,"bbox":[62,184,180,26]}
+{"kind":"textbox","id":"sh/2pszq9sr","slide":2,"text":"形成产物","textPreview":"形成产物","textChars":4,"textLines":1,"bbox":[330,184,300,26]}
+{"kind":"textbox","id":"sh/98nidsrm","slide":2,"text":"研究者保留","textPreview":"研究者保留","textChars":5,"textLines":1,"bbox":[805,184,300,26]}
+{"kind":"shape","id":"sh/o7e14na1","slide":2,"bbox":[58,214,1164,0]}
+{"kind":"textbox","id":"sh/e587etor","slide":2,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[62,234,45,28]}
+{"kind":"textbox","id":"sh/zqh8ny5c","slide":2,"text":"搜索资料","textPreview":"搜索资料","textChars":4,"textLines":1,"bbox":[112,230,180,38]}
+{"kind":"textbox","id":"sh/0rqpg36x","slide":2,"text":"带出处的文献表与证据摘要","textPreview":"带出处的文献表与证据摘要","textChars":12,"textLines":1,"bbox":[330,232,390,48]}
+{"kind":"textbox","id":"sh/1sjqponi","slide":2,"text":"决定精读什么、相信什么","textPreview":"决定精读什么、相信什么","textChars":11,"textLines":1,"bbox":[805,232,370,48]}
+{"kind":"shape","id":"sh/q187a9ov","slide":2,"bbox":[58,299,1164,0]}
+{"kind":"textbox","id":"sh/r2hoje5g","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[62,322,45,28]}
+{"kind":"textbox","id":"sh/c3qpcj61","slide":2,"text":"进度跟踪","textPreview":"进度跟踪","textChars":4,"textLines":1,"bbox":[112,318,180,38]}
+{"kind":"textbox","id":"sh/d4z6lon6","slide":2,"text":"进度板、阶段总结与下一步清单","textPreview":"进度板、阶段总结与下一步清单","textChars":14,"textLines":1,"bbox":[330,320,390,48]}
+{"kind":"textbox","id":"sh/axs7mdoz","slide":2,"text":"决定优先级和研究方向","textPreview":"决定优先级和研究方向","textChars":10,"textLines":1,"bbox":[805,320,370,48]}
+{"kind":"shape","id":"sh/by18vi5k","slide":2,"bbox":[58,387,1164,0]}
+{"kind":"textbox","id":"sh/72d4nalw","slide":2,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[62,410,45,28]}
+{"kind":"textbox","id":"sh/6143e54b","slide":2,"text":"理清逻辑","textPreview":"理清逻辑","textChars":4,"textLines":1,"bbox":[112,406,180,38]}
+{"kind":"textbox","id":"sh/t4vmpk32","slide":2,"text":"论证缺口与待验证问题","textPreview":"论证缺口与待验证问题","textChars":10,"textLines":1,"bbox":[330,408,390,48]}
+{"kind":"textbox","id":"sh/s3m5gfmh","slide":2,"text":"回答关键问题、修正论证","textPreview":"回答关键问题、修正论证","textChars":11,"textLines":1,"bbox":[805,408,370,48]}
+{"kind":"shape","id":"sh/f6d4ral8","slide":2,"bbox":[58,475,1164,0]}
+{"kind":"textbox","id":"sh/u54ni54n","slide":2,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[62,498,45,28]}
+{"kind":"textbox","id":"sh/h8vmtk3y","slide":2,"text":"修改表达","textPreview":"修改表达","textChars":4,"textLines":1,"bbox":[112,494,180,38]}
+{"kind":"textbox","id":"sh/g7m5kfmt","slide":2,"text":"修改建议、差异记录与风格档案","textPreview":"修改建议、差异记录与风格档案","textChars":14,"textLines":1,"bbox":[330,496,390,48]}
+{"kind":"textbox","id":"sh/3ax4vul4","slide":2,"text":"保留观点、结论和个人风格","textPreview":"保留观点、结论和个人风格","textChars":12,"textLines":1,"bbox":[805,496,370,48]}
+{"kind":"shape","id":"sh/29onmp4j","slide":2,"bbox":[58,563,1164,0]}
+{"kind":"shape","id":"sh/0z6lczix","slide":2,"bbox":[58,603,1164,60]}
+{"kind":"textbox","id":"sh/10zml4ji","slide":2,"text":"提速的关键不是让 AI 代替思考，而是让它接手重复工作，并把证据和下一步留在研究过程里。","textPreview":"提速的关键不是让 AI 代替思考，而是让它接手重复工作，并把证据和下一步留在研究过程里。","textChars":44,"textLines":1,"bbox":[88,618,1100,32]}
+{"kind":"shape","id":"sh/edo3ap0r","slide":2,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/zyx4ju1c","slide":2,"text":"SCIENCEX · 02","textPreview":"SCIENCEX · 02","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/4xhz8x","slide":2,"text":"科研时间经常被四类工作切碎：找资料、跟进度、追逻辑和改表达。它们重要，但重复、规模大，也容易丢上下文。\nScienceX 对每一类工作都要求留下可检查的产物。例如检索不是给几个链接，而是形成带出处的文献表；进度不是聊天记录，而是阶段总结和下一步清单。\n右侧是不能外包的部分。研究者仍然决定读什么、信什么、优先做什么，以及结论是否成立。"}
+{"kind":"slide","id":"sl/rek1me","slide":3,"title":"03","textShapes":14}
+{"kind":"textbox","id":"sh/nm5cbuh4","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/oned4zip","slide":3,"text":"HUMAN IN THE LOOP","textPreview":"HUMAN IN THE LOOP","textChars":17,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/9onudkzu","slide":3,"text":"系统执行，研究者判断","textPreview":"系统执行，研究者判断","textChars":10,"textLines":1,"bbox":[58,86,730,64]}
+{"kind":"textbox","id":"sh/apwv6p0f","slide":3,"text":"高风险操作需要授权，关键证据需要人工复核。ScienceX 承担执行和记录，研究者承担科学判断。","textPreview":"高风险操作需要授权，关键证据需要人工复核。ScienceX 承担执行和记录，研究者承担科学判断。","textChars":48,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/bq5cfuh0","slide":3,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"shape","id":"sh/wred8zil","slide":3,"bbox":[58,187,548,385]}
+{"kind":"shape","id":"sh/xsnuh4z6","slide":3,"bbox":[634,187,588,385]}
+{"kind":"textbox","id":"sh/ytgva90r","slide":3,"text":"SCIENCEX","textPreview":"SCIENCEX","textChars":8,"textLines":1,"bbox":[92,222,220,24]}
+{"kind":"textbox","id":"sh/jupcjehc","slide":3,"text":"执行与记录","textPreview":"执行与记录","textChars":5,"textLines":1,"bbox":[92,254,380,55]}
+{"kind":"textbox","id":"sh/v25svil4","slide":3,"text":"• 检索、阅读与整理\n• 编码、计算与比较\n• 执行获得授权的工具\n• 保存过程和候选假设","textPreview":"• 检索、阅读与整理 | • 编码、计算与比较 | • 执行获得授权的工具 | • 保存过程和候选假设","textChars":45,"textLines":4,"bbox":[92,332,420,178]}
+{"kind":"textbox","id":"sh/u1wbmdkj","slide":3,"text":"RESEARCHER","textPreview":"RESEARCHER","textChars":10,"textLines":1,"bbox":[674,222,250,24]}
+{"kind":"textbox","id":"sh/h4naxs3u","slide":3,"text":"科学判断","textPreview":"科学判断","textChars":4,"textLines":1,"bbox":[674,254,380,55]}
+{"kind":"textbox","id":"sh/w3eton29","slide":3,"text":"• 提出重要研究问题\n• 审核方案与关键证据\n• 判断结果是否成立\n• 决定下一轮研究方向","textPreview":"• 提出重要研究问题 | • 审核方案与关键证据 | • 判断结果是否成立 | • 决定下一轮研究方向","textChars":45,"textLines":4,"bbox":[674,332,450,178]}
+{"kind":"shape","id":"sh/7ylsrils","slide":3,"bbox":[585,343,92,92]}
+{"kind":"textbox","id":"sh/mxcbidk7","slide":3,"text":"确认","textPreview":"确认","textChars":2,"textLines":1,"bbox":[599,370,64,28]}
+{"kind":"shape","id":"sh/90nat83y","slide":3,"bbox":[173,602,934,49]}
+{"kind":"textbox","id":"sh/8zutk32d","slide":3,"text":"Human-driven Research Loop  ·  研究者发起、授权、复核并作出最终判断","textPreview":"Human-driven Research Loop  ·  研究者发起、授权、复核并作出最终判断","textChars":49,"textLines":1,"bbox":[200,614,880,24]}
+{"kind":"shape","id":"sh/rupc32lw","slide":3,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/6tgbuxkr","slide":3,"text":"SCIENCEX · 03","textPreview":"SCIENCEX · 03","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/rek1me","slide":3,"text":"这一页是 ScienceX 的责任边界。左边是系统擅长的执行、整理、计算和记录，右边是研究者必须承担的判断。\n中间的“确认”很关键。自动化结果只有在研究者检查来源、方法、告警和产物之后，才可以进入下一轮研究状态。\n因此我们把当前运行模式明确写成 Human-driven Research Loop。ScienceX 能加速研究，但不替代研究者签署最终结论。"}
+{"kind":"slide","id":"sl/o3upg9","slide":4,"title":"04","textShapes":6}
+{"kind":"textbox","id":"sh/7610fqt0","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/87a18vul","slide":4,"text":"PRODUCT IN USE","textPreview":"PRODUCT IN USE","textChars":14,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/98jihgbq","slide":4,"text":"产品已经进入研究过程","textPreview":"产品已经进入研究过程","textChars":10,"textLines":1,"bbox":[58,86,730,64]}
+{"kind":"textbox","id":"sh/y18j21c3","slide":4,"text":"研究项目、研究线程、定时任务与科研 Skills，已经进入同一个桌面工作台。","textPreview":"研究项目、研究线程、定时任务与科研 Skills，已经进入同一个桌面工作台。","textChars":38,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/z2h0b6to","slide":4,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"shape","id":"sh/l4zidgbu","slide":4,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/adojy1c7","slide":4,"text":"SCIENCEX · 04","textPreview":"SCIENCEX · 04","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"image","id":"im/dsn694fi","slide":4,"name":"","geometry":"roundRect","alt":"ScienceX 品牌首页中的产品实景，展示研究线程、定时任务与科研 Skills","bbox":[58,170,1164,480]}
+{"kind":"notes","id":"nt/o3upg9","slide":4,"text":"这里展示的是当前品牌首页中的真实产品界面，已经裁切并脱敏。\n左侧研究线程承载研究问题、过程说明、文件和后续行动；右上是定时任务入口；右下是产品里可查看的科研 Skills。\n这说明 ScienceX 的价值不在于功能数量，而在于这些能力是否在同一个研究上下文中持续工作。\n定时任务也有明确边界：本地任务只在应用运行、设备保持唤醒时执行。"}
+{"kind":"slide","id":"sl/akikch","slide":5,"title":"05","textShapes":27}
+{"kind":"textbox","id":"sh/fudkr6xg","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/gvm1kby1","slide":5,"text":"RESEARCH LOOP","textPreview":"RESEARCH LOOP","textChars":13,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/hwv2tgfm","slide":5,"text":"科研不是一次性 Workflow","textPreview":"科研不是一次性 Workflow","textChars":16,"textLines":1,"bbox":[58,86,700,64]}
+{"kind":"textbox","id":"sh/65kje1gz","slide":5,"text":"结果不是终点，而是下一轮研究的输入。ScienceX 保存状态并执行任务，研究者判断证据与方向。","textPreview":"结果不是终点，而是下一轮研究的输入。ScienceX 保存状态并执行任务，研究者判断证据与方向。","textChars":48,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/7qt0nmxk","slide":5,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"shape","id":"sh/sr21gry5","slide":5,"bbox":[74,218,150,118]}
+{"kind":"textbox","id":"sh/tsbipwfq","slide":5,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[90,234,36,20]}
+{"kind":"textbox","id":"sh/q14jqlg3","slide":5,"text":"研究问题","textPreview":"研究问题","textChars":4,"textLines":1,"bbox":[90,265,118,30]}
+{"kind":"textbox","id":"sh/rmxkzqxo","slide":5,"text":"Question","textPreview":"Question","textChars":8,"textLines":1,"bbox":[90,302,118,19]}
+{"kind":"shape","id":"sh/b2tknetk","slide":5,"bbox":[270,218,150,118]}
+{"kind":"textbox","id":"sh/a1k3e9cz","slide":5,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[286,234,36,20]}
+{"kind":"textbox","id":"sh/x4b2pobq","slide":5,"text":"候选假设","textPreview":"候选假设","textChars":4,"textLines":1,"bbox":[286,265,118,30]}
+{"kind":"textbox","id":"sh/w32lgju5","slide":5,"text":"Hypothesis","textPreview":"Hypothesis","textChars":10,"textLines":1,"bbox":[286,302,118,19]}
+{"kind":"shape","id":"sh/j6tkretg","slide":5,"bbox":[466,218,150,118]}
+{"kind":"textbox","id":"sh/y5k3itcv","slide":5,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[482,234,36,20]}
+{"kind":"textbox","id":"sh/l8b2tobm","slide":5,"text":"证据与数据","textPreview":"证据与数据","textChars":5,"textLines":1,"bbox":[482,265,118,30]}
+{"kind":"textbox","id":"sh/k72lkju1","slide":5,"text":"Evidence","textPreview":"Evidence","textChars":8,"textLines":1,"bbox":[482,302,118,19]}
+{"kind":"shape","id":"sh/7adkvyts","slide":5,"bbox":[662,218,150,118]}
+{"kind":"textbox","id":"sh/6943mtc7","slide":5,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[678,234,36,20]}
+{"kind":"textbox","id":"sh/i5onexwf","slide":5,"text":"实验 / 计算","textPreview":"实验 / 计算","textChars":7,"textLines":1,"bbox":[678,265,118,30]}
+{"kind":"textbox","id":"sh/36xon2d0","slide":5,"text":"Experiment","textPreview":"Experiment","textChars":10,"textLines":1,"bbox":[678,302,118,19]}
+{"kind":"shape","id":"sh/4r65g7el","slide":5,"bbox":[858,218,150,118]}
+{"kind":"textbox","id":"sh/5sz6pcv6","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[874,234,36,20]}
+{"kind":"textbox","id":"sh/u1onadw3","slide":5,"text":"结果与边界","textPreview":"结果与边界","textChars":5,"textLines":1,"bbox":[874,265,118,30]}
+{"kind":"textbox","id":"sh/v2xojido","slide":5,"text":"Result","textPreview":"Result","textChars":6,"textLines":1,"bbox":[874,302,118,19]}
+{"kind":"shape","id":"sh/g365cne9","slide":5,"bbox":[1054,218,150,118]}
+{"kind":"textbox","id":"sh/h4f6lsvu","slide":5,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1070,234,36,20]}
+{"kind":"textbox","id":"sh/ex8nmhwn","slide":5,"text":"下一轮问题","textPreview":"下一轮问题","textChars":5,"textLines":1,"bbox":[1070,265,118,30]}
+{"kind":"textbox","id":"sh/fyhovmd8","slide":5,"text":"Next question","textPreview":"Next question","textChars":13,"textLines":1,"bbox":[1070,302,118,19]}
+{"kind":"shape","id":"sh/9s3qlgfa","slide":5,"bbox":[224,277,46,0]}
+{"kind":"shape","id":"sh/oru9sbyp","slide":5,"bbox":[420,277,46,0]}
+{"kind":"shape","id":"sh/nq18j6x4","slide":5,"bbox":[616,277,46,0]}
+{"kind":"shape","id":"sh/mpsrq1gj","slide":5,"bbox":[812,277,46,0]}
+{"kind":"shape","id":"sh/1ojqhgfe","slide":5,"bbox":[1008,277,46,0]}
+{"kind":"shape","id":"sh/0napobyt","slide":5,"bbox":[149,336,980,24]}
+{"kind":"shape","id":"sh/zm18f6x8","slide":5,"bbox":[116,438,1048,118]}
+{"kind":"textbox","id":"sh/els7m1gn","slide":5,"text":"RESEARCH MEMORY","textPreview":"RESEARCH MEMORY","textChars":15,"textLines":1,"bbox":[146,461,220,20]}
+{"kind":"textbox","id":"sh/lknqt0fi","slide":5,"text":"研究目标 · 候选假设 · 数据版本 · 证据关系 · 关键决策 · 结果 · 未解决问题","textPreview":"研究目标 · 候选假设 · 数据版本 · 证据关系 · 关键决策 · 结果 · 未解决问题","textChars":45,"textLines":1,"bbox":[146,495,972,35]}
+{"kind":"textbox","id":"sh/kje90vyx","slide":5,"text":"当前闭环由研究者驱动。ScienceX 协助执行、记录与重放，不替代最终科学判断。","textPreview":"当前闭环由研究者驱动。ScienceX 协助执行、记录与重放，不替代最终科学判断。","textChars":41,"textLines":1,"bbox":[188,600,904,32]}
+{"kind":"shape","id":"sh/s32hkvyt","slide":5,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/d4byt0fy","slide":5,"text":"SCIENCEX · 05","textPreview":"SCIENCEX · 05","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/akikch","slide":5,"text":"ScienceX 的核心不是线性工作流，而是 Research Loop。研究问题产生候选假设，假设需要证据与数据，再进入实验或计算。\n结果必须连同边界一起被保存，然后转化成下一轮问题。闭环的价值，是每一轮都能知道我们改了什么、为什么改、结果如何变化。\n底部的 Research Memory 是状态层。它保存目标、假设、数据版本、证据关系、关键决策、结果和未解决问题。"}
+{"kind":"slide","id":"sl/pifkm6","slide":6,"title":"06","textShapes":23}
+{"kind":"textbox","id":"sh/7y9kzqh0","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/8zi1svil","slide":6,"text":"CAPABILITY MATURITY","textPreview":"CAPABILITY MATURITY","textChars":19,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/90r210zq","slide":6,"text":"从回答问题，到持续推进研究","textPreview":"从回答问题，到持续推进研究","textChars":13,"textLines":1,"bbox":[58,86,730,64]}
+{"kind":"textbox","id":"sh/u10ju50b","slide":6,"text":"产品能力与长期愿景分开表达。当前可用、下一阶段与长期愿景，不混在同一张能力清单里。","textPreview":"产品能力与长期愿景分开表达。当前可用、下一阶段与长期愿景，不混在同一张能力清单里。","textChars":41,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/v29k3ahw","slide":6,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"shape","id":"sh/w3i1wfih","slide":6,"bbox":[58,190,350,392]}
+{"kind":"textbox","id":"sh/hob250z2","slide":6,"text":"NOW","textPreview":"NOW","textChars":3,"textLines":1,"bbox":[86,220,120,22]}
+{"kind":"textbox","id":"sh/ipkjy50n","slide":6,"text":"当前可用","textPreview":"当前可用","textChars":4,"textLines":1,"bbox":[290,212,90,30]}
+{"kind":"textbox","id":"sh/jqtk7ah8","slide":6,"text":"Research Assistant","textPreview":"Research Assistant","textChars":18,"textLines":1,"bbox":[86,280,290,48]}
+{"kind":"textbox","id":"sh/f2lszip0","slide":6,"text":"研究线程、本地项目、科研 Skills、数据版本、确定性分析、证据与重放。","textPreview":"研究线程、本地项目、科研 Skills、数据版本、确定性分析、证据与重放。","textChars":37,"textLines":1,"bbox":[86,353,286,116]}
+{"kind":"shape","id":"sh/e1sbqx8f","slide":6,"bbox":[86,500,294,0]}
+{"kind":"textbox","id":"sh/143a1s76","slide":6,"text":"保存上下文 · 执行与记录","textPreview":"保存上下文 · 执行与记录","textChars":13,"textLines":1,"bbox":[86,520,286,28]}
+{"kind":"shape","id":"sh/g3utsnql","slide":6,"bbox":[446,190,350,392]}
+{"kind":"textbox","id":"sh/ry1svip4","slide":6,"text":"NEXT","textPreview":"NEXT","textChars":4,"textLines":1,"bbox":[474,220,120,22]}
+{"kind":"textbox","id":"sh/6xsbmd8j","slide":6,"text":"下一阶段","textPreview":"下一阶段","textChars":4,"textLines":1,"bbox":[678,212,90,30]}
+{"kind":"textbox","id":"sh/t0jaxs7a","slide":6,"text":"Research Agent","textPreview":"Research Agent","textChars":14,"textLines":1,"bbox":[474,280,290,48]}
+{"kind":"textbox","id":"sh/szatonqp","slide":6,"text":"更完整地组织计划、执行和验证，并在人工确认后更新研究状态。","textPreview":"更完整地组织计划、执行和验证，并在人工确认后更新研究状态。","textChars":29,"textLines":1,"bbox":[474,353,286,116]}
+{"kind":"shape","id":"sh/bu5c72p8","slide":6,"bbox":[474,500,294,0]}
+{"kind":"textbox","id":"sh/qtcbyhon","slide":6,"text":"计划 · 执行 · 验证","textPreview":"计划 · 执行 · 验证","textChars":12,"textLines":1,"bbox":[474,520,286,28]}
+{"kind":"shape","id":"sh/mpgvq18v","slide":6,"bbox":[834,190,350,392]}
+{"kind":"textbox","id":"sh/nqpwz69g","slide":6,"text":"VISION","textPreview":"VISION","textChars":6,"textLines":1,"bbox":[862,220,120,22]}
+{"kind":"textbox","id":"sh/8rydsbq1","slide":6,"text":"长期愿景","textPreview":"长期愿景","textChars":4,"textLines":1,"bbox":[1066,212,90,30]}
+{"kind":"textbox","id":"sh/9s7e1grm","slide":6,"text":"AI Scientist","textPreview":"AI Scientist","textChars":12,"textLines":1,"bbox":[862,280,290,48]}
+{"kind":"textbox","id":"sh/at0vul87","slide":6,"text":"让结果持续影响候选假设、实验设计和后续研究方向。","textPreview":"让结果持续影响候选假设、实验设计和后续研究方向。","textChars":24,"textLines":1,"bbox":[862,353,286,116]}
+{"kind":"shape","id":"sh/vu9w3q9s","slide":6,"bbox":[862,500,294,0]}
+{"kind":"textbox","id":"sh/wfixwvqd","slide":6,"text":"Hypothesis · Evidence · Next","textPreview":"Hypothesis · Evidence · Next","textChars":28,"textLines":1,"bbox":[862,520,286,28]}
+{"kind":"textbox","id":"sh/xgre50ri","slide":6,"text":"当前产品定位","textPreview":"当前产品定位","textChars":6,"textLines":1,"bbox":[58,611,150,24]}
+{"kind":"textbox","id":"sh/qxwvihsn","slide":6,"text":"ScienceX 当前提供 Research Assistant 能力，后续才逐步走向更完整的 Research Agent。","textPreview":"ScienceX 当前提供 Research Assistant 能力，后续才逐步走向更完整的 Research Agent。","textChars":63,"textLines":1,"bbox":[220,606,920,32]}
+{"kind":"shape","id":"sh/by5wrm98","slide":6,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/dovqdof2","slide":6,"text":"SCIENCEX · 06","textPreview":"SCIENCEX · 06","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/pifkm6","slide":6,"text":"这一页刻意把现在、下一阶段和长期愿景分开，避免把未来能力当成现状。\n当前可用的是 Research Assistant：研究线程、本地项目、科研 Skills、数据版本、确定性分析、证据和重放。\n下一阶段才是更完整的 Research Agent，它需要在人工确认后组织计划、执行和验证。AI Scientist 是长期愿景，强调结果持续改变候选假设和研究方向。"}
+{"kind":"slide","id":"sl/3kxngx","slide":7,"title":"07","textShapes":8}
+{"kind":"textbox","id":"sh/jaxkbmxg","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/kbqlkry1","slide":7,"text":"RUNNABLE EVIDENCE","textPreview":"RUNNABLE EVIDENCE","textChars":17,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/lwz2dwfm","slide":7,"text":"一条可以实际运行和重放的研究链路","textPreview":"一条可以实际运行和重放的研究链路","textChars":16,"textLines":1,"bbox":[58,86,740,64]}
+{"kind":"textbox","id":"sh/a5o3ehgz","slide":7,"text":"本地教学案例保留数据版本、运行证据、失败和不确定性，而不是只展示成功结果。","textPreview":"本地教学案例保留数据版本、运行证据、失败和不确定性，而不是只展示成功结果。","textChars":37,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/b6xk7mxk","slide":7,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"textbox","id":"sh/x8f29wfa","slide":7,"text":"03 MIN   ·   24 WELLS   ·   SHA-256   ·   REPLAY","textPreview":"03 MIN   ·   24 WELLS   ·   SHA-256   ·   REPLAY","textChars":48,"textLines":1,"bbox":[208,558,864,26]}
+{"kind":"shape","id":"sh/u183qlw3","slide":7,"bbox":[58,610,1164,46]}
+{"kind":"textbox","id":"sh/v2h4j6xo","slide":7,"text":"模拟数据，仅用于产品教学；不代表真实药效、湿实验验证或科学结论。","textPreview":"模拟数据，仅用于产品教学；不代表真实药效、湿实验验证或科学结论。","textChars":32,"textLines":1,"bbox":[84,622,1112,22]}
+{"kind":"shape","id":"sh/j2p8jaxo","slide":7,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/i1gra5g3","slide":7,"text":"SCIENCEX · 07","textPreview":"SCIENCEX · 07","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"image","id":"im/1cf6hg7q","slide":7,"name":"","geometry":"roundRect","alt":"ScienceX 细胞活力教学案例，展示可重放事实与四种运行结果","bbox":[58,192,1164,340]}
+{"kind":"notes","id":"nt/3kxngx","slide":7,"text":"这条案例用模拟细胞活力数据演示完整研究链路，三分钟内完成版本化实验设计、确定性 4PL 分析、技术证据评估和结果重放。\n四个事实可以核对：24 个孔位、SHA-256 输入与产物哈希、固定原始版本重放，以及三类研究产物。\n更重要的是，它保留失败和不确定性。缺孔输入会明确失败，弱响应会标记“技术证据尚无定论”，系统不会静默补值或把运行完成写成科学结论。\n需要明确：这是产品教学中的模拟数据，不代表真实药效或湿实验验证。"}
+{"kind":"slide","id":"sl/iynfnl","slide":8,"title":"08","textShapes":24}
+{"kind":"textbox","id":"sh/ihszepov","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/5kji9k7m","slide":8,"text":"HOW IT WORKS","textPreview":"HOW IT WORKS","textChars":12,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/4jahgz61","slide":8,"text":"ScienceX 承载一次研究推进","textPreview":"ScienceX 承载一次研究推进","textChars":17,"textLines":1,"bbox":[58,86,730,64]}
+{"kind":"textbox","id":"sh/r6l0bups","slide":8,"text":"模型负责推理。ScienceX 读取研究状态、组织执行能力、保存运行证据，并把关键判断交还给研究者。","textPreview":"模型负责推理。ScienceX 读取研究状态、组织执行能力、保存运行证据，并把关键判断交还给研究者。","textChars":50,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/65czipo7","slide":8,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"shape","id":"sh/t83id47i","slide":8,"bbox":[88,218,126,126]}
+{"kind":"textbox","id":"sh/s7u1kz6d","slide":8,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[126,237,50,22]}
+{"kind":"textbox","id":"sh/7ah0zap8","slide":8,"text":"Understand","textPreview":"Understand","textChars":10,"textLines":1,"bbox":[100,272,102,30]}
+{"kind":"shape","id":"sh/m98z65o3","slide":8,"bbox":[324,218,126,126]}
+{"kind":"textbox","id":"sh/cne9orqh","slide":8,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[362,237,50,22]}
+{"kind":"textbox","id":"sh/donqxwr2","slide":8,"text":"Plan","textPreview":"Plan","textChars":4,"textLines":1,"bbox":[336,272,102,30]}
+{"kind":"shape","id":"sh/qlwrmh8b","slide":8,"bbox":[560,218,126,126]}
+{"kind":"textbox","id":"sh/bm58vm9w","slide":8,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[598,237,50,22]}
+{"kind":"textbox","id":"sh/0by9srqd","slide":8,"text":"Act","textPreview":"Act","textChars":3,"textLines":1,"bbox":[572,272,102,30]}
+{"kind":"shape","id":"sh/lc7q1w7y","slide":8,"bbox":[796,218,126,126]}
+{"kind":"textbox","id":"sh/ypwrqh8n","slide":8,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[834,237,50,22]}
+{"kind":"textbox","id":"sh/zqp8zm98","slide":8,"text":"Verify","textPreview":"Verify","textChars":6,"textLines":1,"bbox":[808,272,102,30]}
+{"kind":"shape","id":"sh/gfupg7q9","slide":8,"bbox":[1032,218,126,126]}
+{"kind":"textbox","id":"sh/1g3qpcru","slide":8,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1070,237,50,22]}
+{"kind":"textbox","id":"sh/hcv6toji","slide":8,"text":"Learn","textPreview":"Learn","textChars":5,"textLines":1,"bbox":[1044,272,102,30]}
+{"kind":"shape","id":"sh/gbm5kjix","slide":8,"bbox":[214,281,110,0]}
+{"kind":"shape","id":"sh/vadory1s","slide":8,"bbox":[450,281,110,0]}
+{"kind":"shape","id":"sh/u94nit07","slide":8,"bbox":[686,281,110,0]}
+{"kind":"shape","id":"sh/5gf6x8ju","slide":8,"bbox":[922,281,110,0]}
+{"kind":"textbox","id":"sh/4f6po3i9","slide":8,"text":"读取问题、线程与证据","textPreview":"读取问题、线程与证据","textChars":10,"textLines":1,"bbox":[58,378,186,58]}
+{"kind":"textbox","id":"sh/3edovy1o","slide":8,"text":"拆解任务与执行路径","textPreview":"拆解任务与执行路径","textChars":9,"textLines":1,"bbox":[294,378,186,58]}
+{"kind":"textbox","id":"sh/id4nmt03","slide":8,"text":"调用已授权能力","textPreview":"调用已授权能力","textChars":7,"textLines":1,"bbox":[530,378,186,58]}
+{"kind":"textbox","id":"sh/d4f618jq","slide":8,"text":"检查输入、结果与产物","textPreview":"检查输入、结果与产物","textChars":10,"textLines":1,"bbox":[766,378,186,58]}
+{"kind":"textbox","id":"sh/sj6ps3i5","slide":8,"text":"确认后保存关键状态","textPreview":"确认后保存关键状态","textChars":9,"textLines":1,"bbox":[1002,378,186,58]}
+{"kind":"shape","id":"sh/ap03m5gn","slide":8,"bbox":[58,478,1164,110]}
+{"kind":"textbox","id":"sh/bq9kfah8","slide":8,"text":"RESEARCH MEMORY · STATE LAYER","textPreview":"RESEARCH MEMORY · STATE LAYER","textChars":29,"textLines":1,"bbox":[86,500,310,22]}
+{"kind":"textbox","id":"sh/crilofyt","slide":8,"text":"目标 · 假设 · 数据版本 · 证据 · 关键决策 · 未解决问题","textPreview":"目标 · 假设 · 数据版本 · 证据 · 关键决策 · 未解决问题","textChars":34,"textLines":1,"bbox":[86,538,850,34]}
+{"kind":"textbox","id":"sh/xsrmhkze","slide":8,"text":"自动化执行不等于科学结论","textPreview":"自动化执行不等于科学结论","textChars":12,"textLines":1,"bbox":[930,512,254,48]}
+{"kind":"shape","id":"sh/yt03qpgz","slide":8,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/ju94juhk","slide":8,"text":"SCIENCEX · 08","textPreview":"SCIENCEX · 08","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/iynfnl","slide":8,"text":"一次研究推进分成五个动作。先理解当前问题和证据，再形成计划，之后调用已授权能力执行。\n执行后必须验证输入、结果、告警和产物，最后由研究者确认哪些状态值得保留。\n底部的状态层把每次运行连接起来。这样下一次不是从空白聊天开始，而是从已有目标、假设、数据版本和未解决问题继续。"}
+{"kind":"slide","id":"sl/ch8683","slide":9,"title":"09","textShapes":26}
+{"kind":"textbox","id":"sh/ix4vapgv","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/5kvelkz6","slide":9,"text":"RESEARCH SKILLS","textPreview":"RESEARCH SKILLS","textChars":15,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/4jmdcfyl","slide":9,"text":"20 个科研 Skills，把方法带进任务","textPreview":"20 个科研 Skills，把方法带进任务","textChars":21,"textLines":1,"bbox":[58,86,720,64]}
+{"kind":"textbox","id":"sh/vutwfah4","slide":9,"text":"这些 Skills 是可以查看、检查和组合的任务方法，不是藏在聊天框里的提示词。","textPreview":"这些 Skills 是可以查看、检查和组合的任务方法，不是藏在聊天框里的提示词。","textChars":40,"textLines":1,"bbox":[790,94,430,62]}
+{"kind":"textbox","id":"sh/utkv65gj","slide":9,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"textbox","id":"sh/hwvehkza","slide":9,"text":"20","textPreview":"20","textChars":2,"textLines":1,"bbox":[58,196,245,170]}
+{"kind":"textbox","id":"sh/wvmd8fyp","slide":9,"text":"个科研 Skills\n已集成到 ScienceX","textPreview":"个科研 Skills | 已集成到 ScienceX","textChars":24,"textLines":2,"bbox":[66,366,260,80]}
+{"kind":"textbox","id":"sh/fqxwrux8","slide":9,"text":"发现、推理、实验、表达、审查与评测，共同覆盖从问题到产物的研究过程。","textPreview":"发现、推理、实验、表达、审查与评测，共同覆盖从问题到产物的研究过程。","textChars":34,"textLines":1,"bbox":[66,476,280,100]}
+{"kind":"textbox","id":"sh/epovi9gn","slide":9,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[380,205,40,22]}
+{"kind":"textbox","id":"sh/8rqt0jid","slide":9,"text":"发现与检索","textPreview":"发现与检索","textChars":5,"textLines":1,"bbox":[380,238,240,40]}
+{"kind":"textbox","id":"sh/9sza94jy","slide":9,"text":"找到方法、论文与可核对来源","textPreview":"找到方法、论文与可核对来源","textChars":13,"textLines":1,"bbox":[380,293,240,48]}
+{"kind":"shape","id":"sh/m5oby907","slide":9,"bbox":[380,355,236,0]}
+{"kind":"textbox","id":"sh/nqxs7e1s","slide":9,"text":"find-science-skills","textPreview":"find-science-skills","textChars":19,"textLines":1,"bbox":[380,384,248,34]}
+{"kind":"textbox","id":"sh/036twzi1","slide":9,"text":"giiisp-paper-search-apis","textPreview":"giiisp-paper-search-apis","textChars":24,"textLines":1,"bbox":[380,438,248,34]}
+{"kind":"textbox","id":"sh/l4fa54jm","slide":9,"text":"scansci-pdf","textPreview":"scansci-pdf","textChars":11,"textLines":1,"bbox":[380,492,248,34]}
+{"kind":"textbox","id":"sh/y1orup0b","slide":9,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[662,205,40,22]}
+{"kind":"textbox","id":"sh/z2xs3u1g","slide":9,"text":"调研与推理","textPreview":"调研与推理","textChars":5,"textLines":1,"bbox":[662,238,240,40]}
+{"kind":"textbox","id":"sh/cz69szi5","slide":9,"text":"形成候选方向并暴露论证缺口","textPreview":"形成候选方向并暴露论证缺口","textChars":13,"textLines":1,"bbox":[662,293,240,48]}
+{"kind":"shape","id":"sh/d0fa1kjq","slide":9,"bbox":[662,355,236,0]}
+{"kind":"textbox","id":"sh/tkni9w72","slide":9,"text":"sci-employee-deep-research","textPreview":"sci-employee-deep-research","textChars":26,"textLines":1,"bbox":[662,384,248,34]}
+{"kind":"textbox","id":"sh/sjehgrqh","slide":9,"text":"scispark","textPreview":"scispark","textChars":8,"textLines":1,"bbox":[662,438,248,34]}
+{"kind":"textbox","id":"sh/7i5g7mpc","slide":9,"text":"good-question","textPreview":"good-question","textChars":13,"textLines":1,"bbox":[662,492,248,34]}
+{"kind":"textbox","id":"sh/6hczeh8r","slide":9,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[944,205,40,22]}
+{"kind":"textbox","id":"sh/5g3y5c76","slide":9,"text":"研究与实验","textPreview":"研究与实验","textChars":5,"textLines":1,"bbox":[944,238,240,40]}
+{"kind":"textbox","id":"sh/kfuhc7ql","slide":9,"text":"转成设计、数据基线与验证步骤","textPreview":"转成设计、数据基线与验证步骤","textChars":14,"textLines":1,"bbox":[944,293,240,48]}
+{"kind":"shape","id":"sh/jelg32p0","slide":9,"bbox":[944,355,236,0]}
+{"kind":"textbox","id":"sh/idczax8f","slide":9,"text":"experiment-design","textPreview":"experiment-design","textChars":17,"textLines":1,"bbox":[944,384,248,34]}
+{"kind":"textbox","id":"sh/pc7ihg7a","slide":9,"text":"research-baseline-builder","textPreview":"research-baseline-builder","textChars":25,"textLines":1,"bbox":[944,438,248,34]}
+{"kind":"shape","id":"sh/obyhobqp","slide":9,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/mx8fido7","slide":9,"text":"SCIENCEX · 09","textPreview":"SCIENCEX · 09","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/ch8683","slide":9,"text":"当前首页列出 20 个科研 Skills。它们按研究任务组织，而不是按技术栈堆叠。\n这一页先看研究前半程：发现与检索、调研与推理、研究与实验。研究者能看到 Skill 的名称、用途和适用边界。\n例如 scansci-pdf 负责论文获取流程，good-question 用评审式追问暴露论证缺口，experiment-design 把研究问题转成实验设计。"}
+{"kind":"slide","id":"sl/rwn1y2","slide":10,"title":"10","textShapes":28}
+{"kind":"textbox","id":"sh/ho3qlgz6","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/ulc7q10f","slide":10,"text":"RESEARCH SKILLS","textPreview":"RESEARCH SKILLS","textChars":15,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/vmloj6h0","slide":10,"text":"从研究产出到审查，能力边界都可见","textPreview":"从研究产出到审查，能力边界都可见","textChars":16,"textLines":1,"bbox":[58,86,730,64]}
+{"kind":"textbox","id":"sh/8jupori9","slide":10,"text":"方法进入任务后，仍需要质量审查、引用核对、长期记忆和新工具采用前的评测。","textPreview":"方法进入任务后，仍需要质量审查、引用核对、长期记忆和新工具采用前的评测。","textChars":36,"textLines":1,"bbox":[820,94,400,62]}
+{"kind":"textbox","id":"sh/9k36hwzu","slide":10,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"textbox","id":"sh/mhs7m10j","slide":10,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[58,190,40,22]}
+{"kind":"textbox","id":"sh/7ilof6h4","slide":10,"text":"写作与呈现","textPreview":"写作与呈现","textChars":5,"textLines":1,"bbox":[58,224,470,42]}
+{"kind":"textbox","id":"sh/kfapkrid","slide":10,"text":"组织论文、图像、幻灯片、视频与课程产物","textPreview":"组织论文、图像、幻灯片、视频与课程产物","textChars":19,"textLines":1,"bbox":[58,278,470,54]}
+{"kind":"shape","id":"sh/lgj6dwzy","slide":10,"bbox":[58,348,470,0]}
+{"kind":"textbox","id":"sh/dknahwj6","slide":10,"text":"01  academic-writing","textPreview":"01  academic-writing","textChars":20,"textLines":1,"bbox":[58,374,470,32]}
+{"kind":"shape","id":"sh/cjetoril","slide":10,"bbox":[58,413,470,0]}
+{"kind":"textbox","id":"sh/bi5sfm10","slide":10,"text":"02  scientific-humanization","textPreview":"02  scientific-humanization","textChars":27,"textLines":1,"bbox":[58,420,470,32]}
+{"kind":"shape","id":"sh/qhwbmh0v","slide":10,"bbox":[58,459,470,0]}
+{"kind":"textbox","id":"sh/pg3adcja","slide":10,"text":"03  giiisp-scientific-image-generation","textPreview":"03  giiisp-scientific-image-generation","textChars":38,"textLines":1,"bbox":[58,466,470,32]}
+{"kind":"shape","id":"sh/ofutk7ip","slide":10,"bbox":[58,505,470,0]}
+{"kind":"textbox","id":"sh/3elsbm14","slide":10,"text":"04  visual-deck-builder","textPreview":"04  visual-deck-builder","textChars":23,"textLines":1,"bbox":[58,512,470,32]}
+{"kind":"shape","id":"sh/2dcbih0j","slide":10,"bbox":[58,551,470,0]}
+{"kind":"textbox","id":"sh/1c3a9cjy","slide":10,"text":"05  manim-agent","textPreview":"05  manim-agent","textChars":15,"textLines":1,"bbox":[58,558,470,32]}
+{"kind":"shape","id":"sh/grutg7id","slide":10,"bbox":[58,597,470,0]}
+{"kind":"textbox","id":"sh/svytw7q9","slide":10,"text":"06  practical-course-producer","textPreview":"06  practical-course-producer","textChars":29,"textLines":1,"bbox":[58,604,470,32]}
+{"kind":"textbox","id":"sh/tw7a5cru","slide":10,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[554,190,40,22]}
+{"kind":"textbox","id":"sh/6twbux8j","slide":10,"text":"审查与记忆","textPreview":"审查与记忆","textChars":5,"textLines":1,"bbox":[554,224,340,42]}
+{"kind":"textbox","id":"sh/7u5s329o","slide":10,"text":"检查论文与引用，并保存长期研究上下文","textPreview":"检查论文与引用，并保存长期研究上下文","textChars":18,"textLines":1,"bbox":[554,278,340,54]}
+{"kind":"shape","id":"sh/krets7qd","slide":10,"bbox":[554,348,340,0]}
+{"kind":"textbox","id":"sh/5sna1cry","slide":10,"text":"01  thesis-audit-reviewer","textPreview":"01  thesis-audit-reviewer","textChars":25,"textLines":1,"bbox":[554,374,340,32]}
+{"kind":"shape","id":"sh/i5wbqx87","slide":10,"bbox":[554,413,340,0]}
+{"kind":"textbox","id":"sh/j65sz29s","slide":10,"text":"02  papercheck","textPreview":"02  papercheck","textChars":14,"textLines":1,"bbox":[554,420,340,32]}
+{"kind":"shape","id":"sh/4nit4rqh","slide":10,"bbox":[554,459,340,0]}
+{"kind":"textbox","id":"sh/porudwr2","slide":10,"text":"03  cognitive-profile","textPreview":"03  cognitive-profile","textChars":21,"textLines":1,"bbox":[554,466,340,32]}
+{"kind":"shape","id":"sh/zitw3qt4","slide":10,"bbox":[554,505,340,0]}
+{"kind":"textbox","id":"sh/ehkvulsj","slide":10,"text":"04  world-threads-entry","textPreview":"04  world-threads-entry","textChars":23,"textLines":1,"bbox":[554,512,340,32]}
+{"kind":"textbox","id":"sh/lkbe50ba","slide":10,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[920,190,40,22]}
+{"kind":"textbox","id":"sh/0j2dwvap","slide":10,"text":"能力评测","textPreview":"能力评测","textChars":4,"textLines":1,"bbox":[920,224,262,42]}
+{"kind":"textbox","id":"sh/nmdw7atg","slide":10,"text":"采用新工具前检查 MCP 与 Skill 的质量","textPreview":"采用新工具前检查 MCP 与 Skill 的质量","textChars":24,"textLines":1,"bbox":[920,278,262,54]}
+{"kind":"shape","id":"sh/mlkvy5sv","slide":10,"bbox":[920,348,262,0]}
+{"kind":"textbox","id":"sh/9ove90bm","slide":10,"text":"01  mcp-criticagent","textPreview":"01  mcp-criticagent","textChars":19,"textLines":1,"bbox":[920,374,262,32]}
+{"kind":"shape","id":"sh/8nmx0fa1","slide":10,"bbox":[920,413,262,0]}
+{"kind":"textbox","id":"sh/3q9wv6tw","slide":10,"text":"02  skill-criticagent","textPreview":"02  skill-criticagent","textChars":21,"textLines":1,"bbox":[920,420,262,32]}
+{"kind":"shape","id":"sh/2p0vm1sr","slide":10,"bbox":[58,630,1164,38]}
+{"kind":"textbox","id":"sh/ulony5oj","slide":10,"text":"已集成不等于无条件可运行。依赖、外部服务、连接状态与用户授权仍然决定实际可用范围。","textPreview":"已集成不等于无条件可运行。依赖、外部服务、连接状态与用户授权仍然决定实际可用范围。","textChars":41,"textLines":1,"bbox":[84,638,1112,22]}
+{"kind":"shape","id":"sh/fmx4ra54","slide":10,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/gn650fmp","slide":10,"text":"SCIENCEX · 10","textPreview":"SCIENCEX · 10","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/rwn1y2","slide":10,"text":"这一页是研究后半程。写作与呈现能力负责把研究过程组织成论文、图像、幻灯片、视频和课程产物。\n审查与记忆能力负责论文审查、引用核对和长期上下文；能力评测则在采用新的 MCP 或 Skill 之前检查质量。\n需要再次强调，已集成不等于无条件可运行。某些 Skills 需要本机依赖、外部服务或用户授权，ScienceX 不会默认获得论文库、数据库或其他系统的访问权。"}
+{"kind":"slide","id":"sl/8flyk8","slide":11,"title":"11","textShapes":30}
+{"kind":"textbox","id":"sh/4filkbm5","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[58,43,42,28]}
+{"kind":"textbox","id":"sh/3u9krq5k","slide":11,"text":"BOUNDARIES","textPreview":"BOUNDARIES","textChars":10,"textLines":1,"bbox":[112,48,320,20]}
+{"kind":"textbox","id":"sh/it03il4z","slide":11,"text":"连接真实环境，也明确使用边界","textPreview":"连接真实环境，也明确使用边界","textChars":14,"textLines":1,"bbox":[58,86,720,64]}
+{"kind":"textbox","id":"sh/hsr2pgne","slide":11,"text":"只调用本机已安装、已配置并获得授权的能力。连接执行环境，不等于扩大访问权限。","textPreview":"只调用本机已安装、已配置并获得授权的能力。连接执行环境，不等于扩大访问权限。","textChars":38,"textLines":1,"bbox":[790,94,430,62]}
+{"kind":"textbox","id":"sh/grilgbmt","slide":11,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[1110,44,110,22]}
+{"kind":"shape","id":"sh/vqpkn658","slide":11,"bbox":[295,294,170,170]}
+{"kind":"textbox","id":"sh/upgju1o3","slide":11,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[322,344,116,38]}
+{"kind":"textbox","id":"sh/to72lwni","slide":11,"text":"AUTHORIZED","textPreview":"AUTHORIZED","textChars":10,"textLines":1,"bbox":[325,393,110,18]}
+{"kind":"shape","id":"sh/8ny1sr6x","slide":11,"bbox":[62,205,205,82]}
+{"kind":"textbox","id":"sh/2903m1gj","slide":11,"text":"本地文件","textPreview":"本地文件","textChars":4,"textLines":1,"bbox":[80,219,169,28]}
+{"kind":"textbox","id":"sh/3a9kv6x4","slide":11,"text":"PDF / CSV / 项目目录","textPreview":"PDF / CSV / 项目目录","textChars":16,"textLines":1,"bbox":[74,253,181,20]}
+{"kind":"shape","id":"sh/obilobyp","slide":11,"bbox":[74,217,8,8]}
+{"kind":"shape","id":"sh/pcr2xgfa","slide":11,"bbox":[62,478,205,82]}
+{"kind":"textbox","id":"sh/elg3i1gn","slide":11,"text":"代码与终端","textPreview":"代码与终端","textChars":5,"textLines":1,"bbox":[80,492,169,28]}
+{"kind":"textbox","id":"sh/f6pkrmh8","slide":11,"text":"仓库 / 命令 / 脚本","textPreview":"仓库 / 命令 / 脚本","textChars":12,"textLines":1,"bbox":[74,526,181,20]}
+{"kind":"shape","id":"sh/g7ylkryt","slide":11,"bbox":[74,490,8,8]}
+{"kind":"shape","id":"sh/1872twze","slide":11,"bbox":[490,205,205,82]}
+{"kind":"textbox","id":"sh/6hwjehgr","slide":11,"text":"模型提供商","textPreview":"模型提供商","textChars":5,"textLines":1,"bbox":[508,219,169,28]}
+{"kind":"textbox","id":"sh/ripknmhw","slide":11,"text":"已配置的推理模型","textPreview":"已配置的推理模型","textChars":8,"textLines":1,"bbox":[502,253,181,20]}
+{"kind":"shape","id":"sh/vml0vixo","slide":11,"bbox":[502,217,8,8]}
+{"kind":"shape","id":"sh/ulczmdwj","slide":11,"bbox":[490,478,205,82]}
+{"kind":"textbox","id":"sh/ho3ixsfu","slide":11,"text":"MCP 服务","textPreview":"MCP 服务","textChars":6,"textLines":1,"bbox":[508,492,169,28]}
+{"kind":"textbox","id":"sh/wnuhone9","slide":11,"text":"已启用的扩展工具","textPreview":"已启用的扩展工具","textChars":8,"textLines":1,"bbox":[502,526,181,20]}
+{"kind":"shape","id":"sh/jq50zix0","slide":11,"bbox":[502,490,8,8]}
+{"kind":"shape","id":"sh/ipczqxwf","slide":11,"bbox":[160,570,205,82]}
+{"kind":"textbox","id":"sh/5cni1sv6","slide":11,"text":"数据源","textPreview":"数据源","textChars":3,"textLines":1,"bbox":[178,584,169,28]}
+{"kind":"textbox","id":"sh/4rehsnel","slide":11,"text":"授权的数据库与服务","textPreview":"授权的数据库与服务","textChars":9,"textLines":1,"bbox":[172,618,181,20]}
+{"kind":"shape","id":"sh/zu1gnyxw","slide":11,"bbox":[172,582,8,8]}
+{"kind":"shape","id":"sh/ytszetwb","slide":11,"bbox":[392,570,205,82]}
+{"kind":"textbox","id":"sh/4n658vqx","slide":11,"text":"计算环境","textPreview":"计算环境","textChars":4,"textLines":1,"bbox":[410,584,169,28]}
+{"kind":"textbox","id":"sh/pof610ri","slide":11,"text":"本机已有计算能力","textPreview":"本机已有计算能力","textChars":8,"textLines":1,"bbox":[404,618,181,20]}
+{"kind":"shape","id":"sh/2l4n658r","slide":11,"bbox":[404,582,8,8]}
+{"kind":"shape","id":"sh/3mxozq9c","slide":11,"bbox":[735,183,487,436]}
+{"kind":"textbox","id":"sh/gjm54vql","slide":11,"text":"SCIENCEX 使用边界","textPreview":"SCIENCEX 使用边界","textChars":13,"textLines":1,"bbox":[774,224,360,30]}
+{"kind":"textbox","id":"sh/hkv6x0r6","slide":11,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[774,281,42,23]}
+{"kind":"textbox","id":"sh/uh4n2l8f","slide":11,"text":"AI 纠错，不替你写","textPreview":"AI 纠错，不替你写","textChars":10,"textLines":1,"bbox":[832,278,330,30]}
+{"kind":"shape","id":"sh/fidovq90","slide":11,"bbox":[774,327,390,0]}
+{"kind":"textbox","id":"sh/0fqpgfq5","slide":11,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[774,353,42,23]}
+{"kind":"textbox","id":"sh/1gz69k7a","slide":11,"text":"AI 初筛，不替你读","textPreview":"AI 初筛，不替你读","textChars":10,"textLines":1,"bbox":[832,350,330,30]}
+{"kind":"shape","id":"sh/x0r21c72","slide":11,"bbox":[774,399,390,0]}
+{"kind":"textbox","id":"sh/wzil876h","slide":11,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[774,425,42,23]}
+{"kind":"textbox","id":"sh/vy9kzmpw","slide":11,"text":"数据有边界","textPreview":"数据有边界","textChars":5,"textLines":1,"bbox":[832,422,330,30]}
+{"kind":"shape","id":"sh/ax036hob","slide":11,"bbox":[774,471,390,0]}
+{"kind":"textbox","id":"sh/5ob25w7y","slide":11,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[774,497,42,23]}
+{"kind":"textbox","id":"sh/kn2lcr6d","slide":11,"text":"不夸大结果与结论","textPreview":"不夸大结果与结论","textChars":8,"textLines":1,"bbox":[832,494,330,30]}
+{"kind":"textbox","id":"sh/jm9k3mps","slide":11,"text":"关键证据仍需人工复核","textPreview":"关键证据仍需人工复核","textChars":10,"textLines":1,"bbox":[796,573,340,24]}
+{"kind":"shape","id":"sh/il03aho7","slide":11,"bbox":[58,684,1164,0]}
+{"kind":"textbox","id":"sh/tsbm9w7a","slide":11,"text":"SCIENCEX · 11","textPreview":"SCIENCEX · 11","textChars":13,"textLines":1,"bbox":[58,692,180,16]}
+{"kind":"notes","id":"nt/8flyk8","slide":11,"text":"ScienceX 可以连接本地文件、代码与终端、模型提供商、MCP、数据源和计算环境，但每一项都以本机配置和用户授权为前提。\n连接环境不等于自动拥有访问权。ScienceX 不会默认获得数据库、论文库或第三方系统权限。\n右侧四条边界是面向科研使用的底线：AI 可以纠错但不替代论证，可以初筛但不替代精读；敏感和未公开数据要先确认边界；运行结果不能被夸大成科学结论。"}
+{"kind":"slide","id":"sl/a2fnj2","slide":12,"title":"09 · START","textShapes":13}
+{"kind":"shape","id":"sh/3exk7idw","slide":12,"bbox":[0,0,1280,14]}
+{"kind":"textbox","id":"sh/4z610neh","slide":12,"text":"09 · START","textPreview":"09 · START","textChars":10,"textLines":1,"bbox":[66,58,180,22]}
+{"kind":"textbox","id":"sh/p0f29sv2","slide":12,"text":"第一条链路，\n从一个真实问题开始","textPreview":"第一条链路， | 从一个真实问题开始","textChars":16,"textLines":2,"bbox":[66,116,560,146]}
+{"kind":"textbox","id":"sh/u94jutwf","slide":12,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[68,312,42,22]}
+{"kind":"textbox","id":"sh/faxk3ydk","slide":12,"text":"打开本地研究项目","textPreview":"打开本地研究项目","textChars":8,"textLines":1,"bbox":[68,345,330,56]}
+{"kind":"shape","id":"sh/gb61w3e5","slide":12,"bbox":[408,327,30,0]}
+{"kind":"textbox","id":"sh/hcf258vq","slide":12,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[453,312,42,22]}
+{"kind":"textbox","id":"sh/e5836xwj","slide":12,"text":"说清范围、格式和验收条件","textPreview":"说清范围、格式和验收条件","textChars":12,"textLines":1,"bbox":[453,345,330,56]}
+{"kind":"shape","id":"sh/z6hkf2d4","slide":12,"bbox":[793,327,30,0]}
+{"kind":"textbox","id":"sh/ve9gry9c","slide":12,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[838,312,42,22]}
+{"kind":"textbox","id":"sh/udgfyts7","slide":12,"text":"检查来源、产物与下一步建议","textPreview":"检查来源、产物与下一步建议","textChars":13,"textLines":1,"bbox":[838,345,330,56]}
+{"kind":"shape","id":"sh/hgryt8ri","slide":12,"bbox":[66,447,1148,135]}
+{"kind":"textbox","id":"sh/wfix03ax","slide":12,"text":"可以直接开始的示例","textPreview":"可以直接开始的示例","textChars":9,"textLines":1,"bbox":[94,468,220,20]}
+{"kind":"textbox","id":"sh/ji9gvi9o","slide":12,"text":"“检索近三年关于 X 的代表论文，按方法、数据、结论和局限整理成表，每条附出处；先给 10 篇，找不到就明确说明，不要编造。”","textPreview":"“检索近三年关于 X 的代表论文，按方法、数据、结论和局限整理成表，每条附出处；先给 10 篇，找不到就明确说明，不要编造。”","textChars":63,"textLines":1,"bbox":[94,504,1092,62]}
+{"kind":"textbox","id":"sh/ih0f2ds3","slide":12,"text":"ScienceX","textPreview":"ScienceX","textChars":8,"textLines":1,"bbox":[68,630,170,30]}
+{"kind":"textbox","id":"sh/54ryx8ru","slide":12,"text":"科研工作台","textPreview":"科研工作台","textChars":5,"textLines":1,"bbox":[250,632,180,28]}
+{"kind":"textbox","id":"sh/43ih4na9","slide":12,"text":"github.com/insight68/ScienceX","textPreview":"github.com/insight68/ScienceX","textChars":29,"textLines":1,"bbox":[850,636,364,22]}
+{"kind":"notes","id":"nt/a2fnj2","slide":12,"text":"收束到一个可执行的开始方式。打开本地研究项目，说清范围、输出格式和验收条件，然后检查来源、产物与下一步建议。\n示例指令故意包含四个约束：时间范围、整理维度、每条出处，以及找不到就明确说明。这些约束让任务可检查，也把“不要编造”写成验收标准。\n最后回到产品定位：ScienceX 是科研工作台。它让研究问题、证据、运行和下一步进入同一条可追溯链路。"}

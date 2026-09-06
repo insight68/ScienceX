@@ -3,8 +3,10 @@ import { computed } from 'vue'
 import { useData, withBase } from 'vitepress'
 import { HOME_COPY } from './home/homeContent'
 import ProductProof from './home/ProductProof.vue'
+import ResearchInsightPanel from './home/ResearchInsightPanel.vue'
 import ResearchLoopDiagram from './home/ResearchLoopDiagram.vue'
 import ResearchSkills from './home/ResearchSkills.vue'
+import ResearchTwinArchitecture from './home/ResearchTwinArchitecture.vue'
 import RuntimeMechanism from './home/RuntimeMechanism.vue'
 
 const REPO_PAGE = 'https://github.com/insight68/ScienceX'
@@ -35,12 +37,13 @@ const demoGuidePath = computed(() => localPath(
             <span>{{ copy.title[0] }}</span>
             <span class="title-accent">{{ copy.title[1] }}</span>
           </h1>
+          <p class="hero-thesis">{{ copy.heroThesis }}</p>
           <p class="hero-intro">{{ copy.intro }}</p>
           <div class="hero-actions">
-            <a class="primary-action" :href="localPath('/download')">{{ copy.download }}</a>
-            <a class="secondary-action" :href="demoGuidePath">{{ copy.demo }} <span aria-hidden="true">↗</span></a>
+            <a class="primary-action" :href="demoGuidePath">{{ copy.demo }}</a>
+            <a class="secondary-action" href="#research-twin">{{ copy.twinLink }} <span aria-hidden="true">↓</span></a>
           </div>
-          <a class="hero-text-action" href="#research-loop">{{ copy.loopLink }} <span aria-hidden="true">↓</span></a>
+          <a class="hero-text-action" :href="localPath('/download')">{{ copy.download }} <span aria-hidden="true">↗</span></a>
           <p class="release-note">{{ copy.releaseNote }}</p>
           <ul class="trust-list" :aria-label="copy.trustLabel">
             <li v-for="item in copy.trust" :key="item"><span aria-hidden="true">✓</span>{{ item }}</li>
@@ -97,94 +100,25 @@ const demoGuidePath = computed(() => localPath(
     </nav>
 
     <main>
-      <section id="research-reality" class="reality-section section-pad">
+      <section id="research-twin" class="twin-section section-pad">
         <div class="home-shell">
           <div class="section-heading">
             <div>
-              <div class="section-kicker"><span>{{ copy.realityNumber }}</span><p>{{ copy.realityLabel }}</p></div>
-              <h2 class="section-title-lines"><span v-for="line in copy.realityTitle" :key="line">{{ line }}</span></h2>
+              <div class="section-kicker"><span>{{ copy.twinNumber }}</span><p>{{ copy.twinLabel }}</p></div>
+              <h2 class="section-title-lines"><span v-for="line in copy.twinTitle" :key="line">{{ line }}</span></h2>
             </div>
-            <p>{{ copy.realityBody }}</p>
+            <p>{{ copy.twinBody }}</p>
           </div>
-
-          <div class="attention-board">
-            <div class="attention-cards">
-              <article v-for="(signal, index) in copy.realitySignals" :key="signal.title">
-                <div class="attention-card-head"><span>0{{ index + 1 }}</span><small>{{ copy.scenarioOutputLabel }}</small></div>
-                <h3>{{ signal.title }}</h3>
-                <p>{{ signal.body }}</p>
-                <dl>
-                  <div><dt>{{ copy.scenarioOutputLabel }}</dt><dd>{{ signal.output }}</dd></div>
-                  <div><dt>{{ copy.scenarioOwnerLabel }}</dt><dd>{{ signal.owner }}</dd></div>
-                </dl>
-                <blockquote><small>{{ copy.scenarioPromptLabel }}</small>{{ signal.prompt }}</blockquote>
-              </article>
-            </div>
-          </div>
-          <p class="reality-thesis"><span aria-hidden="true"></span>{{ copy.realityThesis }}</p>
-        </div>
-      </section>
-
-      <section id="product-proof" class="product-proof-section section-pad">
-        <div class="home-shell">
-          <div class="section-heading">
-            <div>
-              <div class="section-kicker"><span>{{ copy.productNumber }}</span><p>{{ copy.productLabel }}</p></div>
-              <h2 class="section-title-lines"><span v-for="line in copy.productTitle" :key="line">{{ line }}</span></h2>
-            </div>
-            <p>{{ copy.productBody }}</p>
-          </div>
-          <ProductProof
-            :frames="copy.productFrames"
-            :skill-label="copy.productSkillLabel"
-            :skill-title="copy.productSkillTitle"
-            :skill-body="copy.productSkillBody"
-            :skill-preview="copy.productSkillPreview"
-            :skill-count="copy.productSkillCount"
-            :note="copy.productProofNote"
+          <ResearchTwinArchitecture
+            :aria-label="copy.twinAria"
+            :contrast-label="copy.twinContrastLabel"
+            :contrast-title="copy.twinContrastTitle"
+            :contrast-body="copy.twinContrastBody"
+            :layers="copy.twinLayers"
+            :equation-label="copy.twinEquationLabel"
+            :equation-terms="copy.twinEquationTerms"
+            :boundary="copy.twinBoundary"
           />
-        </div>
-      </section>
-
-      <section id="research-loop" class="loop-section section-pad inverse-section">
-        <div class="home-shell">
-          <div class="section-heading">
-            <div>
-              <div class="section-kicker"><span>{{ copy.loopNumber }}</span><p>{{ copy.loopLabel }}</p></div>
-              <h2 class="section-title-lines"><span v-for="line in copy.loopTitle" :key="line">{{ line }}</span></h2>
-            </div>
-            <p>{{ copy.loopBody }}</p>
-          </div>
-          <ResearchLoopDiagram
-            :aria-label="copy.loopDiagramLabel"
-            :nodes="copy.loopNodes"
-            :center-title="copy.loopCenter"
-            :center-body="copy.loopCenterBody"
-            :memory-title="copy.memoryTitle"
-            :memory-body="copy.memoryBody"
-            :boundary="copy.loopBoundary"
-          />
-        </div>
-      </section>
-
-      <section id="maturity" class="maturity-section section-pad">
-        <div class="home-shell">
-          <div class="section-heading compact-heading">
-            <div>
-              <div class="section-kicker"><span>{{ copy.maturityNumber }}</span><p>{{ copy.maturityLabel }}</p></div>
-              <h2>{{ copy.maturityTitle }}</h2>
-            </div>
-            <p>{{ copy.maturityBody }}</p>
-          </div>
-          <div class="stage-grid">
-            <article v-for="(stage, index) in copy.stages" :key="stage.tag" :class="{ current: index === 0 }">
-              <div class="stage-head"><span>{{ stage.tag }}</span><small>{{ stage.badge }}</small></div>
-              <h3>{{ stage.title }}</h3>
-              <p>{{ stage.body }}</p>
-              <strong>{{ stage.logic }}</strong>
-              <i v-if="index < copy.stages.length - 1" aria-hidden="true">→</i>
-            </article>
-          </div>
         </div>
       </section>
 
@@ -216,6 +150,56 @@ const demoGuidePath = computed(() => localPath(
         </div>
       </section>
 
+      <section id="research-loop" class="loop-section section-pad inverse-section">
+        <div class="home-shell">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker"><span>{{ copy.loopNumber }}</span><p>{{ copy.loopLabel }}</p></div>
+              <h2 class="section-title-lines"><span v-for="line in copy.loopTitle" :key="line">{{ line }}</span></h2>
+            </div>
+            <p>{{ copy.loopBody }}</p>
+          </div>
+          <ResearchLoopDiagram
+            :aria-label="copy.loopDiagramLabel"
+            :nodes="copy.loopNodes"
+            :center-title="copy.loopCenter"
+            :center-body="copy.loopCenterBody"
+            :memory-title="copy.memoryTitle"
+            :memory-body="copy.memoryBody"
+            :boundary="copy.loopBoundary"
+          />
+          <div class="feedback-lanes">
+            <article v-for="lane in copy.feedbackLanes" :key="lane.tag" :class="lane.status">
+              <small>{{ lane.tag }}</small>
+              <strong>{{ lane.title }}</strong>
+              <p>{{ lane.body }}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="research-insight" class="insight-section section-pad inverse-section">
+        <div class="home-shell">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker"><span>{{ copy.insightNumber }}</span><p>{{ copy.insightLabel }}</p></div>
+              <h2 class="section-title-lines"><span v-for="line in copy.insightTitle" :key="line">{{ line }}</span></h2>
+            </div>
+            <p>{{ copy.insightBody }}</p>
+          </div>
+          <ResearchInsightPanel
+            :aria-label="copy.insightAria"
+            :signals="copy.insightSignals"
+            :example-label="copy.insightExampleLabel"
+            :example-title="copy.insightExampleTitle"
+            :rows="copy.insightRows"
+            :status-label="copy.insightStatusLabel"
+            :status="copy.insightStatus"
+            :boundary="copy.insightBoundary"
+          />
+        </div>
+      </section>
+
       <section id="mechanism" class="mechanism-section section-pad">
         <div class="home-shell">
           <div class="section-heading">
@@ -233,6 +217,55 @@ const demoGuidePath = computed(() => localPath(
             :memory-body="copy.memoryBody"
             :boundary="copy.mechanismBoundary"
           />
+        </div>
+      </section>
+
+      <section id="product-proof" class="product-proof-section section-pad">
+        <div class="home-shell">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker"><span>{{ copy.productNumber }}</span><p>{{ copy.productLabel }}</p></div>
+              <h2 class="section-title-lines"><span v-for="line in copy.productTitle" :key="line">{{ line }}</span></h2>
+            </div>
+            <p>{{ copy.productBody }}</p>
+          </div>
+          <ProductProof
+            :frames="copy.productFrames"
+            :skill-label="copy.productSkillLabel"
+            :skill-title="copy.productSkillTitle"
+            :skill-body="copy.productSkillBody"
+            :skill-preview="copy.productSkillPreview"
+            :skill-count="copy.productSkillCount"
+            :note="copy.productProofNote"
+          />
+        </div>
+      </section>
+
+      <section id="research-reality" class="reality-section section-pad">
+        <div class="home-shell">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker"><span>{{ copy.realityNumber }}</span><p>{{ copy.realityLabel }}</p></div>
+              <h2 class="section-title-lines"><span v-for="line in copy.realityTitle" :key="line">{{ line }}</span></h2>
+            </div>
+            <p>{{ copy.realityBody }}</p>
+          </div>
+
+          <div class="attention-board">
+            <div class="attention-cards">
+              <article v-for="(signal, index) in copy.realitySignals" :key="signal.title">
+                <div class="attention-card-head"><span>0{{ index + 1 }}</span><small>{{ copy.scenarioOutputLabel }}</small></div>
+                <h3>{{ signal.title }}</h3>
+                <p>{{ signal.body }}</p>
+                <dl>
+                  <div><dt>{{ copy.scenarioOutputLabel }}</dt><dd>{{ signal.output }}</dd></div>
+                  <div><dt>{{ copy.scenarioOwnerLabel }}</dt><dd>{{ signal.owner }}</dd></div>
+                </dl>
+                <blockquote><small>{{ copy.scenarioPromptLabel }}</small>{{ signal.prompt }}</blockquote>
+              </article>
+            </div>
+          </div>
+          <p class="reality-thesis"><span aria-hidden="true"></span>{{ copy.realityThesis }}</p>
         </div>
       </section>
 
@@ -288,10 +321,32 @@ const demoGuidePath = computed(() => localPath(
         </div>
       </section>
 
+      <section id="maturity" class="maturity-section section-pad">
+        <div class="home-shell">
+          <div class="section-heading compact-heading">
+            <div>
+              <div class="section-kicker"><span>{{ copy.maturityNumber }}</span><p>{{ copy.maturityLabel }}</p></div>
+              <h2>{{ copy.maturityTitle }}</h2>
+            </div>
+            <p>{{ copy.maturityBody }}</p>
+          </div>
+          <div class="stage-grid">
+            <article v-for="(stage, index) in copy.stages" :key="stage.tag" :class="{ current: index === 0 }">
+              <div class="stage-head"><span>{{ stage.tag }}</span><small>{{ stage.badge }}</small></div>
+              <h3>{{ stage.title }}</h3>
+              <p>{{ stage.body }}</p>
+              <strong>{{ stage.logic }}</strong>
+              <i v-if="index < copy.stages.length - 1" aria-hidden="true">→</i>
+            </article>
+          </div>
+          <p class="maturity-boundary"><span aria-hidden="true">!</span>{{ copy.maturityBoundary }}</p>
+        </div>
+      </section>
+
       <section id="start" class="final-section">
         <div class="home-shell final-layout">
           <div>
-            <p><span>{{ copy.finalNumber }}</span> ScienceX / RESEARCH WORKBENCH</p>
+            <p><span>{{ copy.finalNumber }}</span> ScienceX / RESEARCH TWIN WORKBENCH</p>
             <h2>{{ copy.finalTitle }}</h2>
             <strong>{{ copy.finalBody }}</strong>
             <ol class="start-steps">
@@ -445,7 +500,8 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .home-hero h1 { max-width: 760px; margin: 0; color: #fff; font-size: clamp(48px, 5.2vw, 72px); font-weight: 700; letter-spacing: -.055em; line-height: 1.08; }
 .home-hero h1 > span { display: block; }
 .title-accent { color: #67daa9; }
-.hero-intro { max-width: 690px; margin: 27px 0 0; color: #bfd4cd; font-size: 16px; line-height: 1.82; }
+.hero-thesis { max-width: 720px; margin: 27px 0 0; color: #f0faf6; font-family: var(--sx-display); font-size: 21px; font-weight: 700; letter-spacing: -.025em; line-height: 1.5; }
+.hero-intro { max-width: 690px; margin: 13px 0 0; color: #bfd4cd; font-size: 15px; line-height: 1.82; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-top: 31px; }
 .primary-action, .secondary-action { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 22px; border-radius: 7px; font-size: 14px; font-weight: 750; text-decoration: none; transition: transform .18s ease, background .18s ease, color .18s ease, border-color .18s ease; }
 .primary-action { color: #fff; background: var(--sx-blue); box-shadow: 0 14px 28px rgba(16, 42, 112, .22); }
@@ -497,7 +553,7 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .section-nav a:last-child { border-right: 1px solid var(--sx-line); }
 .section-nav a:hover { color: var(--sx-green); background: color-mix(in srgb, var(--sx-green-soft) 62%, transparent); }
 
-.reality-section, .maturity-section, .mechanism-section { background: var(--sx-section); }
+.twin-section, .reality-section, .maturity-section, .mechanism-section { background: var(--sx-section); }
 .product-proof-section { background: var(--sx-paper); }
 .attention-board { display: grid; gap: 22px; }
 .attention-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--sx-line); border-left: 1px solid var(--sx-line); }
@@ -517,10 +573,20 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .reality-thesis span { width: 9px; height: 9px; border-radius: 50%; background: var(--sx-green); box-shadow: 0 0 0 6px rgba(22, 191, 114, .12); }
 
 .loop-section { background: #063a31; }
+.feedback-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 26px; }
+.feedback-lanes article { position: relative; min-height: 150px; padding: 24px 26px; border: 1px solid rgba(146, 208, 185, .24); background: rgba(255, 255, 255, .035); }
+.feedback-lanes article.current { border-top: 3px solid var(--sx-green); }
+.feedback-lanes article.connect { border-style: dashed; border-color: rgba(97, 194, 224, .54); }
+.feedback-lanes small { color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; font-weight: 800; letter-spacing: .11em; }
+.feedback-lanes article.connect small { color: #6ac8e3; }
+.feedback-lanes strong { display: block; margin-top: 28px; color: #f4faf7; font-family: var(--sx-display); font-size: 22px; }
+.feedback-lanes p { margin: 11px 0 0; color: #9bbcaf; font-family: var(--sx-mono); font-size: 9px; line-height: 1.7; }
+
+.insight-section { background: #071f1b; }
 
 .maturity-section { border-bottom: 1px solid var(--sx-line); }
 .compact-heading { margin-bottom: 42px; }
-.stage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.stage-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .stage-grid article { position: relative; display: flex; min-height: 240px; flex-direction: column; padding: 27px; border: 1px solid var(--sx-line); border-radius: 14px; background: color-mix(in srgb, var(--sx-panel) 88%, transparent); }
 .stage-grid article.current { border-color: color-mix(in srgb, var(--sx-green) 70%, var(--sx-line)); background: color-mix(in srgb, var(--sx-green-soft) 56%, var(--sx-panel)); box-shadow: inset 0 3px 0 var(--sx-green); }
 .stage-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
@@ -530,6 +596,8 @@ h2 { margin-bottom: 0; color: var(--sx-ink); font-size: clamp(36px, 4.4vw, 58px)
 .stage-grid p { margin: 0; color: var(--sx-muted); font-size: 11px; line-height: 1.72; }
 .stage-grid article > strong { margin-top: auto; padding-top: 24px; color: var(--sx-green); font-family: var(--sx-mono); font-size: 8px; letter-spacing: .04em; }
 .stage-grid article > i { position: absolute; z-index: 2; top: 48%; right: -23px; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--sx-line); border-radius: 50%; color: var(--sx-green); background: var(--sx-panel); font-style: normal; }
+.maturity-boundary { display: flex; align-items: flex-start; gap: 10px; margin: 24px 0 0; color: var(--sx-muted); font-size: 11px; line-height: 1.65; }
+.maturity-boundary span { display: grid; flex: 0 0 auto; width: 19px; height: 19px; place-items: center; border-radius: 50%; color: #503b08; background: #f1c656; font-family: Georgia, serif; font-weight: 800; }
 
 .case-section { background: var(--sx-paper); }
 .case-grid { display: grid; grid-template-columns: minmax(0, .76fr) minmax(520px, 1.24fr); gap: 24px; }
@@ -616,6 +684,8 @@ a:focus-visible { outline: 3px solid color-mix(in srgb, var(--sx-green) 72%, #ff
   .section-heading { grid-template-columns: 1fr; gap: 22px; align-items: start; }
   .section-heading > p { max-width: 760px; }
   .attention-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage-grid article:nth-child(2) > i { display: none; }
   .case-grid { grid-template-columns: 1fr; }
   .final-layout { grid-template-columns: 1fr; }
   .final-actions { justify-self: start; }
@@ -628,17 +698,20 @@ a:focus-visible { outline: 3px solid color-mix(in srgb, var(--sx-green) 72%, #ff
   h2 { font-size: clamp(35px, 10vw, 48px); }
   .hero-layout { min-height: auto; padding: 62px 0 56px; }
   .home-hero h1 { font-size: clamp(40px, 12vw, 56px); }
+  .hero-thesis { font-size: 18px; }
   .hero-intro { font-size: 15px; }
   .trust-list { gap: 12px 18px; }
   .proof-result { grid-template-columns: 1fr; }
   .metric-stack { grid-template-columns: repeat(2, 1fr); }
   .proof-pipeline { grid-template-columns: 1fr; }
   .proof-pipeline b { display: none; }
+  .feedback-lanes { grid-template-columns: 1fr; }
   .section-nav a { padding: 13px 18px; }
   .attention-cards { grid-template-columns: 1fr; }
   .attention-cards article { min-height: 360px; }
   .attention-cards h3 { margin-top: 28px; }
   .stage-grid { grid-template-columns: 1fr; }
+  .stage-grid article:nth-child(2) > i { display: grid; }
   .stage-grid article { min-height: 245px; }
   .stage-grid article > i { top: auto; right: 25px; bottom: -23px; transform: rotate(90deg); }
   .case-facts { grid-template-columns: 1fr 1fr; }

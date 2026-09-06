@@ -47,6 +47,7 @@ export type CreateSessionRequest = {
   temporary?: boolean
   repository?: CreateSessionRepositoryOptions
   permissionMode?: PermissionMode
+  prePlanMode?: PermissionMode
 }
 export type BranchSessionRequest = {
   targetMessageId: string

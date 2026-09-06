@@ -770,10 +770,10 @@ describe('Settings > General tab', () => {
       await Promise.resolve()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ask permissions' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: /Bypass permissions/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Request approval' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Full access/ }))
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Enable bypass' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Enable full access' }))
       await Promise.resolve()
     })
 
@@ -789,14 +789,14 @@ describe('Settings > General tab', () => {
       await Promise.resolve()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ask permissions' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: /Auto mode/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Request approval' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /Automatic approval/ }))
 
     expect(useSettingsStore.getState().setPermissionMode).not.toHaveBeenCalledWith('auto')
-    const dialog = screen.getByRole('dialog', { name: 'Enable Auto mode?' })
+    const dialog = screen.getByRole('dialog', { name: 'Enable automatic approval?' })
 
     await act(async () => {
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Enable Auto mode' }))
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Enable automatic approval' }))
     })
 
     expect(useSettingsStore.getState().acceptAutoModeOptIn).toHaveBeenCalledOnce()

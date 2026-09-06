@@ -93,6 +93,7 @@ export type ServerMessage =
   // 恢复到进入 plan 前的模式、Shift+Tab 切换）时，把新模式回传给前端，让桌面端
   // 选择器与 CLI 保持同步，而不是停留在本地影子值上。
   | { type: 'permission_mode_changed'; mode: PermissionMode }
+  | { type: 'plan_execution_mode'; mode: PermissionMode }
   | {
       type: 'api_retry'
       attempt: number

@@ -20,13 +20,14 @@
     <circle cx="8" cy="24" r="4" stroke-width="4"/><circle cx="24" cy="24" r="4" stroke-width="4"/><circle cx="40" cy="24" r="4" stroke-width="4"/>
     <circle cx="8" cy="40" r="4" stroke-width="4"/><circle cx="24" cy="40" r="4" stroke-width="4"/><circle cx="40" cy="40" r="4" stroke-width="4"/>
   </g>
-  <text x="78" y="245" fill="#FFFFFF" font-family="Arial" font-size="92" font-weight="700">ScienceX</text>
-  <text x="82" y="326" fill="#BFD4CD" font-family="Arial" font-size="30">Keep research questions, evidence, and next steps connected.</text>
+  <text x="78" y="228" fill="#FFFFFF" font-family="Arial" font-size="86" font-weight="700">ScienceX</text>
+  <text x="82" y="308" fill="#72DDB0" font-family="STSong" font-size="45" font-weight="700">科研孪生实验台</text>
+  <text x="82" y="354" fill="#BFD4CD" font-family="Arial" font-size="25">Research Twin Workbench</text>
   <line x1="82" y1="410" x2="1118" y2="410" stroke="#8ED4BA" stroke-opacity="0.28"/>
-  <text x="82" y="472" fill="#62DDA8" font-family="Arial" font-size="20" font-weight="700">OPEN SOURCE · LOCAL FIRST · TRACEABLE</text>
+  <text x="82" y="472" fill="#62DDA8" font-family="Arial" font-size="20" font-weight="700">OPEN SOURCE · LOCAL FIRST · REPRODUCIBLE</text>
   <g transform="translate(780 480)">
     <rect width="338" height="72" rx="8" fill="#FFFFFF" fill-opacity="0.04" stroke="#8ED4BA" stroke-opacity="0.35"/>
     <circle cx="34" cy="36" r="6" fill="#16BF72"/>
-    <text x="58" y="44" fill="#E6F5EF" font-family="Arial" font-size="18" font-weight="700">Research Loop · Memory · Evidence</text>
+    <text x="58" y="44" fill="#E6F5EF" font-family="Arial" font-size="17" font-weight="700">Version · Run · Evidence · Replay</text>
   </g>
 </svg>

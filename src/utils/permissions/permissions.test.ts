@@ -63,6 +63,19 @@ async function canUseFakeTool(
 }
 
 describe('hasPermissionsToUseTool bypassPermissions mode', () => {
+  it('blocks project writes in plan even when bypass is available and the tool is allowed', async () => {
+    const result = await canUseFakeTool(
+      fakeTool({ permissionDecision: { behavior: 'allow' } }),
+      permissionContext({ mode: 'plan', isBypassPermissionsModeAvailable: true, alwaysAllowRules: { session: ['FakeTool'] } }),
+    )
+    expect(result.behavior).toBe('deny')
+  })
+
+  it('requires approval for deletion in auto even when a whole-tool rule allows it', async () => {
+    const tool = { ...fakeTool({ permissionDecision: { behavior: 'allow' } }), name: 'Bash', isReadOnly: () => false } as Tool
+    const result = await hasPermissionsToUseTool(tool, { command: 'rm experiment.csv' }, toolUseContext(permissionContext({ mode: 'auto', alwaysAllowRules: { session: ['Bash'] } })), {} as never, 'delete')
+    expect(result.behavior).toBe('ask')
+  })
   it('ignores whole-tool ask rules', async () => {
     const result = await canUseFakeTool(
       fakeTool({

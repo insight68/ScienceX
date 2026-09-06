@@ -244,7 +244,7 @@ export class SettingsService {
     const mode = settings.defaultMode
     return isValidPermissionMode(mode)
       ? mode
-      : 'default'
+      : mode === undefined ? 'auto' : 'default'
   }
 
   /** 设置权限模式 */

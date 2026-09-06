@@ -95,9 +95,7 @@ describe('useTranslation', () => {
       'computerUseApproval.tryAgainHint',
       'question.needsInput',
       'permMode.autoAcceptDesc',
-      'permMode.autoModeDesc',
       'permMode.enableBypassBody',
-      'permMode.enableAutoDetail',
     ] as const
 
     for (const locale of locales) {

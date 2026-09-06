@@ -2335,6 +2335,37 @@ describe('WebSocket Chat Integration', () => {
     expect(messages.some((m) => m.type === 'pong')).toBe(true)
   })
 
+  it('passes the saved execution mode to a CLI launched in plan mode', async () => {
+    const spawnSpy = spyOn(Bun, 'spawn')
+    try {
+      const response = await fetch(`${baseUrl}/api/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workDir: tmpDir, permissionMode: 'plan', prePlanMode: 'auto' }),
+      })
+      expect(response.status).toBe(201)
+      const { sessionId } = await response.json() as { sessionId: string }
+      const messages = await runTurn(sessionId, 'prepare a plan')
+      expect(messages.some(message => message.type === 'message_complete')).toBe(true)
+      const launch = spawnSpy.mock.calls.find(([args]) => Array.isArray(args) && args.includes(sessionId))
+      expect(launch?.[1]?.env?.SCIX_PLAN_EXECUTION_MODE).toBe('auto')
+      expect(await sessionService.getSessionLaunchInfo(sessionId)).toMatchObject({
+        permissionMode: 'plan', prePlanMode: 'auto',
+      })
+    } finally {
+      spawnSpy.mockRestore()
+    }
+  })
+
+  it('rejects plan restoration metadata on an execution session', async () => {
+    const response = await fetch(`${baseUrl}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workDir: tmpDir, permissionMode: 'auto', prePlanMode: 'bypassPermissions' }),
+    })
+    expect(response.status).toBe(400)
+  })
+
   it('should start a placeholder REST session and continue it on a later reconnect', async () => {
     const createRes = await fetch(`${baseUrl}/api/sessions`, {
       method: 'POST',

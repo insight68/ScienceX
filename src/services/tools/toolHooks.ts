@@ -367,6 +367,7 @@ export async function resolveHookPermissionDecision(
 
     if (
       autoModeActive ||
+      permissionMode === 'plan' ||
       (requiresInteraction && !interactionSatisfied) ||
       requireCanUseTool
     ) {

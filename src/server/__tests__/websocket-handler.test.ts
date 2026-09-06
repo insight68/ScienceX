@@ -40,6 +40,20 @@ function makeClientSocket(sessionId: string) {
 }
 
 describe('translateCliMessage usage mapping', () => {
+  it('reports the actual startup permission after an Auto fallback', () => {
+    const messages = translateCliMessage({ type: 'system', subtype: 'init', permissionMode: 'default', model: 'fixture' }, 'approval-fallback')
+    expect(messages).toContainEqual({ type: 'permission_mode_changed', mode: 'default' })
+  })
+
+  it('restores the planning execution mode on reconnect without switching permissions', async () => {
+    const ws = makeClientSocket('planning-reconnect')
+    spyOn(conversationService, 'hasSession').mockReturnValue(false)
+    spyOn(sessionService, 'getSessionLaunchInfo').mockResolvedValue({ permissionMode: 'plan', prePlanMode: 'auto' } as never)
+    handleWebSocket.open(ws)
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(ws.sent.map(payload => JSON.parse(payload))).toContainEqual({ type: 'plan_execution_mode', mode: 'auto' })
+    expect(ws.sent.map(payload => JSON.parse(payload)).some(message => message.type === 'permission_mode_changed')).toBe(false)
+  })
   afterEach(() => {
     __resetWebSocketHandlerStateForTests()
     mock.restore()
