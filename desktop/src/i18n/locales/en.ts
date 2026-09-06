@@ -1764,7 +1764,7 @@ export const en = {
   'permMode.legacyModeHint': 'This session retains its legacy permissions. Choose one of the three approval levels to update it.',
   'permMode.planning': 'Planning',
   'permMode.exitPlanDesc': 'Finish planning and restore {mode}.',
-  'permMode.planPermissionsHint': 'Project changes are blocked during planning. Execution permissions resume when planning ends.',
+  'permMode.planPermissionsHint': 'This session is currently limited to analysis. Choose execution permissions to start changing files.',
   'permMode.executionPermissions': 'Execution permissions',
   'permMode.askPermissions': 'Request approval',
   'permMode.askPermDesc': 'Ask before changing files or performing operations that need authorization.',

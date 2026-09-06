@@ -1766,7 +1766,7 @@ export const zh: Record<TranslationKey, string> = {
   'permMode.planning': '規劃中',
   'permMode.legacyModeHint': '此對話保留舊版權限。選擇三檔權限之一後生效。',
   'permMode.exitPlanDesc': '結束規劃，恢復{mode}。',
-  'permMode.planPermissionsHint': '規劃期間不修改專案；結束後恢復執行權限。',
+  'permMode.planPermissionsHint': '目前僅進行分析。選擇執行權限後，即可開始修改檔案。',
   'permMode.executionPermissions': '執行許可權',
   'permMode.askPermissions': '請求審批',
   'permMode.askPermDesc': '修改檔案和執行需要授權的操作前，由你確認。',

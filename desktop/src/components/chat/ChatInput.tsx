@@ -1183,7 +1183,7 @@ export function ChatInput({ variant = 'default', compact = false }: ChatInputPro
                     )}
                   </div>
 
-                  <PermissionModeSelector compact={useCompactControls} showPlanControl />
+                  <PermissionModeSelector compact={useCompactControls} />
                 </>
               )}
             </div>

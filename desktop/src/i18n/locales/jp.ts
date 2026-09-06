@@ -1766,7 +1766,7 @@ export const jp: Record<TranslationKey, string> = {
   'permMode.planning': '計画中',
   'permMode.legacyModeHint': 'このセッションは従来の権限を保持しています。3つの権限から選択すると更新されます。',
   'permMode.exitPlanDesc': '計画を終了し、{mode}に戻ります。',
-  'permMode.planPermissionsHint': '計画中はプロジェクトを変更できません。終了後に実行権限を復元します。',
+  'permMode.planPermissionsHint': '現在は分析のみ行います。実行権限を選ぶとファイルを変更できます。',
   'permMode.executionPermissions': '実行権限',
   'permMode.askPermissions': '承認をリクエスト',
   'permMode.askPermDesc': 'ファイルの変更や許可が必要な操作の前に、承認を求めます。',

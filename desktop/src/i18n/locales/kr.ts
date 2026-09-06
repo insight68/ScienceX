@@ -1766,7 +1766,7 @@ export const kr: Record<TranslationKey, string> = {
   'permMode.planning': '계획 중',
   'permMode.legacyModeHint': '이 세션은 이전 권한을 유지합니다. 세 가지 권한 중 하나를 선택하면 변경됩니다.',
   'permMode.exitPlanDesc': '계획을 종료하고 {mode} 권한으로 돌아갑니다.',
-  'permMode.planPermissionsHint': '계획 중에는 프로젝트를 변경할 수 없습니다. 종료하면 실행 권한이 복원됩니다.',
+  'permMode.planPermissionsHint': '현재는 분석만 수행합니다. 실행 권한을 선택하면 파일을 변경할 수 있습니다.',
   'permMode.executionPermissions': '실행 권한',
   'permMode.askPermissions': '승인 요청',
   'permMode.askPermDesc': '파일 변경이나 권한이 필요한 작업을 실행하기 전에 승인을 요청합니다.',

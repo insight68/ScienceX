@@ -448,15 +448,22 @@ describe('PermissionModeSelector', () => {
     expect(screen.getByRole('button', { name: 'Auto mode' }).querySelector('svg')).toBeInTheDocument()
   })
 
-  it('keeps planning outside the three approval options and restores the prior mode', () => {
+  it('renders only the permission trigger without a separate planning control', () => {
+    render(<PermissionModeSelector value="auto" onChange={vi.fn()} />)
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: /Plan mode|permMode.planning/ })).not.toBeInTheDocument()
+  })
+
+  it('lets an existing planning session select an execution permission without silently enabling it', () => {
     const onChange = vi.fn()
-    const { rerender } = render(<PermissionModeSelector showPlanControl value="auto" onChange={onChange} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Plan mode' }))
-    expect(onChange).toHaveBeenLastCalledWith('plan')
-    rerender(<PermissionModeSelector showPlanControl value="plan" onChange={onChange} />)
-    expect(screen.getByRole('button', { name: 'Auto mode' })).toBeDisabled()
-    fireEvent.click(screen.getByRole('button', { name: 'permMode.planning' }))
-    expect(onChange).toHaveBeenLastCalledWith('auto')
+    render(<PermissionModeSelector value="plan" onChange={onChange} />)
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    fireEvent.click(screen.getByRole('button', { name: 'Execution Permissions' }))
+    expect(screen.getByRole('status')).toHaveTextContent('permMode.planPermissionsHint')
+    expect(screen.getAllByRole('menuitem')).toHaveLength(3)
+    fireEvent.click(screen.getByRole('menuitem', { name: /Ask permissions/ }))
+    expect(onChange).toHaveBeenLastCalledWith('default')
   })
 
   it('does not change mode when first-use Auto confirmation is cancelled', () => {
