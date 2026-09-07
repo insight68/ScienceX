@@ -362,6 +362,11 @@ describe('release desktop workflow', () => {
       expect(unsignedBuildStep).not.toContain(envName)
     }
     expect(unsignedBuildStep).toContain(electronBuilderCli)
+    expect(unsignedBuildStep).toContain('max_attempts=3')
+    expect(unsignedBuildStep).toContain('Starting unsigned electron-builder attempt')
+    expect(unsignedBuildStep).toContain('Finished unsigned electron-builder attempt')
+    expect(unsignedBuildStep).toContain('retrying after 60 seconds')
+    expect(unsignedBuildStep).toContain('Unsigned electron-builder failed after $max_attempts attempts')
     expect(workflow.indexOf('Build signed macOS Electron release artifacts')).toBeLessThan(workflow.indexOf('Verify packaged app structure'))
     expect(workflow.indexOf('Build unsigned Electron release artifacts')).toBeLessThan(workflow.indexOf('Verify packaged app structure'))
   })
