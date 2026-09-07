@@ -362,6 +362,7 @@ describe('release desktop workflow', () => {
       expect(unsignedBuildStep).not.toContain(envName)
     }
     expect(unsignedBuildStep).toContain(electronBuilderCli)
+    expect(unsignedBuildStep).toContain('shell: bash')
     expect(unsignedBuildStep).toContain('max_attempts=3')
     expect(unsignedBuildStep).toContain('Starting unsigned electron-builder attempt')
     expect(unsignedBuildStep).toContain('Finished unsigned electron-builder attempt')

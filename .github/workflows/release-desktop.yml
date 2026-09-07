@@ -280,6 +280,7 @@ jobs:
           DEBUG: 'electron-builder,electron-osx-sign,electron-notarize*'
       - name: Build unsigned Electron release artifacts
         if: matrix.smoke_platform != 'macos' || needs.signing-preflight.outputs.macos_signed != 'true'
+        shell: bash
         run: |
           cd desktop
           max_attempts=3
