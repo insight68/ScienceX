@@ -484,6 +484,33 @@ describe('WebSocket handler session isolation', () => {
     expect(setTimeoutSpy.mock.calls[0]?.[1]).toBe(120_000)
   })
 
+  it('rechecks a pending turn before disconnect cleanup can kill its running process', () => {
+    const sessionId = `pending-disconnect-${crypto.randomUUID()}`
+    const ws = makeClientSocket(sessionId)
+    const timers: Array<() => void> = []
+    spyOn(globalThis, 'setTimeout').mockImplementation(((callback: () => void) => {
+      timers.push(callback)
+      return timers.length
+    }) as unknown as typeof setTimeout)
+    spyOn(globalThis, 'clearTimeout').mockImplementation(() => {})
+    spyOn(conversationService, 'getPendingPermissionRequests').mockReturnValue([])
+    const stop = spyOn(conversationService, 'stopSession').mockImplementation(() => {})
+    const output = spyOn(conversationService, 'onOutput').mockImplementation(() => {})
+    handleWebSocket.open(ws)
+    __registerPendingUserTurnForTests(sessionId)
+    handleWebSocket.close(ws, 1006, 'waiting turn disconnected')
+    timers[0]()
+    expect(stop).not.toHaveBeenCalled()
+    expect(timers).toHaveLength(2)
+    __markActiveTurnForTests(sessionId)
+    output.mockClear()
+    timers[1]()
+    expect(stop).not.toHaveBeenCalled()
+    expect(output).toHaveBeenCalledTimes(1)
+    output.mock.calls[0][1]({ type: 'result', subtype: 'success' })
+    expect(timers).toHaveLength(3)
+  })
+
   it('does not start the idle timer if the client reconnects before the turn finishes', () => {
     const sessionId = `reconnect-mid-turn-${crypto.randomUUID()}`
     const ws = makeClientSocket(sessionId)
@@ -614,6 +641,159 @@ describe('WebSocket handler session isolation', () => {
       type: 'session_state',
       turnState: 'running',
     })
+  })
+
+  it('discards a stopped turn while startup metadata is pending', async () => {
+    const sessionId = `cancel-pending-turn-${crypto.randomUUID()}`
+    const ws = makeClientSocket(sessionId)
+    let release!: (title: string) => void
+    const title = spyOn(sessionService, 'getCustomTitle').mockImplementation(() => new Promise(resolve => { release = resolve }))
+    const send = spyOn(conversationService, 'sendMessage').mockResolvedValue(true)
+    const start = spyOn(conversationService, 'startSession').mockResolvedValue(undefined)
+    handleWebSocket.message(ws, JSON.stringify({ type: 'user_message', content: 'cancel this turn' }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(title).toHaveBeenCalledTimes(1)
+    handleWebSocket.message(ws, JSON.stringify({ type: 'stop_generation' }))
+    release('existing title')
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(start).not.toHaveBeenCalled()
+    expect(send).not.toHaveBeenCalled()
+    handleWebSocket.message(ws, JSON.stringify({ type: 'sync_state' }))
+    expect(ws.sent.map(payload => JSON.parse(payload))).toContainEqual({ type: 'session_state', turnState: 'idle' })
+  })
+})
+
+describe('stop generation lifecycle', () => {
+  const sessionIds: string[] = []
+  afterEach(() => {
+    __resetWebSocketHandlerStateForTests()
+    for (const id of sessionIds.splice(0)) (conversationService as any).sessions.delete(id)
+    mock.restore()
+  })
+
+  function fixture() {
+    const sessionId = `stop-lifecycle-${crypto.randomUUID()}`
+    sessionIds.push(sessionId)
+    const session = { instanceId: Symbol(sessionId) }
+    ;(conversationService as any).sessions.set(sessionId, session)
+    const ws = makeClientSocket(sessionId)
+    const timers: Array<() => void> = []
+    const callbacks: Array<(message: any) => void> = []
+    spyOn(globalThis, 'setTimeout').mockImplementation(((callback: () => void) => {
+      timers.push(callback)
+      return timers.length
+    }) as unknown as typeof setTimeout)
+    const clear = spyOn(globalThis, 'clearTimeout').mockImplementation(() => {})
+    const interrupt = spyOn(conversationService, 'sendInterrupt').mockReturnValue(true)
+    const stop = spyOn(conversationService, 'stopSession').mockImplementation(() => {})
+    spyOn(conversationService, 'onOutput').mockImplementation((_id, callback) => { callbacks.push(callback) })
+    spyOn(conversationService, 'removeOutputCallback').mockImplementation(() => {})
+    __markActiveTurnForTests(sessionId)
+    const requestStop = () => handleWebSocket.message(ws, JSON.stringify({ type: 'stop_generation' }))
+    return { sessionId, ws, timers, callbacks, clear, interrupt, stop, requestStop }
+  }
+
+  it('does not let the previous stop timer kill a newer turn in the same process', () => {
+    const state = fixture()
+    state.requestStop()
+    __markActiveTurnForTests(state.sessionId)
+    state.timers[0]()
+    expect(state.stop).not.toHaveBeenCalled()
+  })
+
+  it('does not let a stale timer kill a replacement process', () => {
+    const state = fixture()
+    state.requestStop()
+    ;(conversationService as any).sessions.set(state.sessionId, { instanceId: Symbol('replacement') })
+    state.timers[0]()
+    expect(state.stop).not.toHaveBeenCalled()
+  })
+
+  it('disarms the timer on a graceful result even without a connected client', () => {
+    const state = fixture()
+    state.requestStop()
+    expect(state.callbacks).toHaveLength(1)
+    state.callbacks[0]({ type: 'result', subtype: 'success' })
+    __markActiveTurnForTests(state.sessionId)
+    state.timers[0]()
+    expect(state.clear).toHaveBeenCalled()
+    expect(state.stop).not.toHaveBeenCalled()
+  })
+
+  it('keeps one deadline for repeated stops and only kills the original process once', () => {
+    const state = fixture()
+    state.requestStop()
+    state.requestStop()
+    expect(state.timers).toHaveLength(1)
+    expect(state.interrupt).toHaveBeenCalledTimes(1)
+    state.timers[0]()
+    state.timers[0]()
+    expect(state.stop).toHaveBeenCalledTimes(1)
+    handleWebSocket.message(state.ws, JSON.stringify({ type: 'sync_state' }))
+    expect(state.ws.sent.map(payload => JSON.parse(payload))).toContainEqual({
+      type: 'session_state', turnState: 'idle',
+    })
+  })
+
+  it('cleans up the timer when its session is removed', () => {
+    const state = fixture()
+    state.requestStop()
+    closeSessionConnection(state.sessionId)
+    state.timers[0]()
+    expect(state.clear).toHaveBeenCalled()
+    expect(state.stop).not.toHaveBeenCalled()
+  })
+
+  it.each(['result', 'timeout'])('waits for the original stop %s before sending the next turn', async completion => {
+    const state = fixture()
+    spyOn(sessionService, 'getCustomTitle').mockResolvedValue('Existing title')
+    const send = spyOn(conversationService, 'sendMessage').mockResolvedValue(true)
+    state.requestStop()
+    handleWebSocket.message(state.ws, JSON.stringify({ type: 'user_message', content: 'next turn' }))
+    await new Promise(resolve => setImmediate(resolve))
+    expect(send).not.toHaveBeenCalled()
+    if (completion === 'result') {
+      for (const callback of [...state.callbacks]) callback({ type: 'result', subtype: 'success' })
+    } else {
+      state.timers[0]()
+      expect(state.stop).toHaveBeenCalledTimes(1)
+    }
+    await new Promise(resolve => setImmediate(resolve))
+    expect(send).toHaveBeenCalledTimes(1)
+    state.ws.sent.length = 0
+    handleWebSocket.message(state.ws, JSON.stringify({ type: 'sync_state' }))
+    expect(state.ws.sent.map(payload => JSON.parse(payload))).toContainEqual({ type: 'session_state', turnState: 'running' })
+  })
+
+  it('cancels a waiting next turn without disarming the original stop deadline', async () => {
+    const state = fixture()
+    spyOn(sessionService, 'getCustomTitle').mockResolvedValue('Existing title')
+    const send = spyOn(conversationService, 'sendMessage').mockResolvedValue(true)
+    state.requestStop()
+    handleWebSocket.message(state.ws, JSON.stringify({ type: 'user_message', content: 'cancel next turn' }))
+    state.requestStop()
+    state.timers[0]()
+    await new Promise(resolve => setImmediate(resolve))
+    expect(state.stop).toHaveBeenCalledTimes(1)
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('rejects late SDK messages from a replaced process while accepting its replacement', () => {
+    const state = fixture()
+    const oldSocket = makeClientSocket(state.sessionId)
+    oldSocket.data.channel = 'sdk'
+    oldSocket.data.sdkToken = 'old-fixture-token'
+    ;(conversationService as any).sessions.get(state.sessionId).sdkToken = 'new-fixture-token'
+    const receive = spyOn(conversationService, 'handleSdkPayload').mockImplementation(() => {})
+    const payload = JSON.stringify({ type: 'result', subtype: 'success' })
+    handleWebSocket.message(oldSocket, payload)
+    expect(receive).not.toHaveBeenCalled()
+    expect(oldSocket.close).toHaveBeenCalledWith(1008, 'Invalid SDK token')
+    const replacement = makeClientSocket(state.sessionId)
+    replacement.data.channel = 'sdk'
+    replacement.data.sdkToken = 'new-fixture-token'
+    handleWebSocket.message(replacement, payload)
+    expect(receive).toHaveBeenCalledWith(state.sessionId, payload)
   })
 })
 

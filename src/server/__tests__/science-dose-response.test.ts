@@ -224,5 +224,29 @@ describe('Science dose-response run API', () => {
       'run.evaluated',
       'run.completed',
     ])
+
+    const replacementPath = path.join(projectRoot, 'replacement-plate.csv')
+    await fs.writeFile(replacementPath, plateCsv(42), 'utf8')
+    const replacement = await callApi(`/api/research-projects/${projectId}/datasets`, {
+      method: 'POST', body: { filePath: replacementPath },
+    })
+    for (const linkedDatasetId of [datasetId, replacement.body.dataset.id]) {
+      const linked = await callApi(`/api/research-projects/${projectId}/experiments/${experimentId}`, {
+        method: 'PATCH', body: { datasetId: linkedDatasetId },
+      })
+      expect(linked.status).toBe(200)
+      expect(linked.body.experiment.linkedDatasetVersionId).not.toBe(lockedVersionId)
+      const replayAfterRelink = await callApi(`/api/runs/${analyzed.body.run.id}/replay`, {
+        method: 'POST',
+      })
+      expect(replayAfterRelink.status).toBe(201)
+      expect(replayAfterRelink.body.run).toMatchObject({
+        datasetId,
+        datasetVersionId: lockedVersionId,
+        inputHash: analyzed.body.run.inputHash,
+        reproducibilityStatus: 'reproducible',
+        summary: analyzed.body.run.summary,
+      })
+    }
   })
 })

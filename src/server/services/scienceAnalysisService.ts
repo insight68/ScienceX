@@ -281,16 +281,17 @@ async function appendEvent(
   runId: string,
   type: ScienceRunEvent['type'],
   data: Record<string, unknown>,
+  at = new Date().toISOString(),
 ): Promise<ScienceRunEvent> {
-  const event: ScienceRunEvent = { id: randomUUID(), runId, type, at: new Date().toISOString(), data }
+  const event: ScienceRunEvent = { id: randomUUID(), runId, type, at, data }
   const absolutePath = path.join(project.rootDir, relativePath)
-  await fs.mkdir(path.dirname(absolutePath), { recursive: true, mode: 0o700 })
-  const handle = await fs.open(absolutePath, 'a', 0o600)
-  try {
-    await handle.appendFile(`${JSON.stringify(event)}\n`, 'utf8')
-  } finally {
-    await handle.close()
-  }
+  const previous = await fs.readFile(absolutePath, 'utf8').catch(error => {
+    if (error?.code === 'ENOENT') return ''
+    throw error
+  })
+  // Publish complete JSONL snapshots so interrupted writes cannot leave half an event.
+  const separator = previous && !previous.endsWith('\n') ? '\n' : ''
+  await writeFileAtomically(absolutePath, `${previous}${separator}${JSON.stringify(event)}\n`)
   return event
 }
 
@@ -496,6 +497,7 @@ function doseResponseReport(input: {
 
 export class ScienceAnalysisService {
   private activeRuns = new Set<string>()
+  private runExportPromises = new Map<string, Promise<void>>()
 
   async listRuns(projectId: string): Promise<ScienceAnalysisRun[]> {
     const project = await scienceWorkspaceService.getProject(projectId)
@@ -599,16 +601,23 @@ export class ScienceAnalysisService {
   }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
     const project = await scienceWorkspaceService.getProject(input.projectId)
     const experiment = await scienceExperimentService.getExperiment(project.id, input.experimentId)
+    const parent = input.parentRunId ? (await this.findRun(input.parentRunId)).run : null
+    if (parent && (parent.projectId !== project.id || parent.experimentId !== experiment.id ||
+      parent.recipe !== DOSE_RESPONSE_RECIPE || parent.status !== 'completed')) {
+      throw ApiError.conflict('Replay must reference a completed run of this experiment')
+    }
     if (experiment.status !== 'ready') {
       throw ApiError.conflict('Only an execution-ready experiment can start dose-response analysis')
     }
-    if (!experiment.linkedDatasetId || !experiment.linkedDatasetVersionId) {
+    const datasetId = parent?.datasetId ?? experiment.linkedDatasetId
+    const datasetVersionId = parent?.datasetVersionId ?? experiment.linkedDatasetVersionId
+    if (!datasetId || !datasetVersionId) {
       throw ApiError.conflict('Link a registered dataset version before starting dose-response analysis')
     }
     const dataset = await scienceWorkspaceService.getDatasetVersion({
       projectId: project.id,
-      datasetId: experiment.linkedDatasetId,
-      versionId: experiment.linkedDatasetVersionId,
+      datasetId,
+      versionId: datasetVersionId,
     })
     const wellColumn = input.wellColumn.trim()
     const signalColumn = input.signalColumn.trim()
@@ -627,6 +636,9 @@ export class ScienceAnalysisService {
       designVersionId: experiment.designVersion.id,
       parameters,
     }))
+    if (parent && inputHash !== parent.inputHash) {
+      throw ApiError.conflict('The original experiment inputs are unavailable for exact replay')
+    }
     return this.executeAnalysisRun({
       project,
       dataset,
@@ -763,44 +775,44 @@ export class ScienceAnalysisService {
       ? `${recipeSource}\n${evaluationContractJson}`
       : recipeSource)
     const database = openProjectDatabase(project)
-    database
-      .query(`
-        INSERT INTO analysis_runs (
-          id, project_id, dataset_id, dataset_version_id, experiment_id, parent_run_id, recipe, status,
-          reproducibility_status, evaluation_contract_json, evidence_json,
-          parameters_json, environment_json, input_hash, recipe_hash,
-          event_log_path, manifest_path, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, NULL, ?, ?, ?, ?, ?, ?, ?)
-      `)
-      .run(
-        runId,
-        project.id,
-        dataset.id,
-        dataset.currentVersion.id,
-        experimentId,
-        parentRunId ?? null,
-        recipe,
-        evaluationContractJson,
-        JSON.stringify(parameters),
-        JSON.stringify(environment),
-        inputHash,
-        recipeHash,
-        eventLogPath,
-        manifestPath,
-        createdAt,
-      )
-
-    await appendEvent(project, eventLogPath, runId, 'run.created', {
-      recipe,
-      experimentId,
-      datasetId: dataset.id,
-      datasetVersionId: dataset.currentVersion.id,
-      inputHash,
-      parameters,
-    })
     this.activeRuns.add(runId)
 
     try {
+      database
+        .query(`
+          INSERT INTO analysis_runs (
+            id, project_id, dataset_id, dataset_version_id, experiment_id, parent_run_id, recipe, status,
+            reproducibility_status, evaluation_contract_json, evidence_json,
+            parameters_json, environment_json, input_hash, recipe_hash,
+            event_log_path, manifest_path, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, NULL, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .run(
+          runId,
+          project.id,
+          dataset.id,
+          dataset.currentVersion.id,
+          experimentId,
+          parentRunId ?? null,
+          recipe,
+          evaluationContractJson,
+          JSON.stringify(parameters),
+          JSON.stringify(environment),
+          inputHash,
+          recipeHash,
+          eventLogPath,
+          manifestPath,
+          createdAt,
+        )
+
+      await appendEvent(project, eventLogPath, runId, 'run.created', {
+        recipe,
+        experimentId,
+        datasetId: dataset.id,
+        datasetVersionId: dataset.currentVersion.id,
+        inputHash,
+        parameters,
+      })
       const startedAt = new Date().toISOString()
       this.transition(database, runId, 'queued', 'running', startedAt)
       await appendEvent(project, eventLogPath, runId, 'run.started', { environment, recipeHash })
@@ -825,7 +837,7 @@ export class ScienceAnalysisService {
         sizeBytes: Buffer.byteLength(artifact.contents),
         createdAt: new Date().toISOString(),
       }))
-      const insertArtifacts = database.transaction(() => {
+      const insertArtifacts = () => {
         for (const artifact of artifacts) {
           database
             .query(`
@@ -847,15 +859,6 @@ export class ScienceAnalysisService {
               artifact.createdAt,
             )
         }
-      })
-      insertArtifacts()
-      for (const artifact of artifacts) {
-        await appendEvent(project, eventLogPath, runId, 'artifact.created', {
-          artifactId: artifact.id,
-          kind: artifact.kind,
-          relativePath: artifact.relativePath,
-          contentHash: artifact.contentHash,
-        })
       }
 
       const evidence = output.evidence
@@ -881,6 +884,7 @@ export class ScienceAnalysisService {
 
       const completedAt = new Date().toISOString()
       const completeRun = database.transaction(() => {
+        insertArtifacts()
         if (parentRunId) {
           database
             .query('UPDATE analysis_runs SET reproducibility_status = ? WHERE id = ?')
@@ -905,34 +909,18 @@ export class ScienceAnalysisService {
         }
       })
       completeRun()
-      if (evidence) {
-        await appendEvent(project, eventLogPath, runId, 'run.evaluated', {
-          evidenceLevel: evidence.level,
-          verdict: evidence.verdict,
-          contractId: evidence.contractId,
-          contractVersion: evidence.contractVersion,
-          contractHash: evidence.contractHash,
-          failedCriterionIds: evidence.failedCriterionIds,
-          artifactIds: evidence.artifactIds,
-        })
-      }
-      await appendEvent(project, eventLogPath, runId, 'run.completed', {
-        exitCode: 0,
-        reproducibilityStatus,
-        evidenceVerdict: evidence?.verdict ?? null,
-        artifactIds: artifacts.map(artifact => artifact.id),
-      })
-
       const row = database
         .query(`${RUN_SELECT} WHERE analysis_runs.id = ?`)
         .get(runId) as RunRow
       const run = mapRun(row)
-      await this.writeManifest(project, run, artifacts)
+      await this.syncRunExports(project, run, artifacts).catch(error => {
+        console.warn(`[Science] Run ${runId} completed; exports will be retried when read:`, error)
+      })
       return { run, artifacts }
     } catch (error) {
       const completedAt = new Date().toISOString()
       const message = error instanceof Error ? error.message : String(error)
-      database
+      const failed = database
         .query(`
           UPDATE analysis_runs
           SET status = 'failed', reproducibility_status = 'failed', error_message = ?,
@@ -940,12 +928,12 @@ export class ScienceAnalysisService {
           WHERE id = ? AND status IN ('queued', 'running')
         `)
         .run(message, completedAt, runId)
-      await appendEvent(project, eventLogPath, runId, 'run.failed', { exitCode: 1, message })
-        .catch(() => undefined)
-      const row = database
-        .query(`${RUN_SELECT} WHERE analysis_runs.id = ?`)
-        .get(runId) as RunRow | null
-      if (row) await this.writeManifest(project, mapRun(row), []).catch(() => undefined)
+      if (failed.changes === 1) {
+        const row = database.query(`${RUN_SELECT} WHERE analysis_runs.id = ?`).get(runId) as RunRow
+        await this.syncRunExports(project, mapRun(row), []).catch(exportError => {
+          console.warn(`[Science] Run ${runId} failed; exports will be retried when read:`, exportError)
+        })
+      }
       if (error instanceof ScienceDoseResponseAnalysisError) {
         throw ApiError.conflict(error.message)
       }
@@ -987,6 +975,21 @@ export class ScienceAnalysisService {
 
   async getRunEvents(runId: string): Promise<ScienceRunEvent[]> {
     const { project, run } = await this.findRun(runId)
+    if (run.status !== 'queued' && run.status !== 'running') {
+      const database = openProjectDatabase(project)
+      let artifacts: ScienceArtifact[]
+      try {
+        artifacts = (database.query('SELECT * FROM science_artifacts WHERE producing_run_id = ? ORDER BY rowid')
+          .all(runId) as ArtifactRow[]).map(mapArtifact)
+      } finally { database.close() }
+      await this.syncRunExports(project, run, artifacts).catch(error => {
+        console.warn(`[Science] Run ${run.id} exports are unavailable; returning existing events:`, error)
+      })
+    }
+    return this.readRunEvents(project, run)
+  }
+
+  private async readRunEvents(project: ScienceProject, run: ScienceAnalysisRun): Promise<ScienceRunEvent[]> {
     const eventLogPath = path.join(project.rootDir, run.eventLogPath)
     const snapshot = await fs.stat(eventLogPath).catch(() => null)
     if (!snapshot) return []
@@ -1064,15 +1067,93 @@ export class ScienceAnalysisService {
     }
   }
 
+  private async syncRunExports(
+    project: ScienceProject,
+    run: ScienceAnalysisRun,
+    artifacts: ScienceArtifact[],
+  ): Promise<void> {
+    const previous = this.runExportPromises.get(run.id)
+    const pending = (async () => {
+      await previous?.catch(() => undefined)
+      const events = await this.readRunEvents(project, run)
+      const hasTerminalEvent = events.some(event =>
+        event.type === 'run.completed' || event.type === 'run.failed' || event.type === 'run.interrupted')
+      const ensureEvent = async (type: ScienceRunEvent['type'], data: Record<string, unknown>, at: string) => {
+        // Preserve historical logs; recovery only appends an unfinished export suffix.
+        if (hasTerminalEvent) return
+        if (events.some(event => event.type === type &&
+          (type !== 'artifact.created' || event.data.artifactId === data.artifactId))) return
+        events.push(await appendEvent(project, run.eventLogPath, run.id, type, data, at))
+      }
+      await ensureEvent('run.created', {
+        recipe: run.recipe,
+        experimentId: run.experimentId,
+        datasetId: run.datasetId,
+        datasetVersionId: run.datasetVersionId,
+        inputHash: run.inputHash,
+        parameters: run.parameters,
+      }, run.createdAt)
+      if (run.startedAt) await ensureEvent('run.started', {
+        environment: run.environment, recipeHash: run.recipeHash,
+      }, run.startedAt)
+      for (const artifact of artifacts) {
+        await ensureEvent('artifact.created', {
+          artifactId: artifact.id, kind: artifact.kind,
+          relativePath: artifact.relativePath, contentHash: artifact.contentHash,
+        }, artifact.createdAt)
+      }
+      const completedAt = run.completedAt ?? run.createdAt
+      if (run.status === 'completed') {
+        const evidence = run.evidence
+        if (evidence) await ensureEvent('run.evaluated', {
+          evidenceLevel: evidence.level, verdict: evidence.verdict,
+          contractId: evidence.contractId, contractVersion: evidence.contractVersion,
+          contractHash: evidence.contractHash, failedCriterionIds: evidence.failedCriterionIds,
+          artifactIds: evidence.artifactIds,
+        }, completedAt)
+        await ensureEvent('run.completed', {
+          exitCode: 0, reproducibilityStatus: run.reproducibilityStatus,
+          evidenceVerdict: evidence?.verdict ?? null, artifactIds: artifacts.map(artifact => artifact.id),
+        }, completedAt)
+      } else if (run.status === 'failed') {
+        await ensureEvent('run.failed', { exitCode: 1, message: run.errorMessage }, completedAt)
+      } else if (run.status === 'interrupted') {
+        await ensureEvent('run.interrupted', { message: run.errorMessage }, completedAt)
+      }
+      await this.writeManifest(project, run, artifacts)
+    })()
+    this.runExportPromises.set(run.id, pending)
+    try {
+      await pending
+    } finally {
+      if (this.runExportPromises.get(run.id) === pending) this.runExportPromises.delete(run.id)
+    }
+  }
+
   private async writeManifest(
     project: ScienceProject,
     run: ScienceAnalysisRun,
     artifacts: ScienceArtifact[],
   ): Promise<void> {
-    await writeFileAtomically(
-      path.join(project.rootDir, run.manifestPath),
-      `${JSON.stringify({ schemaVersion: 2, run, artifacts }, null, 2)}\n`,
-    )
+    const manifestPath = path.join(project.rootDir, run.manifestPath)
+    const previous = await fs.readFile(manifestPath, 'utf8').catch(error => {
+      if (error?.code === 'ENOENT') return null
+      throw error
+    })
+    const existing = previous ? parseJson<{
+      [key: string]: unknown
+      run?: Record<string, unknown>
+      artifacts?: ScienceArtifact[]
+    }>(previous, 'run manifest') : {}
+    const existingArtifacts = new Map((Array.isArray(existing.artifacts) ? existing.artifacts : [])
+      .map((artifact: ScienceArtifact) => [artifact.id, artifact]))
+    const contents = `${JSON.stringify({
+      ...existing,
+      schemaVersion: 2,
+      run: { ...existing.run, ...run },
+      artifacts: artifacts.map(artifact => ({ ...existingArtifacts.get(artifact.id), ...artifact })),
+    }, null, 2)}\n`
+    if (contents !== previous) await writeFileAtomically(manifestPath, contents)
   }
 }
 

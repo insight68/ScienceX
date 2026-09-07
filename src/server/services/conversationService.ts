@@ -128,6 +128,7 @@ function networkRoutingFingerprint(
 }
 
 type SessionProcess = {
+  instanceId: symbol
   proc: ReturnType<typeof Bun.spawn>
   outputCallbacks: SessionOutputCallback[]
   workDir: string
@@ -397,6 +398,7 @@ export class ConversationService {
       resolveSdkAttached = resolve
     })
     const session: SessionProcess = {
+      instanceId: Symbol(sessionId),
       proc,
       outputCallbacks: [],
       workDir: launchWorkDir,
@@ -532,7 +534,9 @@ export class ConversationService {
     sessionId: string,
     content: string,
     attachments?: AttachmentRef[],
+    signal?: AbortSignal,
   ): Promise<boolean> {
+    if (signal?.aborted) return false
     const userContent = await this.buildUserContent(content, sessionId, attachments)
     let session = this.sessions.get(sessionId)
     if (session && !await this.refreshNetworkEnvironmentBeforeTurn(sessionId, session)) {
@@ -542,6 +546,7 @@ export class ConversationService {
     if (session) {
       await this.refreshOfficialOAuthTokenBeforeTurn(sessionId, session)
     }
+    if (signal?.aborted) return false
     return this.sendSdkMessage(sessionId, {
       type: 'user',
       message: {
@@ -806,6 +811,10 @@ export class ConversationService {
 
   hasSession(sessionId: string): boolean {
     return this.sessions.has(sessionId)
+  }
+
+  getSessionInstanceId(sessionId: string): symbol | null {
+    return this.sessions.get(sessionId)?.instanceId ?? null
   }
 
   getSessionWorkDir(sessionId: string): string {

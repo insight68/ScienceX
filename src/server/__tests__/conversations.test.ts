@@ -71,6 +71,24 @@ describe('ConversationService', () => {
     expect(result).toBe(false)
   })
 
+  it('does not enqueue a turn cancelled while its attachments are being prepared', async () => {
+    const svc = new ConversationService()
+    const controller = new AbortController()
+    let release!: (content: string) => void
+    const build = spyOn(svc as any, 'buildUserContent').mockImplementation(() => new Promise(resolve => { release = resolve }))
+    const enqueue = spyOn(svc as any, 'sendSdkMessage').mockReturnValue(true)
+    try {
+      const pending = svc.sendMessage('cancelled-turn', 'hello', undefined, controller.signal)
+      controller.abort()
+      release('hello')
+      expect(await pending).toBe(false)
+      expect(enqueue).not.toHaveBeenCalled()
+    } finally {
+      build.mockRestore()
+      enqueue.mockRestore()
+    }
+  })
+
   it('should return false when responding to permission for non-existent session', () => {
     const svc = new ConversationService()
     const result = svc.respondToPermission('no-such-session', 'req-1', true)

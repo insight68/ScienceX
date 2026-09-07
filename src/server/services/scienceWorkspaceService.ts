@@ -1167,6 +1167,11 @@ export class ScienceWorkspaceService {
   ): Promise<ScienceDatasetPreview> {
     const project = await requiredProject(projectId)
     const dataset = await this.getDatasetVersion({ projectId, datasetId, versionId })
+    const sourcePath = await this.verifiedDatasetVersionPath(project, dataset)
+    return this.previewFile(dataset, dataset.currentVersion, sourcePath, options)
+  }
+
+  private async verifiedDatasetVersionPath(project: ScienceProject, dataset: ScienceDataset): Promise<string> {
     const version = dataset.currentVersion
     let sourcePath: string
     if (version.snapshotPath) {
@@ -1189,7 +1194,7 @@ export class ScienceWorkspaceService {
     if (await calculateSha256(sourcePath) !== version.contentHash) {
       throw ApiError.conflict(`Dataset version ${version.ordinal} snapshot integrity check failed`)
     }
-    return this.previewFile(dataset, version, sourcePath, options)
+    return sourcePath
   }
 
   private async previewFile(
@@ -1277,16 +1282,12 @@ export class ScienceWorkspaceService {
   }
 
   async getDatasetAnalytics(datasetId: string): Promise<ScienceAnalyticsResult> {
-    const { dataset } = await findDataset(datasetId)
-    const before = await fs.stat(dataset.canonicalPath).catch(error => {
-      if (errnoCode(error) === 'ENOENT') {
-        throw ApiError.conflict(`Dataset source file is unavailable: ${dataset.canonicalPath}`)
-      }
-      throw error
-    })
-    if (!before.isFile()) throw ApiError.conflict('Dataset source path is no longer a file')
-
-    return this.duckDb.computeAnalytics(dataset.id, dataset.canonicalPath, dataset.format)
+    const { project, dataset } = await findDataset(datasetId)
+    const sourcePath = await this.verifiedDatasetVersionPath(project, dataset)
+    const result = await this.duckDb.computeAnalytics(dataset.id, sourcePath, dataset.format)
+    // Legacy versions may still read a mutable source instead of a snapshot.
+    if (!dataset.currentVersion.snapshotPath) await this.verifiedDatasetVersionPath(project, dataset)
+    return result
   }
 }
 

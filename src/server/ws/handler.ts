@@ -120,7 +120,19 @@ type RuntimeOverride = {
 
 type ActiveUserTurnState = {
   messageSent: boolean
+  abortController?: AbortController
 }
+
+type PendingStop = {
+  instanceId: symbol
+  turn: ActiveUserTurnState | undefined
+  timer?: ReturnType<typeof setTimeout>
+  onResult: (message: any) => void
+  settled: Promise<void>
+  settle: () => void
+}
+
+const pendingStops = new Map<string, PendingStop>()
 
 const runtimeOverrides = new Map<string, RuntimeOverride>()
 const activeUserTurns = new Map<string, ActiveUserTurnState>()
@@ -267,6 +279,10 @@ export const handleWebSocket = {
 
   message(ws: ServerWebSocket<WebSocketData>, rawMessage: string | Buffer) {
     if (ws.data.channel === 'sdk') {
+      if (!conversationService.authorizeSdkConnection(ws.data.sessionId, ws.data.sdkToken)) {
+        ws.close(1008, 'Invalid SDK token')
+        return
+      }
       const payload = typeof rawMessage === 'string' ? rawMessage : rawMessage.toString()
       conversationService.handleSdkPayload(ws.data.sessionId, payload)
       return
@@ -279,7 +295,7 @@ export const handleWebSocket = {
 
       switch (message.type) {
         case 'user_message': {
-          const activeTurn: ActiveUserTurnState = { messageSent: false }
+          const activeTurn: ActiveUserTurnState = { messageSent: false, abortController: new AbortController() }
           handleUserMessage(ws, message, activeTurn).catch((err) => {
             const sessionId = ws.data.sessionId
             void diagnosticsService.recordEvent({
@@ -407,8 +423,6 @@ async function handleUserMessage(
 ) {
   const { sessionId } = ws.data
 
-  // Clear any stale stop flag from a previous turn
-  sessionStopRequested.delete(sessionId)
   clearPrewarmState(sessionId)
 
   const desktopSlashCommand = getDesktopSlashCommand(message.content)
@@ -427,12 +441,15 @@ async function handleUserMessage(
     return
   }
 
-  // Send thinking status
+  activeUserTurns.set(sessionId, activeTurn)
+  // Finish the interrupted turn before binding callbacks for the next one.
+  await pendingStops.get(sessionId)?.settled
+  if (activeTurn.abortController?.signal.aborted) return
+  sessionStopRequested.delete(sessionId)
   sendMessage(ws, { type: 'status', state: 'thinking', verb: 'Thinking' })
 
-  activeUserTurns.set(sessionId, activeTurn)
-
   const initialRuntimeTransition = await waitForRuntimeTransitionBeforeUserTurn(ws, sessionId)
+  if (activeTurn.abortController?.signal.aborted) return
   if (!initialRuntimeTransition.ok) {
     clearActiveUserTurn(sessionId, activeTurn)
     return
@@ -452,6 +469,7 @@ async function handleUserMessage(
       startedGenerationKeys: new Set<string>(),
       generationSeq: 0,
     }
+    if (activeTurn.abortController?.signal.aborted) return
     sessionTitleState.set(sessionId, titleState)
   }
   const titleInput = getTitleInputForUserMessage(message.content, desktopSlashCommand)
@@ -474,6 +492,7 @@ async function handleUserMessage(
   try {
     await ensureCliSessionStarted(ws, sessionId, 'user_message')
   } catch (err) {
+    if (activeTurn.abortController?.signal.aborted) return
     const errMsg = err instanceof Error ? err.message : String(err)
     const code =
       err instanceof ConversationStartupError ? err.code : 'CLI_START_FAILED'
@@ -491,6 +510,7 @@ async function handleUserMessage(
   }
 
   const startupRuntimeTransition = await waitForRuntimeTransitionBeforeUserTurn(ws, sessionId)
+  if (activeTurn.abortController?.signal.aborted) return
   if (startupRuntimeTransition.ok) {
     if (startupRuntimeTransition.waited) {
       sendMessage(ws, { type: 'status', state: 'thinking', verb: 'Thinking' })
@@ -523,13 +543,15 @@ async function handleUserMessage(
   const sent = await conversationService.sendMessage(
     sessionId,
     message.content,
-    message.attachments
+    message.attachments,
+    activeTurn.abortController?.signal,
   )
   if (!sent) {
     removeActiveTurnOutputCallback()
     clearActiveUserTurn(sessionId, activeTurn)
     removeTitleOutputCallback?.()
     discardActiveTitleTurn(sessionId, titleTurnNumber)
+    if (activeTurn.abortController?.signal.aborted) return
     sendMessage(ws, {
       type: 'error',
       message: 'CLI process is not running. The session may have ended or the process crashed.',
@@ -622,6 +644,7 @@ async function handleDesktopClearCommand(
   const permissionMode = conversationService.hasSession(sessionId)
     ? conversationService.getSessionPermissionMode(sessionId)
     : undefined
+  clearPendingStop(sessionId)
   conversationService.stopSession(sessionId)
   conversationService.clearOutputCallbacks(sessionId)
   sessionSlashCommands.delete(sessionId)
@@ -940,6 +963,7 @@ async function restartSessionWithPermissionMode(
 ): Promise<void> {
   try {
     const workDir = conversationService.getSessionWorkDir(sessionId)
+    clearPendingStop(sessionId)
     conversationService.stopSession(sessionId)
 
     // Launch with the requested mode in-memory. Persist it only after startup
@@ -1032,6 +1056,7 @@ async function restartSessionWithRuntimeConfig(
 ): Promise<void> {
   try {
     const workDir = conversationService.getSessionWorkDir(sessionId)
+    clearPendingStop(sessionId)
     conversationService.stopSession(sessionId)
 
     const runtimeSettings = await getRuntimeSettings(sessionId)
@@ -1067,21 +1092,58 @@ function handleStopGeneration(ws: ServerWebSocket<WebSocketData>) {
   console.log(`[WS] Stop generation requested for session: ${sessionId}`)
 
   sessionStopRequested.add(sessionId)
-
-  if (conversationService.hasSession(sessionId)) {
-    // First try graceful interrupt via SDK control message
-    conversationService.sendInterrupt(sessionId)
-
-    // Force-kill if still running after 3 seconds
-    setTimeout(() => {
-      if (conversationService.hasSession(sessionId)) {
-        console.log(`[WS] Force-killing CLI subprocess for session: ${sessionId}`)
-        conversationService.stopSession(sessionId)
-      }
+  const turn = activeUserTurns.get(sessionId)
+  turn?.abortController?.abort()
+  if (turn && !turn.messageSent) {
+    clearActiveUserTurn(sessionId, turn)
+    sendMessage(ws, { type: 'status', state: 'idle' })
+    return
+  }
+  const instanceId = conversationService.getSessionInstanceId(sessionId)
+  const existing = pendingStops.get(sessionId)
+  if (instanceId && (!existing || existing.instanceId !== instanceId || (turn?.messageSent && existing.turn !== turn))) {
+    clearPendingStop(sessionId)
+    let settle!: () => void
+    const settled = new Promise<void>(resolve => { settle = resolve })
+    const pending: PendingStop = {
+      instanceId,
+      turn,
+      settled,
+      settle,
+      onResult: message => {
+        if (message?.type !== 'result' || pendingStops.get(sessionId) !== pending) return
+        clearPendingStop(sessionId)
+        if (conversationService.getSessionInstanceId(sessionId) === instanceId && turn) {
+          clearActiveUserTurn(sessionId, turn)
+        }
+      },
+    }
+    pendingStops.set(sessionId, pending)
+    conversationService.onOutput(sessionId, pending.onResult)
+    pending.timer = setTimeout(() => {
+      if (pendingStops.get(sessionId) !== pending) return
+      clearPendingStop(sessionId)
+      const currentTurn = activeUserTurns.get(sessionId)
+      if (conversationService.getSessionInstanceId(sessionId) !== instanceId ||
+        (currentTurn !== turn && currentTurn?.messageSent)) return
+      conversationService.stopSession(sessionId)
+      if (turn) clearActiveUserTurn(sessionId, turn)
     }, 3_000)
+    conversationService.sendInterrupt(sessionId)
   }
 
   sendMessage(ws, { type: 'status', state: 'idle' })
+}
+
+function clearPendingStop(sessionId: string): void {
+  const pending = pendingStops.get(sessionId)
+  if (!pending) return
+  pendingStops.delete(sessionId)
+  pending.settle()
+  if (pending.timer !== undefined) clearTimeout(pending.timer)
+  if (conversationService.getSessionInstanceId(sessionId) === pending.instanceId) {
+    conversationService.removeOutputCallback(sessionId, pending.onResult)
+  }
 }
 
 async function handleStopBackgroundTask(
@@ -1403,6 +1465,8 @@ function cleanupStreamState(sessionId: string) {
 }
 
 function cleanupSessionRuntimeState(sessionId: string) {
+  clearPendingStop(sessionId)
+  activeUserTurns.get(sessionId)?.abortController?.abort()
   cancelSessionDisconnectWatcher(sessionId)
   cleanupStreamState(sessionId)
   sessionSlashCommands.delete(sessionId)
@@ -2286,6 +2350,14 @@ function scheduleDisconnectCleanup(sessionId: string): void {
   const cleanupTimer = setTimeout(() => {
     sessionCleanupTimers.delete(sessionId)
     if (!hasActiveClients(sessionId)) {
+      if (isSessionTurnActive(sessionId)) {
+        watchTurnCompletionForCleanup(sessionId)
+        return
+      }
+      if (hasPendingOrActiveUserTurn(sessionId)) {
+        scheduleDisconnectCleanup(sessionId)
+        return
+      }
       console.log(`[WS] Session ${sessionId} not reconnected after ${cleanupDelayMs}ms, stopping CLI subprocess`)
       conversationService.stopSession(sessionId)
       cleanupSessionRuntimeState(sessionId)
@@ -3124,6 +3196,10 @@ export function getActiveSessionIds(): string[] {
 }
 
 export function __resetWebSocketHandlerStateForTests(): void {
+  for (const sessionId of pendingStops.keys()) clearPendingStop(sessionId)
+  for (const turn of activeUserTurns.values()) turn.abortController?.abort()
+  activeUserTurns.clear()
+  sessionStopRequested.clear()
   for (const timer of sessionCleanupTimers.values()) clearTimeout(timer)
   for (const timer of prewarmIdleTimers.values()) clearTimeout(timer)
   for (const remove of sessionDisconnectWatchers.values()) remove()
