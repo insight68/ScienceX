@@ -167,6 +167,7 @@ export type ScienceExperiment = {
   status: ScienceExperimentStatus
   linkedDatasetId: string | null
   linkedDatasetVersionId: string | null
+  sourceReviewId?: string | null
   protocolVersion: {
     id: string
     ordinal: number
@@ -197,6 +198,7 @@ export type CreateScienceExperimentInput = {
   name: string
   objective?: string
   linkedDatasetId?: string | null
+  sourceReviewId?: string | null
   protocol: ScienceCellViabilityProtocol
 }
 
@@ -340,8 +342,11 @@ export type ScienceAnalysisRun = {
   datasetId: string
   datasetVersionId: string
   datasetVersionOrdinal: number
+  datasetContentHash?: string
   inputCurrentness: ScienceInputCurrentness
   experimentId: string | null
+  executionId?: string | null
+  experimentSnapshot?: ScienceExperiment | null
   parentRunId: string | null
   recipe: 'table-quality-v1' | 'cell-viability-dose-response-v1'
   status: ScienceRunStatus

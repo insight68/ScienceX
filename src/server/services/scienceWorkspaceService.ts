@@ -10,7 +10,7 @@ import { ApiError } from '../middleware/errorHandler.js'
 import { ScienceDuckDbService, type ScienceAnalyticsResult } from './scienceDuckDbService.js'
 import { readScienceExampleMetadata, type ScienceExampleMetadata } from './scienceExampleMetadata.js'
 
-const SCIENCE_PROJECT_SCHEMA_VERSION = 6
+const SCIENCE_PROJECT_SCHEMA_VERSION = 7
 const SCIENCE_REGISTRY_SCHEMA_VERSION = 1
 const PROJECT_DIRECTORY_NAME = '.sciencex'
 const PROJECT_DATABASE_NAME = 'research.sqlite'
@@ -365,6 +365,42 @@ function migrateProjectDatabase(database: Database): void {
     `)
     setSchemaVersion(database, 6)
   }
+  if (currentVersion < 7) {
+    database.transaction(() => {
+      database.exec(`
+        CREATE TABLE science_executions (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL REFERENCES project(id) ON DELETE RESTRICT,
+          experiment_id TEXT REFERENCES science_experiments(id) ON DELETE RESTRICT,
+          protocol_version_id TEXT REFERENCES science_protocol_versions(id) ON DELETE RESTRICT,
+          design_version_id TEXT REFERENCES science_design_versions(id) ON DELETE RESTRICT,
+          record_json TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
+        CREATE TABLE science_execution_datasets (
+          execution_id TEXT NOT NULL REFERENCES science_executions(id) ON DELETE RESTRICT,
+          dataset_id TEXT NOT NULL REFERENCES datasets(id) ON DELETE RESTRICT,
+          dataset_version_id TEXT NOT NULL REFERENCES dataset_versions(id) ON DELETE RESTRICT,
+          PRIMARY KEY(execution_id, dataset_version_id)
+        );
+        CREATE TABLE science_reviews (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL REFERENCES project(id) ON DELETE RESTRICT,
+          run_id TEXT NOT NULL REFERENCES analysis_runs(id) ON DELETE RESTRICT,
+          supersedes_review_id TEXT REFERENCES science_reviews(id) ON DELETE RESTRICT,
+          record_json TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        );
+        ALTER TABLE analysis_runs ADD COLUMN execution_id TEXT REFERENCES science_executions(id) ON DELETE RESTRICT;
+        ALTER TABLE analysis_runs ADD COLUMN experiment_snapshot_json TEXT;
+        ALTER TABLE science_experiments ADD COLUMN source_review_id TEXT REFERENCES science_reviews(id) ON DELETE RESTRICT;
+        CREATE INDEX science_executions_project_idx ON science_executions(project_id, created_at);
+        CREATE INDEX science_reviews_run_idx ON science_reviews(project_id, run_id, created_at);
+        UPDATE project SET schema_version = 7;
+      `)
+      setSchemaVersion(database, 7)
+    })()
+  }
 }
 
 function registryDatabasePath(): string {
@@ -393,7 +429,7 @@ async function openRegistryDatabase(): Promise<Database> {
   }
 }
 
-function openProjectDatabase(rootDir: string, create = false): Database {
+export function openProjectDatabase(rootDir: string, create = false): Database {
   const database = new Database(
     projectDatabasePath(rootDir),
     create ? { create: true } : { readwrite: true },

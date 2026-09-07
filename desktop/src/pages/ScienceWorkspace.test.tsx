@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import '@testing-library/jest-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { scienceApi } from '../api/science'
+import { scienceWorkflowApi } from '../api/scienceWorkflow'
 import { useChatStore } from '../stores/chatStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useScienceStore } from '../stores/scienceStore'
@@ -19,6 +20,8 @@ import type {
 } from '../types/science'
 import { ScienceWorkspace } from './ScienceWorkspace'
 import { runScienceExampleDemo } from '../lib/scienceExampleDemo'
+
+vi.mock('../api/scienceWorkflow', () => ({ scienceWorkflowApi: { listExecutions: vi.fn(), previewVersion: vi.fn(), analyze: vi.fn(), listReviews: vi.fn() } }))
 
 vi.mock('../lib/scienceExampleDemo', () => ({ runScienceExampleDemo: vi.fn() }))
 
@@ -200,6 +203,7 @@ const doseRun: ScienceAnalysisRun = {
   ...run,
   id: 'dose-run-1234',
   experimentId: experiment.id,
+  experimentSnapshot: experiment,
   recipe: 'cell-viability-dose-response-v1',
   parameters: { experimentId: experiment.id, wellColumn: 'well', signalColumn: 'signal' },
   inputHash: 'dose-input-hash',
@@ -376,6 +380,44 @@ describe('ScienceWorkspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open AI evidence review' }))
     await waitFor(() => expect(prefill).toHaveBeenCalledWith('example-review-session', { text: report.aiPrompt, mode: 'replace' }))
     expect(createSession).toHaveBeenCalledWith(project.rootDir)
+  })
+
+  it('opens an execution result, reviews its frozen conditions, and carries a next-step draft into the existing form', async () => {
+    const traced = { ...doseRun, executionId: 'execution-1', experimentSnapshot: experiment }
+    vi.mocked(scienceApi.listExperiments).mockResolvedValue([experiment])
+    vi.mocked(scienceWorkflowApi.listExecutions).mockResolvedValue([{
+      id: 'execution-1', projectId: project.id, experimentId: experiment.id, protocolVersionId: experiment.protocolVersion.id, designVersionId: experiment.designVersion.id,
+      name: 'Day 1', performedBy: 'Lin', performedAt: '2026-09-07T02:00:00Z', sourceType: 'simulated', sampleBatch: '', instrument: '', actualConditions: '', deviations: '', biologicalReplicateId: '', createdAt: '',
+      datasets: [{ datasetId: dataset.id, datasetVersionId: dataset.currentVersion.id, name: dataset.name, ordinal: 1, contentHash: dataset.currentVersion.contentHash }],
+    }])
+    vi.mocked(scienceWorkflowApi.previewVersion).mockResolvedValue({ ...preview, headers: ['well', 'signal'] })
+    vi.mocked(scienceWorkflowApi.analyze).mockResolvedValue({ run: traced, artifacts: [] })
+    vi.mocked(scienceWorkflowApi.listReviews).mockResolvedValue([{ id: 'review-source', projectId: project.id, runId: traced.id, reviewer: 'Lin', decision: 'repeat', rationale: 'Need independent culture', nextStep: 'Repeat with a new batch', inputHash: traced.inputHash, recipeHash: traced.recipeHash, reviewedContentHash: 'result-hash', createdAt: '2026-09-07T02:00:00Z' }])
+    render(<ScienceWorkspace />)
+    await screen.findByText('control')
+    fireEvent.click(screen.getByRole('tab', { name: 'Experiments 1' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Experiment executions' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Analyze execution data' })).toBeEnabled())
+    vi.mocked(scienceApi.listRuns).mockResolvedValue([traced])
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze execution data' }))
+    await waitFor(() => expect(screen.getByRole('tab', { name: 'Runs 1' })).toHaveAttribute('aria-selected', 'true'))
+    expect(useScienceStore.getState().selectedRunId).toBe(traced.id)
+    fireEvent.click(screen.getByRole('button', { name: 'Evidence review and next step' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Use in a new experiment' }))
+    expect(screen.getByRole('tab', { name: 'Experiments 1' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByLabelText(/Experiment name/)).toHaveValue(`${experiment.name} · Follow-up`)
+    expect(screen.getByLabelText('Registered readout table')).toHaveValue('')
+    expect(scienceApi.createExperiment).not.toHaveBeenCalled()
+  })
+
+  it('does not label a legacy result with the current protocol unit when its frozen conditions are missing', async () => {
+    vi.mocked(scienceApi.listExperiments).mockResolvedValue([experiment])
+    vi.mocked(scienceApi.listRuns).mockResolvedValue([{ ...doseRun, experimentSnapshot: null }])
+    render(<ScienceWorkspace />)
+    await screen.findByText('control')
+    fireEvent.click(screen.getByRole('tab', { name: 'Runs 1' }))
+    expect(screen.getByText('Some legacy runs lack frozen conditions; comparability is unconfirmed.')).toBeInTheDocument()
+    expect(screen.queryByText('1 µM')).not.toBeInTheDocument()
   })
 
   it('keeps a rejected input visible and prevents replaying its failed run', async () => {

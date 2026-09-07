@@ -63,12 +63,12 @@ describe('Science workspace API', () => {
       question: 'Does treatment A alter viability after 24 hours?',
       rootDir: await fs.realpath(projectRoot),
       rootAvailable: true,
-      schemaVersion: 6,
+      schemaVersion: 7,
     })
 
     const scienceDirectory = path.join(projectRoot, '.sciencex')
     const manifest = await fs.readFile(path.join(scienceDirectory, 'project.yaml'), 'utf8')
-    expect(manifest).toContain('schemaVersion: 6')
+    expect(manifest).toContain('schemaVersion: 7')
     expect(manifest).toContain('name: Cell viability pilot')
     expect((await fs.stat(path.join(scienceDirectory, 'research.sqlite'))).isFile()).toBe(true)
 
@@ -485,13 +485,13 @@ describe('Science workspace API', () => {
 
     const listed = await callApi('/api/research-projects')
     expect(listed.status).toBe(200)
-    expect(listed.body.projects[0]).toMatchObject({ id: projectId, schemaVersion: 6 })
+    expect(listed.body.projects[0]).toMatchObject({ id: projectId, schemaVersion: 7 })
 
     const inspected = new Database(projectDatabasePath, { readonly: true })
     try {
       expect(inspected.query("SELECT value FROM science_meta WHERE key = 'schema_version'").get())
-        .toEqual({ value: '6' })
-      expect(inspected.query('SELECT schema_version FROM project').get()).toEqual({ schema_version: 6 })
+        .toEqual({ value: '7' })
+      expect(inspected.query('SELECT schema_version FROM project').get()).toEqual({ schema_version: 7 })
       expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'analysis_runs'").get())
         .toEqual({ name: 'analysis_runs' })
       expect(inspected.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'science_artifacts'").get())
@@ -514,7 +514,7 @@ describe('Science workspace API', () => {
       inspected.close()
     }
     const migratedManifest = await fs.readFile(path.join(scienceDirectory, 'project.yaml'), 'utf8')
-    expect(migratedManifest).toContain('schemaVersion: 6')
+    expect(migratedManifest).toContain('schemaVersion: 7')
     expect(migratedManifest).toContain('labNote: preserve-me')
   })
 })

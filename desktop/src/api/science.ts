@@ -87,6 +87,7 @@ export const scienceApi = {
         objective: input.objective,
         assayType: 'cell-viability-dose-response',
         linkedDatasetId: input.linkedDatasetId,
+        sourceReviewId: input.sourceReviewId,
         protocol: input.protocol,
       },
     )

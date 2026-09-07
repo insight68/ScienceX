@@ -30,6 +30,8 @@ import { Textarea } from '../shared/Textarea'
 type LoadState = 'idle' | 'loading' | 'ready' | 'error'
 
 type CellViabilityExperimentPanelProps = {
+  initialDraft?: Omit<CreateScienceExperimentInput, 'projectId'>
+  onDraftConsumed?: () => void
   experiments: ScienceExperiment[]
   datasets: ScienceDataset[]
   selectedDataset: ScienceDataset | null
@@ -52,6 +54,8 @@ type CellViabilityExperimentPanelProps = {
 }
 
 export function CellViabilityExperimentPanel({
+  initialDraft,
+  onDraftConsumed,
   experiments,
   datasets,
   selectedDataset,
@@ -67,7 +71,7 @@ export function CellViabilityExperimentPanel({
   onRunDoseResponse,
 }: CellViabilityExperimentPanelProps) {
   const t = useTranslation()
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useState(Boolean(initialDraft))
   const selected = experiments.find(experiment => experiment.id === selectedExperimentId) ??
     experiments[0] ??
     null
@@ -110,6 +114,7 @@ export function CellViabilityExperimentPanel({
                 type="button"
                 onClick={() => {
                   setCreating(false)
+                  onDraftConsumed?.()
                   onSelect(experiment.id)
                 }}
                 className={`mb-1 w-full rounded-[10px] border px-3 py-3 text-left transition-colors ${
@@ -146,13 +151,15 @@ export function CellViabilityExperimentPanel({
       <div className="min-w-0 flex-1 overflow-y-auto bg-[var(--color-surface-container-lowest)]">
         {showForm ? (
           <ExperimentForm
+            initialDraft={initialDraft}
             datasets={datasets}
             saving={actionState === 'loading'}
             canCancel={experiments.length > 0}
-            onCancel={() => setCreating(false)}
+            onCancel={() => { setCreating(false); onDraftConsumed?.() }}
             onCreate={async input => {
               await onCreate(input)
               setCreating(false)
+              onDraftConsumed?.()
             }}
           />
         ) : selected ? (
@@ -176,12 +183,14 @@ export function CellViabilityExperimentPanel({
 }
 
 function ExperimentForm({
+  initialDraft,
   datasets,
   saving,
   canCancel,
   onCancel,
   onCreate,
 }: {
+  initialDraft?: Omit<CreateScienceExperimentInput, 'projectId'>
   datasets: ScienceDataset[]
   saving: boolean
   canCancel: boolean
@@ -189,21 +198,22 @@ function ExperimentForm({
   onCreate: (input: Omit<CreateScienceExperimentInput, 'projectId'>) => Promise<void>
 }) {
   const t = useTranslation()
-  const [name, setName] = useState('')
-  const [objective, setObjective] = useState('')
-  const [cellLine, setCellLine] = useState('')
-  const [compoundName, setCompoundName] = useState('')
-  const [readout, setReadout] = useState<ScienceAssayReadout>('cck-8')
-  const [durationHours, setDurationHours] = useState('48')
-  const [seedingDensity, setSeedingDensity] = useState('4000')
-  const [unit, setUnit] = useState<ScienceConcentrationUnit>('µM')
-  const [doseText, setDoseText] = useState('0.01, 0.1, 1, 5, 25, 100')
-  const [replicates, setReplicates] = useState('3')
-  const [includeBlank, setIncludeBlank] = useState(true)
-  const [includeVehicle, setIncludeVehicle] = useState(true)
-  const [vehicleName, setVehicleName] = useState('DMSO')
-  const [vehiclePercent, setVehiclePercent] = useState('0.1')
-  const [positiveControl, setPositiveControl] = useState('')
+  const protocol = initialDraft?.protocol
+  const [name, setName] = useState(initialDraft?.name ?? '')
+  const [objective, setObjective] = useState(initialDraft?.objective ?? '')
+  const [cellLine, setCellLine] = useState(protocol?.cellLine ?? '')
+  const [compoundName, setCompoundName] = useState(protocol?.compoundName ?? '')
+  const [readout, setReadout] = useState<ScienceAssayReadout>(protocol?.readout ?? 'cck-8')
+  const [durationHours, setDurationHours] = useState(String(protocol?.treatmentDurationHours ?? 48))
+  const [seedingDensity, setSeedingDensity] = useState(String(protocol?.seedingDensityCellsPerWell ?? 4000))
+  const [unit, setUnit] = useState<ScienceConcentrationUnit>(protocol?.concentrationUnit ?? 'µM')
+  const [doseText, setDoseText] = useState(protocol?.concentrations.join(', ') ?? '0.01, 0.1, 1, 5, 25, 100')
+  const [replicates, setReplicates] = useState(String(protocol?.replicateCount ?? 3))
+  const [includeBlank, setIncludeBlank] = useState(protocol?.includeBlankControl ?? true)
+  const [includeVehicle, setIncludeVehicle] = useState(protocol ? Boolean(protocol.vehicleControl) : true)
+  const [vehicleName, setVehicleName] = useState(protocol?.vehicleControl?.name ?? 'DMSO')
+  const [vehiclePercent, setVehiclePercent] = useState(String(protocol?.vehicleControl?.finalPercent ?? 0.1))
+  const [positiveControl, setPositiveControl] = useState(protocol?.positiveControl ?? '')
   const [linkedDatasetId, setLinkedDatasetId] = useState('')
 
   const doseParse = useMemo(() => parseDoses(doseText), [doseText])
@@ -233,6 +243,7 @@ function ExperimentForm({
       name: name.trim(),
       objective: objective.trim(),
       linkedDatasetId: linkedDatasetId || null,
+      sourceReviewId: initialDraft?.sourceReviewId,
       protocol: {
         cellLine: cellLine.trim(),
         compoundName: compoundName.trim(),
@@ -253,6 +264,7 @@ function ExperimentForm({
 
   return (
     <div className="mx-auto max-w-[1040px] px-6 py-6 2xl:px-10 2xl:py-8">
+      {initialDraft?.sourceReviewId && <p className="mb-4 text-xs text-[var(--color-text-secondary)]">{t('science.workflow.draftHint')} · {initialDraft.sourceReviewId.slice(0, 8)}</p>}
       <div className="relative overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
         <div className="absolute inset-y-0 left-0 w-1 bg-[var(--color-brand)]" />
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--color-border)] px-6 py-5">
@@ -505,6 +517,7 @@ function ExperimentDetail({
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--color-text-primary)]">
                 {experiment.name}
               </h2>
+              {experiment.sourceReviewId && <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{t('science.workflow.review')}: <span className="font-mono">{experiment.sourceReviewId}</span></p>}
               {experiment.objective && (
                 <p className="mt-1 max-w-3xl text-xs leading-relaxed text-[var(--color-text-secondary)]">
                   {experiment.objective}

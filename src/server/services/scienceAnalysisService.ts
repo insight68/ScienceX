@@ -3,6 +3,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import { Database } from 'bun:sqlite'
 import { ApiError } from '../middleware/errorHandler.js'
+import { scienceWorkflowService } from './scienceWorkflowService.js'
 import {
   analyzeCellViabilityDoseResponse,
   ScienceDoseResponseAnalysisError,
@@ -67,8 +68,11 @@ export type ScienceAnalysisRun = {
   datasetId: string
   datasetVersionId: string
   datasetVersionOrdinal: number
+  datasetContentHash?: string
   inputCurrentness: ScienceInputCurrentness
   experimentId: string | null
+  executionId?: string | null
+  experimentSnapshot?: ScienceExperiment | null
   parentRunId: string | null
   recipe: ScienceAnalysisRecipe
   status: ScienceRunStatus
@@ -122,8 +126,11 @@ type RunRow = {
   dataset_id: string
   dataset_version_id: string
   dataset_version_ordinal?: number
+  dataset_content_hash?: string
   input_currentness?: ScienceInputCurrentness
   experiment_id?: string | null
+  execution_id?: string | null
+  experiment_snapshot_json?: string | null
   parent_run_id: string | null
   recipe: ScienceAnalysisRecipe
   status: ScienceRunStatus
@@ -180,6 +187,7 @@ const RUN_SELECT = `
   SELECT
     analysis_runs.*,
     input_version.ordinal AS dataset_version_ordinal,
+    input_version.content_hash AS dataset_content_hash,
     CASE WHEN analysis_runs.dataset_version_id = (
       SELECT latest.id
       FROM dataset_versions latest
@@ -219,8 +227,11 @@ function mapRun(row: RunRow): ScienceAnalysisRun {
     datasetId: row.dataset_id,
     datasetVersionId: row.dataset_version_id,
     datasetVersionOrdinal: row.dataset_version_ordinal ?? 0,
+    datasetContentHash: row.dataset_content_hash,
     inputCurrentness: row.input_currentness ?? 'current',
     experimentId: row.experiment_id ?? null,
+    executionId: row.execution_id ?? null,
+    experimentSnapshot: row.experiment_snapshot_json ? parseJson(row.experiment_snapshot_json, 'experiment snapshot') : null,
     parentRunId: row.parent_run_id,
     recipe: row.recipe,
     status: row.status,
@@ -528,6 +539,7 @@ export class ScienceAnalysisService {
     projectId: string
     datasetId: string
     datasetVersionId?: string
+    executionId?: string
     maxRows?: number
     parentRunId?: string
   }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
@@ -538,10 +550,12 @@ export class ScienceAnalysisService {
       versionId: input.datasetVersionId,
     })
     const maxRows = Math.max(10, Math.min(input.maxRows ?? 100, 100))
+    if (input.executionId) await scienceWorkflowService.requireDatasetBinding(project.id, input.executionId, dataset.id, dataset.currentVersion.id)
     return this.executeAnalysisRun({
       project,
       dataset,
       experimentId: null,
+      executionId: input.executionId,
       recipe: QUALITY_RECIPE,
       recipeSource: QUALITY_RECIPE_SOURCE,
       parameters: { maxRows },
@@ -598,22 +612,36 @@ export class ScienceAnalysisService {
     wellColumn: string
     signalColumn: string
     parentRunId?: string
+    executionId?: string
+    datasetId?: string
+    datasetVersionId?: string
   }): Promise<{ run: ScienceAnalysisRun; artifacts: ScienceArtifact[] }> {
     const project = await scienceWorkspaceService.getProject(input.projectId)
-    const experiment = await scienceExperimentService.getExperiment(project.id, input.experimentId)
     const parent = input.parentRunId ? (await this.findRun(input.parentRunId)).run : null
-    if (parent && (parent.projectId !== project.id || parent.experimentId !== experiment.id ||
+    if (parent && (parent.projectId !== project.id || parent.experimentId !== input.experimentId ||
       parent.recipe !== DOSE_RESPONSE_RECIPE || parent.status !== 'completed')) {
       throw ApiError.conflict('Replay must reference a completed run of this experiment')
     }
+    const executionId = parent?.executionId ?? input.executionId
+    const execution = executionId ? await scienceWorkflowService.getExecution(project.id, executionId) : null
+    if (!execution && (input.datasetId || input.datasetVersionId)) {
+      throw ApiError.badRequest('Explicit dataset inputs require an execution record')
+    }
+    if (execution && (execution.experimentId !== input.experimentId || !execution.protocolVersionId || !execution.designVersionId)) {
+      throw ApiError.conflict('Execution does not belong to this experiment')
+    }
+    const experiment = parent?.experimentSnapshot ?? (execution
+      ? await scienceExperimentService.getExperimentVersion(project.id, input.experimentId, execution.protocolVersionId!, execution.designVersionId!)
+      : await scienceExperimentService.getExperiment(project.id, input.experimentId))
     if (experiment.status !== 'ready') {
       throw ApiError.conflict('Only an execution-ready experiment can start dose-response analysis')
     }
-    const datasetId = parent?.datasetId ?? experiment.linkedDatasetId
-    const datasetVersionId = parent?.datasetVersionId ?? experiment.linkedDatasetVersionId
+    const datasetId = parent?.datasetId ?? (execution ? input.datasetId : experiment.linkedDatasetId)
+    const datasetVersionId = parent?.datasetVersionId ?? (execution ? input.datasetVersionId : experiment.linkedDatasetVersionId)
     if (!datasetId || !datasetVersionId) {
       throw ApiError.conflict('Link a registered dataset version before starting dose-response analysis')
     }
+    if (execution) await scienceWorkflowService.requireDatasetBinding(project.id, execution.id, datasetId, datasetVersionId)
     const dataset = await scienceWorkspaceService.getDatasetVersion({
       projectId: project.id,
       datasetId,
@@ -643,6 +671,8 @@ export class ScienceAnalysisService {
       project,
       dataset,
       experimentId: experiment.id,
+      executionId: executionId ?? undefined,
+      experimentSnapshot: experiment,
       recipe: DOSE_RESPONSE_RECIPE,
       recipeSource: DOSE_RESPONSE_RECIPE_SOURCE,
       evaluationContract: CELL_VIABILITY_EVALUATION_CONTRACT,
@@ -734,6 +764,8 @@ export class ScienceAnalysisService {
     project: ScienceProject
     dataset: ScienceDataset
     experimentId: string | null
+    executionId?: string
+    experimentSnapshot?: ScienceExperiment
     recipe: ScienceAnalysisRecipe
     recipeSource: string
     evaluationContract?: ScienceEvaluationContract
@@ -784,8 +816,8 @@ export class ScienceAnalysisService {
             id, project_id, dataset_id, dataset_version_id, experiment_id, parent_run_id, recipe, status,
             reproducibility_status, evaluation_contract_json, evidence_json,
             parameters_json, environment_json, input_hash, recipe_hash,
-            event_log_path, manifest_path, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, NULL, ?, ?, ?, ?, ?, ?, ?)
+            event_log_path, manifest_path, created_at, execution_id, experiment_snapshot_json
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', 'unchecked', ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `)
         .run(
           runId,
@@ -803,6 +835,8 @@ export class ScienceAnalysisService {
           eventLogPath,
           manifestPath,
           createdAt,
+          input.executionId ?? null,
+          input.experimentSnapshot ? JSON.stringify(input.experimentSnapshot) : null,
         )
 
       await appendEvent(project, eventLogPath, runId, 'run.created', {
@@ -956,6 +990,7 @@ export class ScienceAnalysisService {
         datasetId: location.run.datasetId,
         datasetVersionId: location.run.datasetVersionId,
         maxRows: parameters.maxRows,
+        executionId: location.run.executionId ?? undefined,
         parentRunId: location.run.id,
       })
     }

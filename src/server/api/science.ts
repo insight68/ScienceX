@@ -4,6 +4,7 @@ import { ApiError, errorResponse } from '../middleware/errorHandler.js'
 import { scienceAnalysisService } from '../services/scienceAnalysisService.js'
 import { scienceExperimentService } from '../services/scienceExperimentService.js'
 import { scienceWorkspaceService } from '../services/scienceWorkspaceService.js'
+import { scienceWorkflowService } from '../services/scienceWorkflowService.js'
 import { isAllowedFilesystemPath } from './filesystem.js'
 import { listScienceExamples, materializeScienceExample, scienceExampleReport, saveScienceExampleReport } from '../services/scienceExampleService.js'
 
@@ -26,6 +27,8 @@ const RegisterDatasetSchema = z.object({
 
 const CreateRunSchema = z.object({
   datasetId: z.string().trim().min(1).max(160),
+  datasetVersionId: z.string().trim().min(1).max(160).optional(),
+  executionId: z.string().trim().min(1).max(160).optional(),
   recipe: z.literal('table-quality-v1'),
   parameters: z.object({
     maxRows: z.number().int().min(10).max(100).optional(),
@@ -48,6 +51,7 @@ const CreateExperimentSchema = z.object({
   objective: z.string().trim().max(2000).optional(),
   assayType: z.literal('cell-viability-dose-response'),
   linkedDatasetId: z.string().trim().min(1).max(160).nullable().optional(),
+  sourceReviewId: z.string().trim().min(1).max(160).nullable().optional(),
   protocol: z.object({
     cellLine: z.string().trim().max(160),
     compoundName: z.string().trim().max(160),
@@ -76,11 +80,43 @@ const LinkExperimentDatasetSchema = z.object({
 
 const CreateDoseResponseRunSchema = z.object({
   recipe: z.literal('cell-viability-dose-response-v1'),
+  executionId: z.string().trim().min(1).max(160).optional(),
+  datasetId: z.string().trim().min(1).max(160).optional(),
+  datasetVersionId: z.string().trim().min(1).max(160).optional(),
   parameters: z.object({
     wellColumn: z.string().trim().min(1).max(160),
     signalColumn: z.string().trim().min(1).max(160),
   }),
 })
+
+const IdSchema = z.string().trim().min(1).max(160)
+const CreateExecutionSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  experimentId: IdSchema.nullable().optional(),
+  performedBy: z.string().trim().min(1).max(160),
+  performedAt: z.string().datetime({ offset: true }),
+  sourceType: z.enum(['measured', 'simulated', 'unknown']),
+  sampleBatch: z.string().trim().max(500).default(''),
+  instrument: z.string().trim().max(500).default(''),
+  actualConditions: z.string().trim().max(4000).default(''),
+  deviations: z.string().trim().max(4000).default(''),
+  biologicalReplicateId: z.string().trim().max(160).default(''),
+})
+const BindExecutionDatasetSchema = z.object({ datasetId: IdSchema, versionId: IdSchema })
+const CreateReviewSchema = z.object({
+  runId: IdSchema,
+  reviewer: z.string().trim().min(1).max(160),
+  decision: z.enum(['accept', 'revise', 'repeat']),
+  rationale: z.string().trim().min(1).max(8000),
+  nextStep: z.string().trim().max(2000).default(''),
+  supersedesReviewId: IdSchema.nullable().optional(),
+})
+
+async function parseWorkflowBody<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
+  const parsed = schema.safeParse(await parseJsonBody(request))
+  if (!parsed.success) throw ApiError.badRequest(parsed.error.issues.map(issue => issue.message).join('; '))
+  return parsed.data
+}
 
 async function parseJsonBody(request: Request): Promise<unknown> {
   try {
@@ -164,7 +200,37 @@ export async function handleScienceApi(
         return Response.json({ project: await scienceWorkspaceService.getProject(projectId) })
       }
 
+      if (childResource === 'executions') {
+        if (segments.length === 6 && segments[5] === 'datasets') {
+          if (request.method !== 'POST') throw methodNotAllowed(request)
+          const input = await parseWorkflowBody(request, BindExecutionDatasetSchema)
+          return Response.json({ execution: await scienceWorkflowService.bindDataset(projectId, segments[4], input.datasetId, input.versionId) })
+        }
+        if (segments.length !== 4) throw ApiError.notFound('Unknown execution endpoint')
+        if (request.method === 'GET') return Response.json({ executions: await scienceWorkflowService.listExecutions(projectId) })
+        if (request.method === 'POST') return Response.json({ execution: await scienceWorkflowService.createExecution(projectId,
+          await parseWorkflowBody(request, CreateExecutionSchema)) }, { status: 201 })
+        throw methodNotAllowed(request)
+      }
+
+      if (childResource === 'reviews' && segments.length === 4) {
+        if (request.method === 'GET') {
+          const runId = IdSchema.safeParse(url.searchParams.get('runId'))
+          if (!runId.success) throw ApiError.badRequest('runId is required')
+          return Response.json({ reviews: await scienceWorkflowService.listReviews(projectId, runId.data) })
+        }
+        if (request.method === 'POST') return Response.json({ review: await scienceWorkflowService.createReview(projectId,
+          await parseWorkflowBody(request, CreateReviewSchema)) }, { status: 201 })
+        throw methodNotAllowed(request)
+      }
+
+      if (childResource === 'datasets' && segments.length === 8 && segments[5] === 'versions' && segments[7] === 'preview') {
+        if (request.method !== 'GET') throw methodNotAllowed(request)
+        return Response.json({ preview: await scienceWorkspaceService.previewDatasetVersion(projectId, segments[4], segments[6], { maxRows: 100 }) })
+      }
+
       if (childResource === 'datasets') {
+        if (segments.length !== 4) throw ApiError.notFound('Unknown dataset endpoint')
         if (request.method === 'GET') {
           return Response.json({ datasets: await scienceWorkspaceService.listDatasets(projectId) })
         }
@@ -196,6 +262,8 @@ export async function handleScienceApi(
           const result = await scienceAnalysisService.createQualityRun({
             projectId,
             datasetId: parsed.data.datasetId,
+            datasetVersionId: parsed.data.datasetVersionId,
+            executionId: parsed.data.executionId,
             maxRows: parsed.data.parameters?.maxRows,
           })
           return Response.json(result, { status: 201 })
@@ -215,6 +283,9 @@ export async function handleScienceApi(
           return Response.json(await scienceAnalysisService.createDoseResponseRun({
             projectId,
             experimentId,
+            executionId: parsed.data.executionId,
+            datasetId: parsed.data.datasetId,
+            datasetVersionId: parsed.data.datasetVersionId,
             wellColumn: parsed.data.parameters.wellColumn,
             signalColumn: parsed.data.parameters.signalColumn,
           }), { status: 201 })

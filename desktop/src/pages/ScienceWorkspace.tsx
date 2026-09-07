@@ -24,6 +24,10 @@ import {
 } from 'lucide-react'
 import { Button } from '../components/shared/Button'
 import { CellViabilityExperimentPanel } from '../components/science/CellViabilityExperimentPanel'
+import { ScienceExecutionPanel } from '../components/science/ScienceExecutionPanel'
+import { ScienceDataQualityPanel } from '../components/science/ScienceDataQualityPanel'
+import { ScienceRunComparisonPanel } from '../components/science/ScienceRunComparisonPanel'
+import { ScienceReviewPanel, type ScienceNextExperimentDraft } from '../components/science/ScienceReviewPanel'
 import { ScienceExampleLauncher, ScienceExamplePanel } from '../components/science/ScienceExampleGuide'
 import { DirectoryPicker } from '../components/shared/DirectoryPicker'
 import { Input } from '../components/shared/Input'
@@ -297,6 +301,7 @@ export function ScienceWorkspace() {
               onSelect={datasetId => void selectDataset(datasetId)}
             />
             <ScienceCanvas
+              key={selectedProject?.id ?? 'empty'}
               project={selectedProject}
               datasets={datasets}
               dataset={selectedDataset}
@@ -322,6 +327,15 @@ export function ScienceWorkspace() {
               onSelectRun={runId => void selectRun(runId)}
               onSelectExperiment={selectExperiment}
               onCreateExperiment={createExperiment}
+              onExecutionRunCreated={async run => {
+                if (useScienceStore.getState().selectedProjectId !== run.projectId) return
+                await selectProject(run.projectId)
+                if (useScienceStore.getState().selectedProjectId !== run.projectId) return
+                await selectDataset(run.datasetId)
+                if (useScienceStore.getState().selectedProjectId !== run.projectId) return
+                await selectRun(run.id)
+                if (useScienceStore.getState().selectedProjectId === run.projectId) setCanvasTab('runs')
+              }}
               onLinkExperimentDataset={linkExperimentDataset}
               onSelectDataset={selectDataset}
               onRunDoseResponse={async (experimentId, wellColumn, signalColumn) => {
@@ -604,6 +618,7 @@ function ScienceCanvas({
   onSelectRun,
   onSelectExperiment,
   onCreateExperiment,
+  onExecutionRunCreated,
   onLinkExperimentDataset,
   onSelectDataset,
   onRunDoseResponse,
@@ -633,6 +648,7 @@ function ScienceCanvas({
   onSelectRun: (runId: string) => void
   onSelectExperiment: (experimentId: string) => void
   onCreateExperiment: Parameters<typeof CellViabilityExperimentPanel>[0]['onCreate']
+  onExecutionRunCreated: (run: ScienceAnalysisRun) => Promise<void>
   onLinkExperimentDataset: Parameters<typeof CellViabilityExperimentPanel>[0]['onLinkDataset']
   onSelectDataset: Parameters<typeof CellViabilityExperimentPanel>[0]['onSelectDataset']
   onRunDoseResponse: Parameters<typeof CellViabilityExperimentPanel>[0]['onRunDoseResponse']
@@ -640,6 +656,7 @@ function ScienceCanvas({
   onReplay: (runId: string) => Promise<void>
 }) {
   const t = useTranslation()
+  const [draft, setDraft] = useState<ScienceNextExperimentDraft | null>(null)
   if (!project) {
     return (
       <PreviewPanel
@@ -653,6 +670,8 @@ function ScienceCanvas({
   }
 
   const datasetRuns = dataset ? runs.filter(run => run.datasetId === dataset.id) : []
+  const qualityRun = datasetRuns.find(run => run.id === selectedRunId && run.summary?.scope === 'full-linked-plate') ??
+    datasetRuns.find(run => run.summary?.scope === 'full-linked-plate')
   const datasetRunIds = new Set(datasetRuns.map(run => run.id))
   const datasetArtifacts = artifacts.filter(artifact => datasetRunIds.has(artifact.producingRunId))
 
@@ -703,35 +722,52 @@ function ScienceCanvas({
       </div>
       <div className="min-h-0 flex-1">
         {activeTab === 'experiments' && (
-          <CellViabilityExperimentPanel
-            experiments={experiments}
-            datasets={datasets}
-            selectedDataset={dataset}
-            preview={preview}
-            selectedExperimentId={selectedExperimentId}
-            state={experimentsState}
-            actionState={experimentActionState}
-            runActionState={runActionState}
-            onSelect={onSelectExperiment}
-            onCreate={onCreateExperiment}
-            onLinkDataset={onLinkExperimentDataset}
-            onSelectDataset={onSelectDataset}
-            onRunDoseResponse={onRunDoseResponse}
-          />
+          <div className="flex h-full flex-col overflow-hidden">
+            <ScienceExecutionPanel project={project} experiments={experiments} datasets={datasets} selectedExperimentId={selectedExperimentId} onRunCreated={onExecutionRunCreated} />
+            <div className="min-h-0 flex-1">
+              <CellViabilityExperimentPanel
+                key={draft?.sourceReviewId ?? 'existing'}
+                initialDraft={draft ?? undefined}
+                onDraftConsumed={() => setDraft(null)}
+                experiments={experiments}
+                datasets={datasets}
+                selectedDataset={dataset}
+                preview={preview}
+                selectedExperimentId={selectedExperimentId}
+                state={experimentsState}
+                actionState={experimentActionState}
+                runActionState={runActionState}
+                onSelect={onSelectExperiment}
+                onCreate={onCreateExperiment}
+                onLinkDataset={onLinkExperimentDataset}
+                onSelectDataset={onSelectDataset}
+                onRunDoseResponse={onRunDoseResponse}
+              />
+            </div>
+          </div>
         )}
         {activeTab === 'data' && (
-          <PreviewPanel
-            project={project}
-            dataset={dataset}
-            preview={preview}
-            state={previewState}
-            onRetry={onRetry}
-          />
+          <div className="flex h-full flex-col overflow-hidden">
+            {qualityRun && <ScienceDataQualityPanel key={dataset?.id} run={qualityRun} />}
+            <div className="min-h-0 flex-1">
+              <PreviewPanel
+                project={project}
+                dataset={dataset}
+                preview={preview}
+                state={previewState}
+                onRetry={onRetry}
+              />
+            </div>
+          </div>
         )}
         {activeTab === 'runs' && (
           <RunsPanel
+            projectRuns={runs}
+            onDraft={next => {
+              setDraft(next)
+              onTabChange('experiments')
+            }}
             runs={datasetRuns}
-            experiments={experiments}
             selectedRunId={selectedRunId}
             events={runEvents}
             state={runsState}
@@ -752,7 +788,8 @@ function ScienceCanvas({
 
 function RunsPanel({
   runs,
-  experiments,
+  projectRuns,
+  onDraft,
   selectedRunId,
   events,
   state,
@@ -763,7 +800,8 @@ function RunsPanel({
   onReplay,
 }: {
   runs: ScienceAnalysisRun[]
-  experiments: ScienceExperiment[]
+  projectRuns: ScienceAnalysisRun[]
+  onDraft: (draft: ScienceNextExperimentDraft) => void
   selectedRunId: string | null
   events: ScienceRunEvent[]
   state: 'idle' | 'loading' | 'ready' | 'error'
@@ -830,6 +868,7 @@ function RunsPanel({
       </aside>
       {selectedRun && (
         <div className="min-w-0 flex-1 overflow-y-auto">
+          <ScienceRunComparisonPanel runs={projectRuns} />
           <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -863,11 +902,13 @@ function RunsPanel({
             </div>
           </div>
           {selectedRun.evidence && <ScienceEvidencePanel run={selectedRun} />}
+          <ScienceReviewPanel key={selectedRun.id} run={selectedRun} onDraft={onDraft} />
+          {selectedRun.summary?.scope === 'full-linked-plate' && <ScienceDataQualityPanel key={`quality-${selectedRun.id}`} run={selectedRun} />}
           {selectedRun.summary?.scope === 'preview-sample' && <QualitySummary run={selectedRun} />}
           {selectedRun.summary?.scope === 'full-linked-plate' && (
             <DoseResponseSummary
               run={selectedRun}
-              experiment={experiments.find(experiment => experiment.id === selectedRun.experimentId) ?? null}
+              experiment={selectedRun.experimentSnapshot ?? null}
             />
           )}
           {selectedRun.errorMessage && (
@@ -1043,6 +1084,7 @@ function DoseResponseSummary({
 
   return (
     <div className="border-b border-[var(--color-border)] px-5 py-4">
+      {!experiment && <p className="mb-3 text-xs text-[var(--color-warning)]">{t('science.workflow.missingConditions')}</p>}
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--color-text-tertiary)]">

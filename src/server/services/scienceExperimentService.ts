@@ -83,6 +83,7 @@ export type ScienceExperiment = {
   status: ScienceExperimentStatus
   linkedDatasetId: string | null
   linkedDatasetVersionId: string | null
+  sourceReviewId?: string | null
   protocolVersion: {
     id: string
     ordinal: number
@@ -108,6 +109,7 @@ export type CreateScienceExperimentInput = {
   linkedDatasetId?: string | null
   protocol: ScienceCellViabilityProtocol
   design?: SciencePlateDesign
+  sourceReviewId?: string | null
 }
 
 type ExperimentRow = {
@@ -119,6 +121,7 @@ type ExperimentRow = {
   status: ScienceExperimentStatus
   linked_dataset_id: string | null
   linked_dataset_version_id: string | null
+  source_review_id: string | null
   created_at: string
   updated_at: string
   protocol_version_id: string
@@ -132,7 +135,7 @@ type ExperimentRow = {
   design_created_at: string
 }
 
-const EXPERIMENT_SELECT = `
+const EXPERIMENT_SELECT_BASE = `
   SELECT
     experiment.id,
     experiment.project_id,
@@ -142,6 +145,7 @@ const EXPERIMENT_SELECT = `
     experiment.status,
     experiment.linked_dataset_id,
     experiment.linked_dataset_version_id,
+    experiment.source_review_id,
     experiment.created_at,
     experiment.updated_at,
     protocol.id AS protocol_version_id,
@@ -156,6 +160,9 @@ const EXPERIMENT_SELECT = `
   FROM science_experiments experiment
   JOIN science_protocol_versions protocol ON protocol.experiment_id = experiment.id
   JOIN science_design_versions design ON design.experiment_id = experiment.id
+`
+
+const EXPERIMENT_SELECT = `${EXPERIMENT_SELECT_BASE}
   WHERE protocol.ordinal = (
     SELECT MAX(latest_protocol.ordinal)
     FROM science_protocol_versions latest_protocol
@@ -388,6 +395,7 @@ function mapExperiment(row: ExperimentRow): ScienceExperiment {
     status: row.status,
     linkedDatasetId: row.linked_dataset_id,
     linkedDatasetVersionId: row.linked_dataset_version_id,
+    sourceReviewId: row.source_review_id ?? null,
     protocolVersion: {
       id: row.protocol_version_id,
       ordinal: row.protocol_ordinal,
@@ -433,6 +441,19 @@ export class ScienceExperimentService {
     }
   }
 
+  async getExperimentVersion(projectId: string, experimentId: string, protocolId: string, designId: string): Promise<ScienceExperiment> {
+    const project = await scienceWorkspaceService.getProject(projectId)
+    const database = openProjectDatabase(project)
+    try {
+      const row = database.query(`${EXPERIMENT_SELECT_BASE} WHERE experiment.project_id = ?
+        AND experiment.id = ? AND protocol.id = ? AND design.id = ?`)
+        .get(project.id, experimentId, protocolId, designId) as ExperimentRow | null
+      if (!row) throw ApiError.notFound('The frozen experiment versions are unavailable')
+      const experiment = mapExperiment(row)
+      return { ...experiment, status: experiment.readiness.blockingCount === 0 ? 'ready' : 'draft' }
+    } finally { database.close() }
+  }
+
   async createExperiment(input: CreateScienceExperimentInput): Promise<ScienceExperiment> {
     const project = await scienceWorkspaceService.getProject(input.projectId)
     let linkedDatasetVersionId: string | null = null
@@ -458,12 +479,16 @@ export class ScienceExperimentService {
     let row: ExperimentRow | null = null
     try {
       const insert = database.transaction(() => {
+        if (input.sourceReviewId && !database.query(`SELECT review.id FROM science_reviews review
+          JOIN analysis_runs run ON run.id = review.run_id
+          WHERE review.id = ? AND review.project_id = ? AND run.experiment_id IS NOT NULL`)
+          .get(input.sourceReviewId, project.id)) throw ApiError.conflict('Source review must belong to an experiment result in this project')
         database
           .query(`
             INSERT INTO science_experiments (
               id, project_id, name, objective, assay_type, status,
-              linked_dataset_id, linked_dataset_version_id, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              linked_dataset_id, linked_dataset_version_id, created_at, updated_at, source_review_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `)
           .run(
             experimentId,
@@ -476,6 +501,7 @@ export class ScienceExperimentService {
             linkedDatasetVersionId,
             now,
             now,
+            input.sourceReviewId ?? null,
           )
         database
           .query(`
